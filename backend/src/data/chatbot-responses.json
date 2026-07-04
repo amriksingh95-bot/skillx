@@ -1,0 +1,385 @@
+{
+  "version": "1.0",
+  "fallback": "I don't have an answer for that right now. Please use the complaint/feedback option on your dashboard and our support team will get back to you.",
+  "greetings": ["hi", "hello", "hey", "help", "start", "namaste", "sat sri akal"],
+  "greeting_response": "Hi! Welcome to SkillXT Rewards support. I can help you with points, redemptions, merchant info, and more. What would you like to know?",
+  "categories": [
+    {
+      "id": "general",
+      "label": "About SkillXT",
+      "keywords": ["what is skillxt", "about skillxt", "how does skillxt work", "what is this", "explain skillxt"]
+    },
+    {
+      "id": "customer_points",
+      "label": "Earning & Redeeming Points",
+      "keywords": ["earn", "points", "redeem", "balance", "wallet", "discount", "how many points"]
+    },
+    {
+      "id": "customer_account",
+      "label": "My Account",
+      "keywords": ["register", "login", "account", "lost phone", "mobile", "password", "otp", "sign up"]
+    },
+    {
+      "id": "merchant",
+      "label": "Merchant Info",
+      "keywords": ["merchant", "business", "join", "subscription", "top-up", "topup", "approval", "qr code", "register business"]
+    },
+    {
+      "id": "support",
+      "label": "Support & Complaints",
+      "keywords": ["problem", "issue", "complaint", "help", "contact", "wrong", "failed", "fraud", "support"]
+    }
+  ],
+  "responses": [
+    {
+      "id": "q01",
+      "category": "general",
+      "keywords": ["what is skillxt", "how does it work", "skillxt rewards", "what is this platform", "explain"],
+      "question": "What is SkillXT Rewards and how does it work?",
+      "answer": "SkillXT Rewards is a shared loyalty points platform for local businesses. Shop at any partner merchant, earn points on every purchase, and redeem those points for discounts at any partner merchant in the network. One wallet works across all stores."
+    },
+    {
+      "id": "q02",
+      "category": "general",
+      "keywords": ["free", "cost for customer", "customer fee", "joining fee", "no charge"],
+      "question": "Is SkillXT free for customers?",
+      "answer": "Yes, completely free. No joining fee, no annual charge, no hidden costs. Just register and start earning points."
+    },
+    {
+      "id": "q03",
+      "category": "customer_account",
+      "keywords": ["safe", "security", "data safe", "points safe", "secure", "protected"],
+      "question": "Are my points and personal data safe?",
+      "answer": "Yes. Your account is protected with OTP verification and encrypted passwords. Points are stored in a secure ledger — they cannot be lost or stolen without account access."
+    },
+    {
+      "id": "q04",
+      "category": "customer_points",
+      "keywords": ["how to earn", "how earn points", "get points", "earn points", "how do i earn"],
+      "question": "How do I earn points?",
+      "answer": "Visit any SkillXT partner merchant, make a purchase, and ask them to scan your QR code or enter your mobile number. Points are credited instantly to your wallet."
+    },
+    {
+      "id": "q05",
+      "category": "customer_points",
+      "keywords": ["how many points", "per 100", "per rupee", "earn rate", "points per purchase", "₹100", "100 rupees"],
+      "question": "How many points do I get per ₹100 spent?",
+      "answer": "You earn 1 point for every ₹10 spent. So on a ₹100 purchase you get 10 points, on ₹1,000 you get 100 points."
+    },
+    {
+      "id": "q06",
+      "category": "customer_points",
+      "keywords": ["specific items", "all items", "category", "restrictions", "everything"],
+      "question": "Can I earn points on every purchase or only specific items?",
+      "answer": "Points are earned on your total bill amount with no category restrictions — every rupee spent counts."
+    },
+    {
+      "id": "q07",
+      "category": "customer_points",
+      "keywords": ["minimum purchase", "minimum bill", "minimum spend", "minimum amount to earn"],
+      "question": "Is there a minimum purchase amount to earn points?",
+      "answer": "The minimum purchase to earn points is ₹100. Practically any normal purchase qualifies."
+    },
+    {
+      "id": "q08",
+      "category": "customer_points",
+      "keywords": ["referral", "refer friend", "bonus points", "invite", "share code", "referral code"],
+      "question": "Can I earn bonus points by referring friends?",
+      "answer": "Yes. Share your unique referral link from your dashboard. When your friend registers and shops, you both earn bonus points."
+    },
+    {
+      "id": "q09",
+      "category": "customer_points",
+      "keywords": ["how to redeem", "use points", "spend points", "redeem points", "how do i redeem"],
+      "question": "How do I redeem my points?",
+      "answer": "At any partner merchant checkout, ask them to apply your points. They scan your QR or enter your mobile number, enter the bill amount, and the discount is applied instantly."
+    },
+    {
+      "id": "q10",
+      "category": "customer_points",
+      "keywords": ["how much discount", "100 points value", "points value", "worth", "₹10 discount"],
+      "question": "How much discount do 100 points give me?",
+      "answer": "100 points = ₹10 discount. Every point is worth ₹0.10."
+    },
+    {
+      "id": "q11",
+      "category": "customer_points",
+      "keywords": ["minimum points", "minimum redemption", "minimum to redeem", "least points"],
+      "question": "What is the minimum points required to redeem?",
+      "answer": "You need a minimum of 100 points (worth ₹10) to redeem at any merchant."
+    },
+    {
+      "id": "q12",
+      "category": "customer_points",
+      "keywords": ["different store", "any store", "other store", "cross merchant", "redeem anywhere", "earn one redeem another"],
+      "question": "Can I earn at one store and redeem at a different store?",
+      "answer": "Yes — that is the core benefit of SkillXT. Earn points at any partner merchant and redeem them at any other partner merchant in the network."
+    },
+    {
+      "id": "q13",
+      "category": "customer_points",
+      "keywords": ["fee on redemption", "charge on redeem", "customer fee redeem", "platform fee"],
+      "question": "Is there any fee when I redeem points?",
+      "answer": "There is no fee charged to you as a customer. A 5% platform fee is deducted internally, but you receive the full discount shown on your bill."
+    },
+    {
+      "id": "q14",
+      "category": "customer_account",
+      "keywords": ["how to register", "how to sign up", "create account", "new account", "join as customer", "register"],
+      "question": "How do I register?",
+      "answer": "Scan a SkillXT partner merchant's QR code, or go to the SkillXT platform directly. Enter your mobile number, verify the OTP, set your password, and your account is ready."
+    },
+    {
+      "id": "q15",
+      "category": "customer_points",
+      "keywords": ["check balance", "points balance", "my balance", "how many points i have", "wallet balance"],
+      "question": "How do I check my points balance?",
+      "answer": "Log in to your SkillXT customer dashboard. Your current points balance, cash value, and full transaction history are visible on the home screen."
+    },
+    {
+      "id": "q16",
+      "category": "customer_points",
+      "keywords": ["expire", "expiry", "do points expire", "how long valid", "1 year", "one year"],
+      "question": "Do points expire? After how long?",
+      "answer": "Yes, points expire 1 year (365 days) from the date they were earned. You'll see a warning on your dashboard 30 days before any points are about to expire."
+    },
+    {
+      "id": "q17",
+      "category": "customer_points",
+      "keywords": ["full bill", "pay full", "20 percent", "cap", "maximum discount", "how much of bill"],
+      "question": "Can I use points to pay the full bill or only part of it?",
+      "answer": "Points can cover a maximum of 20% of your bill value. For example, on a ₹500 bill, the maximum points discount is ₹100 regardless of how many points you have."
+    },
+    {
+      "id": "q18",
+      "category": "general",
+      "keywords": ["find merchants", "where to shop", "partner merchants", "merchant list", "nearby merchants", "find partners", "map"],
+      "question": "How do I find which merchants accept SkillXT?",
+      "answer": "Open your customer dashboard and go to the Find Partners section. It shows all active partner merchants near you on a map with their details, categories, and addresses."
+    },
+    {
+      "id": "q19",
+      "category": "customer_account",
+      "keywords": ["lost phone", "lost mobile", "new phone", "change phone", "phone lost"],
+      "question": "What happens to my points if I lose my phone?",
+      "answer": "Your points are completely safe. They are stored in your account, not on your phone. Log in from any device using your mobile number and password to access your wallet."
+    },
+    {
+      "id": "q20",
+      "category": "support",
+      "keywords": ["contact support", "how to contact", "reach support", "get help", "support team"],
+      "question": "How do I contact support if I have a problem?",
+      "answer": "Log in to your dashboard and use the complaint/feedback option. Submit your issue with details and our team will respond promptly."
+    },
+    {
+      "id": "q21",
+      "category": "general",
+      "keywords": ["benefits", "why join", "should i join", "why use skillxt", "merits", "what do i get", "is it worth it", "why skillxt", "kyu join karu", "faida kya hai", "faida", "fayda", "fayda kya", "fyda", "what's the benefit", "what is the benefit", "joining benefits", "benefits of joining", "join karu", "join karna"],
+      "question": "What are the benefits of joining SkillXT as a customer?",
+      "answer": "Great question! 😊\n\nIf you're a **Customer** 🛍️:\n✅ Earn points on every purchase (₹10 = 1 point)\n✅ Redeem at ANY SkillXT partner store — not just one shop\n✅ Real cashback: 100 points = ₹10 off your bill\n✅ Free to join, no card needed, works on your phone\n→ You're already shopping — now get paid for it!\n\nIf you're a **Business Owner / Merchant** 🏪:\n✅ Get customers coming back — loyalty that actually works\n✅ Compete with big brands with your own reward program\n✅ Just ₹399/month — no commission, no per-transaction fee\n✅ Full setup support + 1,000 bonus points on activation\n→ Less than ₹15/day to build a loyal customer base!\n\nWhich one are you — Customer or Merchant? I'll tell you exactly how to get started! 🚀"
+    },
+    {
+      "id": "q22",
+      "category": "merchant",
+      "keywords": ["merchant benefit", "benefit my business", "benefits for merchant", "merchant faida", "retailer benefit", "shop owner benefit", "business benefit"],
+      "question": "What is SkillXT and how does it benefit my business?",
+      "answer": "Here's why 500+ local businesses trust SkillXT 🏪💪\n\n✅ Customers come back to YOU — points are redeemable at your store\n✅ Build a loyal base without discounting your margins\n✅ Professional loyalty program for just ₹399/month\n✅ No commission. No per-transaction fee. Ever.\n✅ Real customer data — see who's buying and how often\n✅ 1,000 welcome points on your first activation — on us!\n\nBig malls spend lakhs on retention. You can do it for ₹15/day.\n\n👉 Ready to activate? Type 'register as merchant' or visit our sign-up page!"
+    },
+    {
+      "id": "q23",
+      "category": "merchant",
+      "keywords": ["why join as merchant", "reason to join", "should i join as merchant", "is skillxt worth it for business", "kyu join karu merchant"],
+      "question": "Why should I join SkillXT as a merchant?",
+      "answer": "Still thinking? Here's the honest truth 👇\n\nYour competitors are losing customers to malls and apps that offer rewards. SkillXT puts that same power in YOUR hands — at a fraction of the cost.\n\n💡 The math is simple:\n→ 1 extra returning customer/week = recovered cost in days\n→ Loyal customers spend 67% more than new ones\n→ SkillXT setup = under 10 minutes\n\nNo long contracts. Cancel anytime. But merchants who join rarely leave — because it works.\n\n🚀 Type 'join as merchant' and let's get your store live today!"
+    },
+    {
+      "id": "q24",
+      "category": "merchant",
+      "keywords": ["merchant cost", "how much to join", "merchant fee", "subscription cost", "₹399", "399 per month"],
+      "question": "How much does it cost to join SkillXT as a merchant?",
+      "answer": "₹399 per month flat subscription fee. No setup cost, no hidden charges. As a promotional offer, you also receive 1,000 free reward points on your first activation."
+    },
+    {
+      "id": "q25",
+      "category": "merchant",
+      "keywords": ["monthly fee", "subscription plan", "plans available", "merchant subscription", "what's included in plan"],
+      "question": "Is there a monthly subscription fee? What plans are available?",
+      "answer": "Yes, ₹399/month. Currently one standard plan covering all core features — points issuance, redemption, dashboard, analytics, and ad platform (ads billed separately)."
+    },
+    {
+      "id": "q26",
+      "category": "merchant",
+      "keywords": ["fund wallet", "add points", "points wallet", "how to get points", "merchant wallet", "top up"],
+      "question": "How do I fund my points wallet as a merchant?",
+      "answer": "Purchase a points top-up package from your merchant dashboard. Upload your payment screenshot as proof. Admin confirms and your wallet is credited. Packages and pricing are shown on your dashboard."
+    },
+    {
+      "id": "q27",
+      "category": "merchant",
+      "keywords": ["pre-purchase", "top-up packages", "points packages", "starter growth pro", "bulk points"],
+      "question": "Do I have to pre-purchase points? What are the top-up packages?",
+      "answer": "Yes, points are pre-purchased. Starter, Growth, and Pro packages give you a bulk points balance to issue to customers. Package details and pricing are shown on your merchant dashboard."
+    },
+    {
+      "id": "q28",
+      "category": "merchant",
+      "keywords": ["how customers earn", "issue points", "award points", "customer purchase at my store"],
+      "question": "How do my customers earn points at my store?",
+      "answer": "When a customer pays, open your merchant dashboard, go to Issue Points, scan their QR code or enter their mobile number, enter the bill amount, and points are calculated and credited to them automatically."
+    },
+    {
+      "id": "q29",
+      "category": "merchant",
+      "keywords": ["customer makes purchase", "what to do purchase", "process sale", "issue points steps"],
+      "question": "What do I need to do when a customer makes a purchase?",
+      "answer": "Open your SkillXT merchant dashboard → Issue Points → scan customer QR or enter their mobile number → enter purchase amount → confirm. Done in under 30 seconds."
+    },
+    {
+      "id": "q30",
+      "category": "merchant",
+      "keywords": ["customer redemption", "how customer redeem", "redeem at my store", "process redemption"],
+      "question": "How does a customer redeem points at my store?",
+      "answer": "Customer requests redemption at checkout. Open Redeem Points on your dashboard, scan their QR or enter their mobile, enter the bill amount, and the system calculates the maximum discount. Confirm and the discount is applied instantly."
+    },
+    {
+      "id": "q31",
+      "category": "merchant",
+      "keywords": ["deduct points", "give discount", "apply points discount", "redemption process steps"],
+      "question": "What is the process to deduct points and give a discount?",
+      "answer": "Dashboard → Redeem Points → scan or enter customer details → enter invoice amount → system shows discount amount → confirm. Points are deducted from the customer's wallet and discount applied to their bill."
+    },
+    {
+      "id": "q32",
+      "category": "merchant",
+      "keywords": ["discount per point", "merchant point value", "how much discount per point"],
+      "question": "How much discount does a customer get per point?",
+      "answer": "100 points = ₹10 discount. Every point is worth ₹0.10."
+    },
+    {
+      "id": "q33",
+      "category": "merchant",
+      "keywords": ["cap on discount", "maximum discount bill", "20 percent cap", "redemption cap", "max discount"],
+      "question": "Is there a cap on discount per bill?",
+      "answer": "Yes. Maximum 20% of the bill value can be covered by points redemption. On a ₹500 bill, maximum discount is ₹100 regardless of how many points the customer has. This protects your margins."
+    },
+    {
+      "id": "q34",
+      "category": "merchant",
+      "keywords": ["new customers", "bring customers", "acquire customers", "customer acquisition", "grow business"],
+      "question": "Will SkillXT bring me new customers?",
+      "answer": "Yes, in two ways. First, customers who earned points at other partner merchants can discover and visit your store to redeem them. Second, your merchant onboarding QR attracts new registrations directly to your business."
+    },
+    {
+      "id": "q35",
+      "category": "merchant",
+      "keywords": ["customers from other merchants", "shared customers", "network customers", "cross merchant customers"],
+      "question": "Can customers from other merchants come and spend at my store?",
+      "answer": "Yes — this is the core advantage of the network. A customer who earned points at a grocery store can walk into your restaurant and redeem them. You get new footfall at zero acquisition cost."
+    },
+    {
+      "id": "q36",
+      "category": "merchant",
+      "keywords": ["customers find my store", "merchant visibility", "how to be discovered", "find my shop"],
+      "question": "How do customers find my store on SkillXT?",
+      "answer": "Through the Find Partners section on every customer's dashboard — a map-based directory showing all active partner merchants with location, category, and store details."
+    },
+    {
+      "id": "q37",
+      "category": "merchant",
+      "keywords": ["marketing", "visibility", "ads on skillxt", "advertise", "promotions"],
+      "question": "What marketing or visibility does SkillXT give me?",
+      "answer": "Your store appears in the merchant directory visible to all SkillXT customers. You can also run advertisements that appear on customer dashboards — targeted, affordable, and direct."
+    },
+    {
+      "id": "q38",
+      "category": "merchant",
+      "keywords": ["register business", "how to register merchant", "merchant signup", "how to join as merchant", "business registration"],
+      "question": "How do I register my business on SkillXT?",
+      "answer": "Go to the SkillXT platform, select Merchant Signup, fill in your business details — name, category, address, contact — and submit. Admin reviews and approves your application."
+    },
+    {
+      "id": "q39",
+      "category": "merchant",
+      "keywords": ["how long approval", "approval time", "when approved", "24 hours", "48 hours"],
+      "question": "How long does merchant approval take?",
+      "answer": "Typically within 24–48 hours. You will be notified once approved and can activate your subscription and start issuing points the same day."
+    },
+    {
+      "id": "q40",
+      "category": "merchant",
+      "keywords": ["merchant qr code", "get qr code", "my qr", "where is my qr"],
+      "question": "How do I get my merchant QR code?",
+      "answer": "Your unique merchant QR code is generated automatically upon approval. Find it on your merchant dashboard — use it to onboard new customers and for display at your store."
+    },
+    {
+      "id": "q41",
+      "category": "merchant",
+      "keywords": ["start immediately", "use right away", "after signup", "can i start now"],
+      "question": "Can I start using the system immediately after signup?",
+      "answer": "Not immediately — your account goes through admin approval first. Once approved and subscription activated, you can start issuing points the same day."
+    },
+    {
+      "id": "q42",
+      "category": "merchant",
+      "keywords": ["subscription includes", "what do i get", "subscription features", "included in plan"],
+      "question": "What is included in the monthly subscription?",
+      "answer": "Full access to points issuance, redemption, merchant dashboard, customer analytics, advertisement platform, complaint management, and admin support."
+    },
+    {
+      "id": "q43",
+      "category": "merchant",
+      "keywords": ["subscription expires", "what if expires", "when subscription ends", "expired subscription"],
+      "question": "What happens when my subscription expires?",
+      "answer": "You enter a 15-day grace period where you can still operate normally. After the grace period ends, points operations are blocked until you renew."
+    },
+    {
+      "id": "q44",
+      "category": "merchant",
+      "keywords": ["grace period", "15 days grace", "after expiry", "renew after expiry"],
+      "question": "Is there a grace period after subscription expiry?",
+      "answer": "Yes — 15 days grace period after expiry. Renew within this window to avoid any disruption to your points operations."
+    },
+    {
+      "id": "q45",
+      "category": "merchant",
+      "keywords": ["track points", "transaction history", "points history", "issued redeemed", "view transactions"],
+      "question": "How do I track points issued and redeemed?",
+      "answer": "Your merchant dashboard shows complete transaction history — every points issuance, redemption, and transfer with date, amount, and customer details."
+    },
+    {
+      "id": "q46",
+      "category": "merchant",
+      "keywords": ["which customers", "customer visits", "customer insights", "customer history", "who visited my store"],
+      "question": "How do I see which customers visited my store?",
+      "answer": "The Customer Insights section on your dashboard shows all customers who transacted at your store — visit count, points issued, last visit date, and spending patterns."
+    },
+    {
+      "id": "q47",
+      "category": "merchant",
+      "keywords": ["run ads", "create ad", "advertisement", "promote my store", "ad packages", "sponsored"],
+      "question": "Can I run my own promotions or ads on SkillXT?",
+      "answer": "Yes. Create advertisements from your merchant dashboard. Choose a package (Starter ₹499/7 days, Growth ₹999/15 days, Premium ₹1,999/30 days), upload your creative, set dates, and ads appear on customer dashboards after admin approval."
+    },
+    {
+      "id": "q48",
+      "category": "support",
+      "keywords": ["points not credited", "missing points", "redemption failed", "dispute transaction", "wrong points"],
+      "question": "What if a customer claims points were not credited or redemption failed?",
+      "answer": "The customer can submit a complaint from their dashboard, and you can also raise it from your merchant dashboard. Admin reviews the transaction log and manually corrects if the error is confirmed."
+    },
+    {
+      "id": "q49",
+      "category": "support",
+      "keywords": ["fake points", "fraud points", "fraudulent redemption", "cheat points", "manipulated balance"],
+      "question": "What if a customer tries to redeem fake or fraudulent points?",
+      "answer": "This is not possible. All points are verified against the live ledger before any redemption is processed. Fake or manipulated balances are automatically rejected by the system."
+    },
+    {
+      "id": "q50",
+      "category": "merchant",
+      "keywords": ["renewal bonus", "bonus on renewal", "1000 points renewal", "monthly bonus", "points on renew"],
+      "question": "Do I get bonus points on subscription renewal?",
+      "answer": "Yes. You receive 1,000 bonus points on your first activation and 1,000 bonus points on every monthly renewal — automatically credited to your wallet."
+    }
+  ]
+}

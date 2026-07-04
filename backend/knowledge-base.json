@@ -1,0 +1,3555 @@
+[
+  {
+    "id": 1,
+    "title": "SkillXT Reward Program Platform Overview",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To provide an overview of the SkillXT Reward Program platform, its core components, user roles, and value proposition.",
+    "keyTopics": [
+      "Digital loyalty platform for customer-merchant engagement",
+      "Three distinct user roles: Customer, Merchant, Super Admin",
+      "Points-based reward system with earning, redemption, and transfer capabilities",
+      "QR code-based customer identification at merchants",
+      "Subscription-based merchant access with tiered plans",
+      "Real-time notification system via Server-Sent Events (SSE)",
+      "Comprehensive audit logging for all platform actions",
+      "PostgreSQL database with Prisma ORM backend"
+    ],
+    "exampleQuestions": [
+      "What is SkillXT Reward Program?",
+      "SkillXT platform ka overview kya hai?",
+      "How does the loyalty program work?",
+      "What are the different user roles in SkillXT?",
+      "Can I use SkillXT as both a customer and merchant?",
+      "What is the main benefit of SkillXT for merchants?",
+      "How do I get started with SkillXT?",
+      "Is SkillXT available in my city?",
+      "What kind of businesses can join SkillXT?",
+      "How secure is my data on SkillXT?"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "SkillXT Platform Architecture & Technology Stack",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To describe the technical architecture and technology stack used in the SkillXT Reward Program platform.",
+    "keyTopics": [
+      "Node.js backend with Express.js framework",
+      "PostgreSQL database with Prisma ORM for data modeling",
+      "JWT-based authentication with access and refresh tokens",
+      "Server-Sent Events (SSE) for real-time notifications",
+      "React frontend for customer and merchant dashboards",
+      "RESTful API endpoints under /api directory",
+      "File upload handling via Multer for payment screenshots",
+      "ExcelJS for report generation and exports"
+    ],
+    "exampleQuestions": [
+      "What technology stack powers SkillXT?",
+      "Backend mein kaunsa database use hai?",
+      "How does authentication work in SkillXT?",
+      "Can I integrate SkillXT with my existing POS system?",
+      "What APIs are available for merchants?",
+      "How are real-time notifications implemented?",
+      "Is the platform built on microservices or monolith?",
+      "What is the database schema design approach?",
+      "How is password security handled?",
+      "Can I export transaction data?"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "User Roles & Permissions in SkillXT",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain the three user roles in SkillXT, their permissions, and access levels across the platform.",
+    "keyTopics": [
+      "**super_admin**: Full platform access, merchant/customer management, reward settings, subscriptions, complaints",
+      "**customer**: Profile management, points balance, ledger view, redemption, QR code access",
+      "**merchant**: Points issuance, redemption, transfer, customer lookup, advertisements, subscription management",
+      "Role-based access enforced via middleware authorization",
+      "Each role has dedicated dashboard endpoints",
+      "JWT tokens include role for authorization checks"
+    ],
+    "exampleQuestions": [
+      "How many user roles exist in SkillXT?",
+      "Merchant role mein kya sakte hain?",
+      "Can a customer become a merchant?",
+      "What permissions does super admin have?",
+      "How is role verification done?",
+      "Can I change my role after registration?",
+      "Do merchants need admin approval?",
+      "What features are customer-only?",
+      "How does the merchant dashboard differ from admin?",
+      "Can roles be shared across accounts?"
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Customer Role Features & Capabilities",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To detail all features and capabilities available to customers within the SkillXT platform.",
+    "keyTopics": [
+      "Customer registration with OTP verification",
+      "Unique referral code generation (SKXT + 4 letters + 4 digits)",
+      "QR code for identification (SKILLXT-{customerId})",
+      "Points balance access via /api/customer/balance",
+      "Points earning through merchant purchases",
+      "Points redemption at merchant locations",
+      "Points transfer from merchants to customers",
+      "Profile management with personal details",
+      "Notification preferences and SSE streaming",
+      "Complaint submission capability"
+    ],
+    "exampleQuestions": [
+      "What can customers do in SkillXT?",
+      "Customer ka profile kahan update kare?",
+      "How do I use my QR code at merchants?",
+      "Can customers transfer points to each other?",
+      "What is my referral code used for?",
+      "How do I check my points balance?",
+      "Where can I see my transaction history?",
+      "How do I get notifications from SkillXT?",
+      "Can I change my mobile number?",
+      "How do I submit feedback or complaints?"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Merchant Role Features & Capabilities",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To detail all features and capabilities available to merchants within the SkillXT platform.",
+    "keyTopics": [
+      "Merchant registration (admin-created or self-signup)",
+      "QR code and mobile number customer lookup",
+      "Points earning issuance to customers",
+      "Points redemption processing",
+      "Points transfer to customers",
+      "Merchant wallet balance tracking",
+      "Advertisement creation and management",
+      "Subscription plan selection and renewal",
+      "Payment screenshot upload for approval",
+      "Complaint submission capability",
+      "Customer insights and analytics"
+    ],
+    "exampleQuestions": [
+      "What features are available for merchants?",
+      "Merchant ka dashboard kahan hai?",
+      "How do I issue points to customers?",
+      "Can I redeem points at my own store?",
+      "How does the merchant wallet work?",
+      "What advertisements can I create?",
+      "How do I manage my subscription?",
+      "Can I transfer points to customers?",
+      "Where can I see my daily statistics?",
+      "How do I upload payment proof?"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Super Admin Role & Administrative Functions",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To describe all administrative functions available to super admins for platform management.",
+    "keyTopics": [
+      "Full merchant and customer CRUD operations",
+      "Merchant status management (suspend/deactivate/reactivate)",
+      "Merchant password reset capability",
+      "Reward settings configuration (pointsPerRupee, rupeesPerPoint, etc.)",
+      "Subscription plan management",
+      "Transaction reversal and audit",
+      "Complaint management and status updates",
+      "Advertisement approval/rejection",
+      "Daily and monthly reports generation",
+      "Excel/CSV export functionality",
+      "Platform analytics and customer intelligence"
+    ],
+    "exampleQuestions": [
+      "What can super admin do in SkillXT?",
+      "How do I approve a merchant application?",
+      "Where can I configure reward settings?",
+      "Can I reverse a completed transaction?",
+      "How do I generate reports?",
+      "What analytics are available?",
+      "How do I manage subscription plans?",
+      "Can I deactivate merchant accounts?",
+      "Where is the audit log accessible?",
+      "How do I export transaction data?"
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Customer Registration Process",
+    "targetUser": "Customer",
+    "purpose": "To explain the step-by-step registration process for new customers joining the SkillXT platform.",
+    "keyTopics": [
+      "POST /api/auth/register endpoint",
+      "OTP verification required before registration completion",
+      "Name, mobile, email, and password fields",
+      "Optional referral code for bonus points",
+      "Optional merchant code for signup attribution",
+      "Unique referral code auto-generated (SKXT pattern)",
+      "QR code auto-generated (SKILLXT-{customerId})",
+      "Duplicate mobile prevention at registration",
+      "Unique email validation across all users"
+    ],
+    "exampleQuestions": [
+      "How do I register as a customer?",
+      "Customer registration ka process kya hai?",
+      "Is OTP required for registration?",
+      "Can I sign up without a referral code?",
+      "What happens after successful registration?",
+      "Do I get bonus points on signup?",
+      "How is my QR code generated?",
+      "Can I register with the same mobile as another user?",
+      "What email format is accepted?",
+      "Is password mandatory during registration?"
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Customer Login Authentication",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how customers authenticate and maintain sessions on the SkillXT platform.",
+    "keyTopics": [
+      "POST /api/auth/login endpoint accepts mobile or email",
+      "JWT access token (15 minutes expiry)",
+      "JWT refresh token (7 days expiry)",
+      "Password verification using bcrypt comparison",
+      "User must be active (isActive=true) to login",
+      "Failed login attempts logged to audit trail",
+      "Refresh token rotation on each use",
+      "Token reuse detection for security",
+      "All refresh tokens invalidated on password change"
+    ],
+    "exampleQuestions": [
+      "How do I login as a customer?",
+      "Login mein mobile aur email dono kaise use kare?",
+      "What is JWT token expiry time?",
+      "Can I stay logged in for weeks?",
+      "What happens after 15 minutes of inactivity?",
+      "How are failed logins tracked?",
+      "What is token reuse detection?",
+      "Do I need to re-login after password change?",
+      "Can I use refresh tokens on multiple devices?",
+      "How secure is the login process?"
+    ]
+  },
+  {
+    "id": 9,
+    "title": "OTP Verification System",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain the OTP-based verification system used for registration, login, and profile updates.",
+    "keyTopics": [
+      "OTP required for customer registration",
+      "OTP for password reset requests",
+      "OTP for mobile number changes",
+      "Unique constraint on mobile+purpose combination",
+      "OTP records deleted immediately after successful verification",
+      "Development mode returns OTP in response for testing",
+      "Production mode sends OTP via email only",
+      "No SMS gateway integration in current implementation",
+      "OTP expiration handled via expiresAt field"
+    ],
+    "exampleQuestions": [
+      "How does OTP verification work?",
+      "OTP verify karne ke liye kya mangta hai?",
+      "Can I request OTP without email?",
+      "What happens after OTP is verified?",
+      "Is OTP valid for all time?",
+      "Can I use SMS instead of email?",
+      "How many times can I request OTP?",
+      "What if my OTP expires?",
+      "Is OTP required for every login?",
+      "How is OTP implemented for security?"
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Getting Started with SkillXT",
+    "targetUser": "Customer, Merchant",
+    "purpose": "To provide a step-by-step guide for new users to begin using the SkillXT platform.",
+    "keyTopics": [
+      "Customer self-registration via OTP flow",
+      "QR code availability after registration",
+      "Merchant discovery via customer mobile app",
+      "Merchant onboarding with admin approval",
+      "Getting subscription plan after approval",
+      "First transaction processing for merchants",
+      "Points earning and redemption basics",
+      "Profile completion for better experience",
+      "Referral program activation on signup"
+    ],
+    "exampleQuestions": [
+      "How do I start using SkillXT?",
+      "New user kaise register kare?",
+      "Merchant kaise onboard kare?",
+      "What should I do after registration?",
+      "How do I find nearby merchants?",
+      "What is subscription plan?",
+      "Can I earn points without purchase?",
+      "How do I complete my profile?",
+      "Merchant application approval time?",
+      "Is wallet setup required for customers?"
+    ]
+  },
+  {
+    "id": 11,
+    "title": "Customer Profile Management",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how customers can view and manage their personal profile information.",
+    "keyTopics": [
+      "GET /api/customer/profile returns full profile",
+      "PUT /api/customer/profile updates personal details",
+      "Editable fields: name, email, city, pinCode, area, occupation",
+      "JSON-stored favouriteCategories array",
+      "Notification opt-in flag",
+      "Preferred language selection (English/Hindi/Punjabi/Other)",
+      "Communication preference (email/whatsapp/sms/all)",
+      "Date of birth and anniversary date storage",
+      "Profile photo path storage",
+      "Referral code and referrer information display"
+    ],
+    "exampleQuestions": [
+      "How do I update my customer profile?",
+      "Profile details kaise change kare?",
+      "Can I add my favourite categories?",
+      "How do I change notification settings?",
+      "Is profile photo mandatory?",
+      "What languages are supported?",
+      "How do I update my address?",
+      "Can I hide my profile from merchants?",
+      "Where is my referral code shown?",
+      "How do I set dietary preferences?"
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Customer Points Overview",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how the points system works for customers, including earning, redemption, and balance tracking.",
+    "keyTopics": [
+      "Points earned via merchant purchase transactions",
+      "Points redeemed for discounts at merchants",
+      "Points transferred from merchant wallets",
+      "Dynamic balance calculation from PointsLedger",
+      "Per-transaction expiry dates (default 365 days)",
+      "No cached balance field on Customer model",
+      "GET /api/customer/balance endpoint",
+      "Points summary includes lifetime earned/redeemed",
+      "Milestone bonuses for cumulative spending",
+      "Referral bonus points (20 points each)"
+    ],
+    "exampleQuestions": [
+      "How do customer points work?",
+      "Points ka balance kahan check kare?",
+      "How many points needed to redeem?",
+      "Do points expire automatically?",
+      "Kitna time tak valid rehte hain points?",
+      "Can I check lifetime points earned?",
+      "What are milestone bonuses?",
+      "How do I earn referral points?",
+      "Points transfer possible hai?",
+      "Where are points stored?"
+    ]
+  },
+  {
+    "id": 13,
+    "title": "Customer Mobile Number Update",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain the secure process for customers to update their registered mobile number.",
+    "keyTopics": [
+      "Two-step OTP process for mobile change",
+      "POST /api/customer/profile/mobile/request-otp sends to current email",
+      "PUT /api/customer/profile/mobile verifies OTP and updates",
+      "New mobile checked against existing users",
+      "All refresh tokens invalidated after update",
+      "Email required on file before mobile change",
+      "OTP record deleted after successful verification",
+      "Same Prisma $transaction pattern for data consistency"
+    ],
+    "exampleQuestions": [
+      "How do I change my mobile number?",
+      "New mobile number update ke liye OTP kyun chahiye?",
+      "Can I change mobile without email?",
+      "What if my new number exists already?",
+      "Will I be logged out after mobile change?",
+      "Mobile change kaise verify kare?",
+      "OTP kahan receive hoga?",
+      "How many attempts for mobile update?",
+      "Can admin change my mobile?",
+      "Will mobile change affect transactions?"
+    ]
+  },
+  {
+    "id": 14,
+    "title": "Password Management & Reset",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain password management, change, and reset functionality for user accounts.",
+    "keyTopics": [
+      "PUT /api/customer/profile/password requires old password verification",
+      "Minimum 6 characters password length",
+      "All refresh tokens revoked on password change",
+      "POST /api/auth/request-reset for reset OTP",
+      "POST /api/auth/reset-password for actual reset",
+      "Generic message to prevent account enumeration",
+      "Password hashed with bcrypt before storage",
+      "Admin can reset any customer password",
+      "Admin reset also revokes all user tokens",
+      "CUSTOMER_PASSWORD_RESET audit log entry"
+    ],
+    "exampleQuestions": [
+      "How do I change my password?",
+      "Password reset kaise kare?",
+      "What is the password requirement?",
+      "Will I be logged out after password change?",
+      "Can admin reset my password?",
+      "Password reset ke liye OTP kyun?",
+      "How is password stored securely?",
+      "Can I reset without mobile access?",
+      "How many reset attempts allowed?",
+      "What happens to my sessions after reset?"
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Platform Security & Data Protection",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To outline the security measures implemented in the SkillXT platform to protect user data.",
+    "keyTopics": [
+      "Passwords hashed with bcrypt before storage",
+      "JWT secret required for server startup",
+      "Refresh token hashed lookup with reuse detection",
+      "All user tokens revoked on suspicious reuse",
+      "Role-based middleware authorization",
+      "Input validation via express-validator",
+      "Rate limiting on auth endpoints",
+      "Audit logging for all critical actions",
+      "No sensitive data in error responses",
+      "Account status (isActive) checked on login"
+    ],
+    "exampleQuestions": [
+      "How secure is SkillXT platform?",
+      "Password kaise store kiya jata hai?",
+      "What is JWT security?",
+      "How are unauthorized access prevented?",
+      "Can tokens be reused?",
+      "Is my data encrypted?",
+      "How are passwords validated?",
+      "What happens on suspicious login?",
+      "Are audit logs maintained?",
+      "How secure are my transactions?"
+    ]
+  },
+  {
+    "id": 16,
+    "title": "Account Status & Verification",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain the account status lifecycle and verification requirements for users.",
+    "keyTopics": [
+      "User and Customer/Merchant isActive boolean field",
+      "Users must have isActive=true to login",
+      "Customers with inactive accounts rejected on earn/redeem",
+      "Merchants with inactive accounts blocked",
+      "Admin can toggle customer isActive via PATCH endpoint",
+      "Status changes trigger refresh token revocation",
+      "Merchant status includes pending/approved/active/suspended/rejected",
+      "Merchant subscription status separate from account status",
+      "Audit logs created for all status changes"
+    ],
+    "exampleQuestions": [
+      "What is account status in SkillXT?",
+      "Inactive account se login possible hai?",
+      "Admin can account deactivate kare?",
+      "Merchant status kya hota hai?",
+      "How do I reactivate my account?",
+      "What happens after deactivation?",
+      "Is email verification required?",
+      "Can I reactivate deactivated account?",
+      "How is merchant approval done?",
+      "What causes account suspension?"
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Merchant Account Status Management",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain merchant account status lifecycle including approval, suspension, and deactivation.",
+    "keyTopics": [
+      "MerchantStatus enum: pending, approved, payment_pending, active, suspended, deactivated, rejected",
+      "Default status is pending on self-registration",
+      "Admin approval required to move to payment_pending",
+      "Payment screenshot upload moves to payment_pending",
+      "Admin confirms payment to set active status",
+      "Suspend action sets isActive=false temporarily",
+      "Deactivate action sets isActive=false permanently",
+      "Deactivated merchants cannot be reactivated",
+      "Admin actions logged via audit trail",
+      "Status changes trigger token revocation"
+    ],
+    "exampleQuestions": [
+      "How does merchant account status work?",
+      "Merchant approval ke liye kya chahiye?",
+      "Can I reactivate after deactivation?",
+      "What is grace period for merchants?",
+      "How do I upload payment proof?",
+      "Merchant reject hone ka reason kya?",
+      "Can admin suspend my account?",
+      "Active status se kaunsa feature milta hai?",
+      "How long approval takes?",
+      "What happens after payment confirmation?"
+    ]
+  },
+  {
+    "id": 18,
+    "title": "Merchant Registration Process",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain the two pathways for merchant registration on the SkillXT platform.",
+    "keyTopics": [
+      "Admin-created merchants via POST /api/admin/merchants",
+      "Self-registration via POST /api/auth/merchant-signup",
+      "Self-registration creates pending status merchant",
+      "Admin approval required for pending merchants",
+      "Payment screenshot upload after approval",
+      "Merchant code auto-generated (SKXT + 4 letters + 4 digits)",
+      "No points balance on self-registration",
+      "1000 points bonus added on subscription purchase",
+      "Business name, owner name, mobile, email, category required",
+      "Duplicate mobile/email prevention"
+    ],
+    "exampleQuestions": [
+      "How do I register my business as merchant?",
+      "Merchant registration ka process kya hai?",
+      "Can I register directly without admin?",
+      "What documents are required?",
+      "How long takes merchant approval?",
+      "What happens after registration?",
+      "Can admin create my merchant account?",
+      "Is payment mandatory during signup?",
+      "What business categories are supported?",
+      "How do I get my merchant code?"
+    ]
+  },
+  {
+    "id": 19,
+    "title": "Merchant Login Authentication",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain how merchants authenticate and access their dashboard on the SkillXT platform.",
+    "keyTopics": [
+      "POST /api/auth/login works for merchants",
+      "JWT access and refresh tokens generated",
+      "Same token format as customer login",
+      "Merchant auto-login after admin creation",
+      "Merchant auto-login for self-registration with active status",
+      "isActive check before login allowed",
+      "Merchant must be active AND approved for full access",
+      "Profile endpoint accessible before active status",
+      "requireActiveMerchant middleware for sensitive endpoints",
+      "Login audit trail for merchants"
+    ],
+    "exampleQuestions": [
+      "How do merchants login to SkillXT?",
+      "Merchant login mein kya credentials chahiye?",
+      "Can I login after registration?",
+      "What if my account is not approved?",
+      "How long does merchant login last?",
+      "Can I use refresh tokens?",
+      "Is login secure for merchants?",
+      "What happens on failed login?",
+      "Can admin reset my password?",
+      "How many login attempts allowed?"
+    ]
+  },
+  {
+    "id": 20,
+    "title": "Merchant Wallet Management",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain the merchant points wallet system for managing earned points and performing operations.",
+    "keyTopics": [
+      "Merchant.pointsBalance field stores current wallet points",
+      "Default 0 balance on registration",
+      "1000 points added on initial subscription purchase",
+      "Points decremented when issuing earn transactions",
+      "Points decremented when transferring to customers",
+      "Atomic balance check-and-decrement prevents overspend",
+      "No separate ledger entries for merchant (direct balance update)",
+      "Balance displayed on merchant dashboard",
+      "Low balance warnings via insufficient points errors",
+      "Top-up packages available (Starter/Growth/Pro)"
+    ],
+    "exampleQuestions": [
+      "What is merchant wallet in SkillXT?",
+      "Merchant wallet ka balance kahan check kare?",
+      "How do I add points to wallet?",
+      "Wallet se points kam hone par kya kare?",
+      "What are top-up packages?",
+      "Can I transfer wallet points?",
+      "How secure is wallet balance?",
+      "Do wallet points expire?",
+      "Can admin check my wallet?",
+      "What is the minimum wallet balance?"
+    ]
+  },
+  {
+    "id": 21,
+    "title": "Merchant Points Operations",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain how merchants perform points-related operations including earn, redeem, and transfer.",
+    "keyTopics": [
+      "POST /api/merchant/earn issues points to customers",
+      "POST /api/merchant/redeem processes customer redemptions",
+      "POST /api/merchant/transfer-points transfers to customers",
+      "Customer lookup via mobile or QR code",
+      "Atomic transaction processing with locks",
+      "Insufficient balance errors block operations",
+      "Audit logs for all points actions",
+      "Real-time SSE notifications on transfers",
+      "20% invoice cap on redemptions",
+      "Subscription status validated each transaction"
+    ],
+    "exampleQuestions": [
+      "How do I issue points to customers?",
+      "Merchant se points redeem kaise kare?",
+      "Can I transfer points to customers?",
+      "Points operation ke liye subscription chahiye?",
+      "What if customer has insufficient points?",
+      "How do I check customer balance?",
+      "Points operation ka audit trail hai?",
+      "Can I issue partial points?",
+      "What validation happens before transfer?",
+      "How is redemption capped?"
+    ]
+  },
+  {
+    "id": 22,
+    "title": "Admin Dashboard Overview",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To describe the admin dashboard features and key metrics available for platform monitoring.",
+    "keyTopics": [
+      "GET /api/admin/dashboard returns comprehensive metrics",
+      "Total customers and active customers counts",
+      "Total merchants and active merchants counts",
+      "Total transactions across platform",
+      "Points issued and redeemed statistics",
+      "Outstanding points liability calculation",
+      "Platform fee revenue aggregation",
+      "Points issued vs redeemed chart (30 days)",
+      "Top 7 merchants by transaction volume",
+      "Customer growth cumulative chart"
+    ],
+    "exampleQuestions": [
+      "What is in the admin dashboard?",
+      "Admin dashboard mein kya metrics hain?",
+      "Merchants count kaise check kare?",
+      "Points redemption statistics kahaan hai?",
+      "Monthly revenue kahaan dekhe?",
+      "Top merchants ka list kya hai?",
+      "Customer growth chart kya show karta hai?",
+      "Platform liability kya hota hai?",
+      "How often dashboard updates?",
+      "Can I export dashboard data?"
+    ]
+  },
+  {
+    "id": 23,
+    "title": "Merchant Management for Admins",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain the tools and processes available to admins for managing merchant accounts.",
+    "keyTopics": [
+      "GET /api/admin/merchants lists all merchants paginated",
+      "GET /api/admin/merchants/:id for merchant details",
+      "POST /api/admin/merchants creates new merchant",
+      "PUT /api/admin/merchants/:id updates merchant details",
+      "PATCH /api/admin/merchants/:id/status for status control",
+      "PATCH /api/admin/merchants/:id/approve for approval",
+      "PATCH /api/admin/merchants/:id/reject for rejection",
+      "PATCH /api/admin/merchants/:id/confirm-payment for payment",
+      "POST /api/admin/merchants/:id/reset-password",
+      "Status: suspend, deactivate, reactivate actions"
+    ],
+    "exampleQuestions": [
+      "How do I manage merchant accounts?",
+      "Merchant details kahaan update kare?",
+      "Can I approve merchant payments?",
+      "How do I reject a merchant?",
+      "Merchant suspend kaise kare?",
+      "Can I deactivate merchant accounts?",
+      "Merchant password reset kaise kare?",
+      "All merchants ka list kahaan hai?",
+      "Merchant approval ke baad kya hota hai?",
+      "Can I reactivate suspended merchant?"
+    ]
+  },
+  {
+    "id": 24,
+    "title": "Reward Settings Configuration",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain how administrators configure global reward settings for the platform.",
+    "keyTopics": [
+      "GET /api/admin/reward-settings retrieves current settings",
+      "PUT /api/admin/reward-settings updates all settings",
+      "pointsPerRupee: Earning rate (default 0.01, 100 Rs = 1 point)",
+      "rupeesPerPoint: Redemption rate (default 0.10, 100 points = 10 Rs)",
+      "minRedeemPoints: Minimum points to redeem (default 100)",
+      "pointsExpiryDays: Points validity period (default 365, max 3650)",
+      "redemptionFeePercent: Platform fee on redemptions (default 5%)",
+      "Validations enforced: min 0.0001 for rates, min 1 for minimum",
+      "Settings affect all new transactions",
+      "No retroactive changes to existing transactions",
+      "Settings history not maintained"
+    ],
+    "exampleQuestions": [
+      "How do I configure reward settings?",
+      "Points earning rate kaise change kare?",
+      "Redemption fee set kaise kare?",
+      "Minimum redemption points kya hai?",
+      "Points expiry days ka limit kya hai?",
+      "Can I set earning rate to zero?",
+      "Settings change affects existing transactions?",
+      "Default earning rate kya hai?",
+      "Redemption rate kaise calculate hoti hai?",
+      "Can I change expiry days?"
+    ]
+  },
+  {
+    "id": 25,
+    "title": "Database Models & Schema",
+    "targetUser": "Super Admin / Admin, Developer",
+    "purpose": "To provide an overview of the core database models used in the SkillXT platform.",
+    "keyTopics": [
+      "User model: Base auth table with mobile, email, password, role",
+      "Customer model: Profile, QR code, referral code, preferences",
+      "Merchant model: Business info, wallet balance, status, subscription",
+      "Transaction model: Earning, redemption, transfer, reversal records",
+      "PointsLedger model: Balance tracking with expiry dates",
+      "RewardSettings model: Global configuration values",
+      "MerchantSubscription model: Plan subscriptions with status",
+      "SubscriptionPlan model: Available plans (monthly/quarterly/annual)",
+      "OTPVerification and OTPAttempt for OTP management",
+      "AuditLog model for action tracking"
+    ],
+    "exampleQuestions": [
+      "SkillXT ke database models kya hain?",
+      "User model ka structure kya hai?",
+      "Customer QR code kahaan store hota hai?",
+      "Points ledger mein kya hota hai?",
+      "Transaction types kaunse hain?",
+      "Merchant wallet kya model hai?",
+      "Subscription plans kahaan defined hain?",
+      "OTP verification ka model kya hai?",
+      "Audit logs database mein kya store karte hain?",
+      "Points expiry kahaan track hota hai?"
+    ]
+  },
+  {
+    "id": 26,
+    "title": "Transaction Model & Fields",
+    "targetUser": "Super Admin / Admin, Merchant",
+    "purpose": "To explain the Transaction database model and all fields used to track points operations.",
+    "keyTopics": [
+      "TransactionType enum: earn, redeem, transfer, reversal, adjustment",
+      "TransactionStatus enum: completed, pending, failed, reversed",
+      "customerId: Reference to Customer",
+      "merchantId: Reference to Merchant",
+      "type: Operation type",
+      "invoiceAmount: Invoice value (for redemptions)",
+      "purchaseAmount: Purchase amount (for earn) or gross discount (for redeem)",
+      "platformFee: Calculated fee on redemptions",
+      "netAmount: Amount after fee deduction",
+      "points: Points involved in transaction",
+      "remarks: Human-readable description",
+      "status: Transaction status",
+      "reversedById and reversedAt for reversal tracking"
+    ],
+    "exampleQuestions": [
+      "Transaction model ka structure kya hai?",
+      "Transaction type kya hota hai?",
+      "What is purchaseAmount field?",
+      "How is platform fee stored?",
+      "Transaction reversal kaise track hota hai?",
+      "Invoice amount kya store karta hai?",
+      "Points transaction mein kya record hota hai?",
+      "Transaction status values kya hain?",
+      "Remarks field kya show karta hai?",
+      "Net amount kaise calculate hota hai?"
+    ]
+  },
+  {
+    "id": 27,
+    "title": "Points Top-Up for Merchants",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain how merchants can purchase additional points for their wallet through top-up packages.",
+    "keyTopics": [
+      "POST /api/merchant/topup/request creates top-up request",
+      "Package names: starter, growth, pro",
+      "Top-up requires pointsScreenshot upload",
+      "Status: pending, confirmed, rejected",
+      "Admin confirms top-up via PATCH endpoint",
+      "Points added to merchant.pointsBalance after confirmation",
+      "Top-up history available via GET /api/merchant/topup/history",
+      "No automatic payment gateway integration",
+      "Admin review required for confirmation",
+      "PointsTopUp table tracks all requests"
+    ],
+    "exampleQuestions": [
+      "How do I add points to my merchant wallet?",
+      "Point top-up kaise purchase kare?",
+      "Top-up package options kya hain?",
+      "Admin approval required hai?",
+      "Payment proof kya upload kare?",
+      "Top-up history kahaan check kare?",
+      "Points automatically add hote hain?",
+      "Kitne time mein top-up confirmed hota hai?",
+      "Can I cancel top-up request?",
+      "Top-up amount customizable hai?"
+    ]
+  },
+  {
+    "id": 28,
+    "title": "Merchant Subscription Management",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain merchant subscription plans, purchase, renewal, and status checking.",
+    "keyTopics": [
+      "Three subscription plans: monthly (399), quarterly (999), annual (3499)",
+      "Duration days: 30, 90, 365 respectively",
+      "GRACE_PERIOD_DAYS = 15 after subscription expiry",
+      "SubscriptionStatus enum: active, grace_period, expired, cancelled",
+      "Purchase creates MerchantSubscription record",
+      "1000 welcome points added on first subscription",
+      "Auto-renew not enabled by default",
+      "Renewal extends from current end date or now",
+      "Payment reference required for purchase/renewal",
+      "Admin can create/verify subscriptions directly"
+    ],
+    "exampleQuestions": [
+      "What subscription plans are available?",
+      "Merchants ke liye subscription kyun chahiye?",
+      "Monthly plan ka price kya hai?",
+      "Grace period se kya matlab hai?",
+      "Subscription kaise renew kare?",
+      "Welcome bonus points kya milte hain?",
+      "Auto-renewal available hai?",
+      "Payment reference kya hai?",
+      "Can I upgrade my plan?",
+      "Subscription expiry hone par kya hota hai?"
+    ]
+  },
+  {
+    "id": 29,
+    "title": "Complaint & Feedback System",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how users can submit complaints and feedback through the platform.",
+    "keyTopics": [
+      "POST /api/customer/complaint for customer complaints",
+      "POST /api/merchant/complaint for merchant complaints",
+      "Required fields: type, description",
+      "UserRole stored for origin tracking",
+      "Status defaults to \"Pending\"",
+      "Admin can update status: Pending, In Progress, Resolved",
+      "Complaint visible in admin dashboard",
+      "No customer-visible status updates",
+      "No file attachments supported",
+      "Complaint stored with userId reference"
+    ],
+    "exampleQuestions": [
+      "How do I submit a complaint?",
+      "Complaint submit karne ke baad kya hota hai?",
+      "Merchant bhi complaint submit kare?",
+      "Complaint status kaise check kare?",
+      "Kya complaint ka reply milta hai?",
+      "Complaint file attach kar sakte hain?",
+      "Admin complaint kaise manage karta hai?",
+      "Complaint types kya hote hain?",
+      "Complaint resolve hone mein time lagta hai?",
+      "Can I edit my complaint after submission?"
+    ]
+  },
+  {
+    "id": 30,
+    "title": "Points Balance & Expiration",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how customer points balance is calculated and how points expiration works.",
+    "keyTopics": [
+      "Balance calculated dynamically from PointsLedger",
+      "SUM(pointsChange) where expiresAt > now OR expiresAt IS NULL",
+      "No cached balance field on Customer model",
+      "Per-transaction expiry via expiresAt field",
+      "Default 365 days from RewardSettings.pointsExpiryDays",
+      "Legacy entries (null expiry) always included",
+      "GET /api/customer/expiring-points for upcoming expirations",
+      "30-day default look-ahead period",
+      "Expired points not deducted from balance automatically",
+      "Each earning transaction has own expiry timestamp"
+    ],
+    "exampleQuestions": [
+      "How is my points balance calculated?",
+      "Points expire hone ka time kya hai?",
+      "Kya main expiry check kare sakta hun?",
+      "Points automatically expire hote hain?",
+      "Expired points ko restore kare?",
+      "Balance calculation secure hai?",
+      "Different transactions different expiry?",
+      "What happens after points expire?",
+      "Can admin extend expiry?",
+      "Points history kahaan check kare?"
+    ]
+  },
+  {
+    "id": 31,
+    "title": "Admin Reports & Analytics",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain how administrators can generate, export, and analyze reports from the SkillXT platform.",
+    "keyTopics": [
+      "Report Types Available",
+      "Transaction Reports",
+      "Merchant Performance Reports",
+      "Customer Analytics Reports",
+      "Financial Reports"
+    ],
+    "exampleQuestions": [
+      "How does admin reports & analytics work?",
+      "Admin Reports & Analytics kaise configure kare?",
+      "What are the key features of admin reports & analytics?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 32,
+    "title": "PointsLedger & Balance Tracking",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how points balances are calculated and tracked via the PointsLedger table.",
+    "keyTopics": [
+      "Dynamic Balance Calculation",
+      "Ledger Fields",
+      "No Cached Balance",
+      "Transaction Linkage",
+      "Expiry Tracking"
+    ],
+    "exampleQuestions": [
+      "How does pointsledger & balance tracking work?",
+      "PointsLedger & Balance Tracking kaise configure kare?",
+      "What are the key features of pointsledger & balance tracking?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 33,
+    "title": "Complaint Management System",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how complaints and feedback are submitted, tracked, and resolved on the SkillXT platform.",
+    "keyTopics": [
+      "Complaint Submission",
+      "Complaint Storage",
+      "Admin Complaint Handling",
+      "Complaint Types"
+    ],
+    "exampleQuestions": [
+      "How do I submit a complaint on SkillXT?",
+      "Complaint submit karne ke baad kya hota hai?",
+      "Merchant bhi complaint submit kare?",
+      "Complaint status kaise check kare?",
+      "Kya complaint ka reply milta hai?",
+      "Complaint file attach kar sakte hain?",
+      "Admin complaint kaise manage karta hai?",
+      "Complaint types kya hote hain?",
+      "Complaint resolve hone mein time lagta hai?",
+      "Can I edit my complaint after submission?"
+    ]
+  },
+  {
+    "id": 34,
+    "title": "Subscription Payment Processing",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain how merchants process subscription payments, upload proofs, and get verified on the SkillXT platform.",
+    "keyTopics": [
+      "Payment Methods",
+      "Payment Submission",
+      "Admin Payment Verification",
+      "Welcome Bonus"
+    ],
+    "exampleQuestions": [
+      "How do I pay for my merchant subscription?",
+      "Payment proof kya upload kare?",
+      "Admin approval kitna time lagata hai?",
+      "Welcome bonus points kab milte hain?",
+      "Payment methods kya hain?",
+      "Screenshot upload kaise kare?",
+      "Payment reject hone par kya kare?",
+      "Can I renew subscription manually?",
+      "Payment proof format kya hai?",
+      "How do I check payment status?"
+    ]
+  },
+  {
+    "id": 35,
+    "title": "Merchant Wallet API Reference",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To provide API reference for merchant wallet balance and top-up operations.",
+    "keyTopics": [
+      "GET /api/merchant/wallet returns current balance and recent transactions",
+      "POST /api/merchant/topup/request creates points purchase request",
+      "GET /api/merchant/topup/history lists all top-up requests",
+      "PATCH /api/admin/topup/",
+      "Wallet balance decremented atomically during earn operations"
+    ],
+    "exampleQuestions": [
+      "How does merchant wallet api reference work?",
+      "Merchant Wallet API Reference kaise configure kare?",
+      "What are the key features of merchant wallet api reference?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 36,
+    "title": "Points Top-Up API Reference",
+    "targetUser": "Merchant, Super Admin / Admin, Developer",
+    "purpose": "To provide technical API documentation for the points top-up system.",
+    "keyTopics": [
+      "POST /api/merchant/topup/request validates merchant status and creates request",
+      "Package validation",
+      "Payment screenshot required for admin verification",
+      "Status flow",
+      "Points credited to merchant.pointsBalance on confirmation"
+    ],
+    "exampleQuestions": [
+      "How does points top-up api reference work?",
+      "Points Top-Up API Reference kaise configure kare?",
+      "What are the key features of points top-up api reference?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 37,
+    "title": "Merchant Management & CRUD Operations",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain admin CRUD operations for merchant accounts.",
+    "keyTopics": [
+      "GET /api/admin/merchants lists with pagination and search",
+      "GET /api/admin/merchants/",
+      "POST /api/admin/merchants creates merchant directly",
+      "PUT /api/admin/merchants/",
+      "PATCH /api/admin/merchants/"
+    ],
+    "exampleQuestions": [
+      "How does merchant management & crud operations work?",
+      "Merchant Management & CRUD Operations kaise configure kare?",
+      "What are the key features of merchant management & crud operations?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 38,
+    "title": "Customer Management & CRUD Operations",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain admin CRUD operations for customer accounts.",
+    "keyTopics": [
+      "GET /api/admin/customers lists customers with pagination",
+      "GET /api/admin/customers/",
+      "PUT /api/admin/customers/",
+      "PATCH /api/admin/customers/",
+      "POST /api/admin/customers/"
+    ],
+    "exampleQuestions": [
+      "How does customer management & crud operations work?",
+      "Customer Management & CRUD Operations kaise configure kare?",
+      "What are the key features of customer management & crud operations?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 39,
+    "title": "Points Expiration Management",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain how points expiration works, how customers can track expiring points, and admin configuration options.",
+    "keyTopics": [
+      "Expiration Behavior",
+      "Checking Expirations",
+      "Admin Configuration",
+      "Prevention Strategies"
+    ],
+    "exampleQuestions": [
+      "How long do my points stay valid?",
+      "Points expire hone se pehle kya kare?",
+      "Can I extend point expiry?",
+      "How do I check expiring points?",
+      "What happens after points expire?",
+      "Can admin restore expired points?",
+      "Points expiry kaise stop kare?",
+      "How many points will expire?",
+      "Do all points expire at once?",
+      "Can I get expiry reminders?"
+    ]
+  },
+  {
+    "id": 40,
+    "title": "Customer Earning Transaction Type",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain the earn transaction type in the SkillXT platform.",
+    "keyTopics": [
+      "TransactionType.earn for points earned from purchases",
+      "Purchase amount multiplied by pointsPerRupee rate",
+      "Merchant pointsBalance decremented on earn",
+      "Customer PointsLedger credited with balanceAfter",
+      "Automatic expiry assignment (default 365 days)"
+    ],
+    "exampleQuestions": [
+      "How does customer earning transaction type work?",
+      "Customer Earning Transaction Type kaise configure kare?",
+      "What are the key features of customer earning transaction type?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 41,
+    "title": "Customer Redemption Transaction Type",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain the redeem transaction type and fee calculations.",
+    "keyTopics": [
+      "TransactionType.redeem for points redeemed at merchants",
+      "Redemption rate",
+      "Platform fee",
+      "Net discount",
+      "Merchant receives netAmount, customer gets discount"
+    ],
+    "exampleQuestions": [
+      "How does customer redemption transaction type work?",
+      "Customer Redemption Transaction Type kaise configure kare?",
+      "What are the key features of customer redemption transaction type?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 42,
+    "title": "Points Transfer Transaction Type",
+    "targetUser": "Merchant, Super Admin",
+    "purpose": "To explain merchant-to-customer point transfers.",
+    "keyTopics": [
+      "TransactionType.transfer for direct merchant transfers",
+      "No platform fee on transfer transactions",
+      "Merchant wallet decremented directly",
+      "Customer PointsLedger credited",
+      "SSE notification sent on successful transfer"
+    ],
+    "exampleQuestions": [
+      "How does points transfer transaction type work?",
+      "Points Transfer Transaction Type kaise configure kare?",
+      "What are the key features of points transfer transaction type?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 43,
+    "title": "Points Expiration & Expiry Rules",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain points expiry behavior and configuration.",
+    "keyTopics": [
+      "Default expiry",
+      "Per-transaction expiry via expiresAt field",
+      "Balance calculation excludes expired points",
+      "Legacy points (null expiry) never expire",
+      "Expiration not automated - checked at query time"
+    ],
+    "exampleQuestions": [
+      "How does points expiration & expiry rules work?",
+      "Points Expiration & Expiry Rules kaise configure kare?",
+      "What are the key features of points expiration & expiry rules?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 44,
+    "title": "Points Balance Query API",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To document the API endpoints for querying points balances.",
+    "keyTopics": [
+      "GET /api/customer/balance returns current balance and summary",
+      "Query includes lifetime earned and redeemed counts",
+      "Balance computed dynamically from PointsLedger",
+      "Pagination for transaction history",
+      "Filter options"
+    ],
+    "exampleQuestions": [
+      "How does points balance query api work?",
+      "Points Balance Query API kaise configure kare?",
+      "What are the key features of points balance query api?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 45,
+    "title": "Points Transaction History API",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To document endpoints for retrieving transaction history.",
+    "keyTopics": [
+      "GET /api/customer/history returns all customer transactions",
+      "GET /api/merchant/transactions returns merchant activities",
+      "GET /api/admin/transactions with filters and pagination",
+      "Date range and type filtering supported",
+      "PointsLedger integration for detailed tracking"
+    ],
+    "exampleQuestions": [
+      "How does points transaction history api work?",
+      "Points Transaction History API kaise configure kare?",
+      "What are the key features of points transaction history api?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 46,
+    "title": "QR Code Generation & Usage",
+    "targetUser": "Customer, Merchant, Super Admin / Admin",
+    "purpose": "To explain customer QR code generation and merchant scanning.",
+    "keyTopics": [
+      "QR code format",
+      "Generated at customer registration",
+      "GET /api/customer/qr returns QR data URL",
+      "Merchants scan via mobile or manual entry",
+      "QR used for customer lookup during earn/redeem"
+    ],
+    "exampleQuestions": [
+      "How does qr code generation & usage work?",
+      "QR Code Generation & Usage kaise configure kare?",
+      "What are the key features of qr code generation & usage?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 47,
+    "title": "Reward Settings Configuration",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain RewardSettings model fields and API endpoints.",
+    "keyTopics": [
+      "pointsPerRupee",
+      "rupeesPerPoint",
+      "minRedeemPoints",
+      "pointsExpiryDays",
+      "redemptionFeePercent"
+    ],
+    "exampleQuestions": [
+      "How does reward settings configuration work?",
+      "Reward Settings Configuration kaise configure kare?",
+      "What are the key features of reward settings configuration?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 48,
+    "title": "Subscription Plans Reference",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To detail available subscription plans and their pricing.",
+    "keyTopics": [
+      "Monthly plan",
+      "Quarterly plan",
+      "Annual plan",
+      "All plans include same core features",
+      "Plans managed via SubscriptionPlan table"
+    ],
+    "exampleQuestions": [
+      "How does subscription plans reference work?",
+      "Subscription Plans Reference kaise configure kare?",
+      "What are the key features of subscription plans reference?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 49,
+    "title": "Merchant Subscription Status Types",
+    "targetUser": "Merchant, Super Admin / Admin",
+    "purpose": "To explain MerchantSubscriptionStatus enum values.",
+    "keyTopics": [
+      "active",
+      "grace_period",
+      "expired",
+      "cancelled",
+      "pending"
+    ],
+    "exampleQuestions": [
+      "How does merchant subscription status types work?",
+      "Merchant Subscription Status Types kaise configure kare?",
+      "What are the key features of merchant subscription status types?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 50,
+    "title": "Customer Referral Program",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain the customer referral bonus system.",
+    "keyTopics": [
+      "20 points bonus for successful referral signup",
+      "Both referrer and referee receive 20 points",
+      "Referral code format",
+      "Bonus applied at registration time",
+      "Same 365-day expiry as regular earnings"
+    ],
+    "exampleQuestions": [
+      "How does customer referral program work?",
+      "Customer Referral Program kaise configure kare?",
+      "What are the key features of customer referral program?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 51,
+    "title": "Milestone Bonus Configuration",
+    "targetUser": "Super Admin / Admin",
+    "purpose": "To explain milestone bonus thresholds and payouts.",
+    "keyTopics": [
+      "MilestoneBonus table stores thresholds and rewards",
+      "Default tiers",
+      "Cumulative spend triggers bonus automatically",
+      "Bonus transaction created with milestone remarks",
+      "Admin can create, update, deactivate milestones"
+    ],
+    "exampleQuestions": [
+      "How does milestone bonus configuration work?",
+      "Milestone Bonus Configuration kaise configure kare?",
+      "What are the key features of milestone bonus configuration?",
+      "Admin access required hai kya?",
+      "Can I customize this feature?",
+      "What happens if I exceed limits?",
+      "How is this tracked in reports?",
+      "What API endpoints are available?",
+      "Can customers access this?",
+      "What security measures apply?"
+    ]
+  },
+  {
+    "id": 52,
+    "title": "Customer Points Earning (Earn Points)",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how customers earn points through purchases at SkillXT partner merchants, including the earning formula, merchant requirements, milestone bonuses, points expiry, and transaction recording.",
+    "keyTopics": [
+      "Points Earning Formula",
+      "Merchant Requirements for Issuing Points",
+      "Points Issuance Process",
+      "Milestone Bonuses",
+      "Points Expiry Behavior",
+      "Transaction Recording",
+      "Earning Validation Rules",
+      "Admin Controls"
+    ],
+    "exampleQuestions": [
+      "How do I earn points on SkillXT?",
+      "Kitne points milenge ₹500 ke kharch se?",
+      "What is the default points earning rate?",
+      "How many points for a ₹1000 purchase?",
+      "Merchant se points kaise kamaye?",
+      "Can I earn points at all merchants?",
+      "What happens if my purchase amount gives fractional points?",
+      "Are there bonus points for reaching spending milestones?",
+      "How long do earned points stay valid?",
+      "Do points expire if I don't use them?"
+    ]
+  },
+  {
+    "id": 53,
+    "title": "Customer Points Redemption (Redeem Points)",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how customers redeem earned points for discounts at SkillXT partner merchants, including the redemption rate, minimum thresholds, the 20% invoice cap, fee calculation, merchant subscription requirements, and transaction recording.",
+    "keyTopics": [
+      "Redemption Process Flow",
+      "Redemption Rate Configuration",
+      "Minimum Redemption Threshold",
+      "20% Invoice Redemption Cap",
+      "Platform Fee Calculation",
+      "Net Amount Calculation",
+      "Merchant Subscription Requirements",
+      "Balance Validation"
+    ],
+    "exampleQuestions": [
+      "How do I redeem my points for a discount at a merchant?",
+      "Kitne points chahiye ₹100 ka discount lene ke liye?",
+      "What is the minimum points required to redeem?",
+      "Can I redeem points at any merchant?",
+      "Is there a limit on how much I can redeem in one transaction?",
+      "How is the platform fee calculated on redemptions?",
+      "What is the net amount I actually save after fees?",
+      "How do I check if I have enough points to redeem?",
+      "What happens if I try to redeem more points than allowed?",
+      "Does my merchant subscription affect point redemption?"
+    ]
+  },
+  {
+    "id": 54,
+    "title": "Customer Points Transfer",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how merchants transfer points from their own wallet directly into a customer's wallet, including the transfer flow, eligibility rules, balance limits, transaction recording, notifications, and administrative reversal.",
+    "keyTopics": [
+      "Transfer Direction and Scope",
+      "Transfer Process Flow",
+      "Eligibility and Validation Rules",
+      "Balance Limits",
+      "Fees and Costs",
+      "Ledger Recording",
+      "Real-Time Notifications",
+      "Audit Trail"
+    ],
+    "exampleQuestions": [
+      "How does a merchant transfer points to a customer?",
+      "Merchant se customer ko points kaise bheje?",
+      "Can a customer transfer points to another customer?",
+      "What is the minimum points a merchant can transfer?",
+      "Is there a fee for transferring points?",
+      "How do I scan a customer QR code to transfer points?",
+      "What happens if the merchant does not have enough points?",
+      "Can I transfer points without an active subscription?",
+      "How does the customer know they received points?",
+      "Can a transfer be reversed after completion?"
+    ]
+  },
+  {
+    "id": 55,
+    "title": "Customer Referral Program",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how customers earn bonus points by referring new users to SkillXT, including the registration flow, point awards, monthly limits, referral code mechanics, and transaction recording.",
+    "keyTopics": [
+      "Referral Program Overview",
+      "Referral Code Generation",
+      "Registration and Validation Flow",
+      "Point Award Mechanics",
+      "Monthly Limits",
+      "Ledger Recording",
+      "Referral Statistics",
+      "Frontend Experience"
+    ],
+    "exampleQuestions": [
+      "How does the SkillXT referral program work?",
+      "Referral program se points kaise kamaye?",
+      "How many points do I get for referring a friend?",
+      "What is my referral code and where can I find it?",
+      "Does my friend also get points when they use my code?",
+      "Is there a limit on how many friends I can refer?",
+      "Do referral points expire?",
+      "Can I refer someone who already has a SkillXT account?",
+      "How do I share my referral code with friends?",
+      "What happens if my referral code is invalid?"
+    ]
+  },
+  {
+    "id": 56,
+    "title": "Customer Profile & Preferences Management",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how customers manage their profile information, contact details, notification preferences, and personalization settings on SkillXT, including self-service updates, admin overrides, validation rules, and the storage model for preferences.",
+    "keyTopics": [
+      "Customer Profile Data Model",
+      "Profile Retrieval Endpoints",
+      "Customer Self-Service Profile Update",
+      "Personal Information Validation Rules",
+      "Preference Settings",
+      "Notification Preferences & Real-Time Updates",
+      "Mobile Number Update via OTP",
+      "Password & Email Management"
+    ],
+    "exampleQuestions": [
+      "How do I update my SkillXT profile?",
+      "Apne profile me kaise changes kare?",
+      "How do I change my email address?",
+      "Can I update my mobile number?",
+      "What personal details can I edit?",
+      "How do I change my notification preferences?",
+      "My mobile number se OTP kaise receive karu?",
+      "How do I reset my SkillXT password?"
+    ]
+  },
+  {
+    "id": 57,
+    "title": "Merchant Wallet & Points Management",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To explain how merchants manage their points wallet, including wallet balance tracking, points top-up processes, balance adjustments, transaction history, and merchant-specific point management features.",
+    "keyTopics": [
+      "Wallet Balance Overview",
+      "Points Top-up Process",
+      "Wallet Management Features",
+      "Points Issuance Tracking",
+      "Merchant Subscription Impact",
+      "Admin Wallet Controls",
+      "Wallet Security",
+      "Financial Reconciliation"
+    ],
+    "exampleQuestions": [
+      "How do I check my current wallet balance as a merchant?",
+      "Merchant wallet me kitna points hai?",
+      "What happens when my wallet balance reaches zero?",
+      "How do I purchase more points for my wallet?",
+      "Can I set up automatic recharge for my wallet?",
+      "How does subscription status affect my wallet?",
+      "What are the different top-up package options?",
+      "How do I view my wallet transaction history?",
+      "Kaise pata kare kaunse transaction ne mere wallet ko affect kiya?",
+      "Can an admin adjust my wallet balance?"
+    ]
+  },
+  {
+    "id": 58,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 59,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 60,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 61,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 62,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 63,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 64,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 65,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 66,
+    "title": "",
+    "targetUser": "",
+    "purpose": "",
+    "keyTopics": [],
+    "exampleQuestions": []
+  },
+  {
+    "id": 67,
+    "title": "Revenue Decline Alerts & Trends",
+    "targetUser": "Super Admin, Finance Team, Merchant",
+    "purpose": "To enable proactive monitoring of platform revenue streams by tracking fee revenue and subscription revenue trends over time, identifying decline patterns early, and providing actionable insights for revenue optimization.",
+    "keyTopics": [
+      "Revenue Streams Overview",
+      "Trend Analysis Engine",
+      "Revenue Decline Detection",
+      "Dashboard Integration",
+      "Business Intelligence Features",
+      "Actionable Insights"
+    ],
+    "exampleQuestions": [
+      "How do I access the revenue trend dashboard in SkillXT?",
+      "What is the current month's platform fee revenue compared to last month?",
+      "How can I identify merchants whose subscriptions are expiring soon?",
+      "What percentage decline in revenue triggers an automatic alert?",
+      "How do I view revenue breakdown by individual merchants?",
+      "Can I export revenue trend data to Excel for further analysis?",
+      "What is the correlation between new merchant signups and revenue growth?",
+      "How do I set up custom revenue decline thresholds for my business?",
+      "What actions should I take when I see a 15% month-over-month revenue decline?",
+      "How can I distinguish between seasonal dips and actual revenue problems?"
+    ]
+  },
+  {
+    "id": 68,
+    "title": "Revenue Recovery Strategies",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To provide systematic approaches for recovering declining revenue through merchant retention, customer re-engagement, subscription optimization, and operational efficiency improvements.",
+    "keyTopics": [
+      "Revenue Decline Diagnosis Framework",
+      "Merchant Retention Tactics",
+      "Customer Re-engagement Strategies",
+      "Subscription Revenue Optimization",
+      "Redemption Fee Optimization",
+      "Operational Efficiency Gains",
+      "New Revenue Stream Development",
+      "Recovery Implementation Framework"
+    ],
+    "exampleQuestions": [
+      "What is the first step when I notice a revenue decline in the admin dashboard?",
+      "How do I determine if revenue decline is caused by merchant churn or reduced customer activity?",
+      "What proactive measures can I take to prevent merchant subscription cancellations?",
+      "How do I create a re-engagement campaign for dormant customers?",
+      "What metrics should I track to measure the success of revenue recovery initiatives?",
+      "How can I identify which merchants are most likely to churn?",
+      "What incentives are most effective for encouraging subscription renewals?",
+      "How do I calculate the ROI of a customer re-engagement campaign?",
+      "What is the optimal timing for outreach to merchants approaching subscription expiry?",
+      "How can I use the inactivity reports to drive revenue recovery?"
+    ]
+  },
+  {
+    "id": 69,
+    "title": "Subscription Revenue Optimization",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To maximize recurring subscription revenue through strategic plan design, pricing optimization, renewal rate improvement, and expansion revenue tactics.",
+    "keyTopics": [
+      "Subscription Revenue Fundamentals",
+      "Plan Tier Optimization",
+      "Pricing Strategy",
+      "Renewal Rate Optimization",
+      "Expansion Revenue Tactics",
+      "Churn Reduction Strategies",
+      "Subscription Metrics & KPIs",
+      "Subscription Analytics"
+    ],
+    "exampleQuestions": [
+      "What is the current MRR for the SkillXT platform and how is it calculated?",
+      "How do I determine the optimal pricing for a new subscription plan?",
+      "What is the average subscription renewal rate and how can I improve it?",
+      "How do I calculate Customer Lifetime Value (LTV) for merchants?",
+      "What strategies work best for reducing subscription churn?",
+      "How can I encourage merchants to upgrade from monthly to annual plans?",
+      "What is the ideal grace period duration for subscription renewals?",
+      "How do I track expansion revenue from existing merchants?",
+      "What metrics should I review weekly to monitor subscription health?",
+      "How do I handle failed subscription payments and recover revenue?"
+    ]
+  },
+  {
+    "id": 70,
+    "title": "Platform Fee Revenue Analysis",
+    "targetUser": "Super Admin, Finance Team, Data Analysts",
+    "purpose": "To provide comprehensive analysis and reporting of platform fee revenue generated from point redemption transactions, including trend analysis, merchant contribution, and optimization strategies.",
+    "keyTopics": [
+      "Platform Fee Structure",
+      "Revenue Calculation Methods",
+      "Fee Revenue Analytics",
+      "Redemption Volume Analysis",
+      "Fee Revenue Optimization",
+      "Revenue Attribution",
+      "Financial Reporting",
+      "Performance Benchmarks"
+    ],
+    "exampleQuestions": [
+      "How is the 5% platform fee calculated on point redemptions?",
+      "What is the total platform fee revenue collected to date?",
+      "How do I view fee revenue broken down by individual merchants?",
+      "What is the month-over-month growth in platform fee revenue?",
+      "How can I identify which merchants contribute the most to fee revenue?",
+      "What reports are available for fee revenue analysis?",
+      "How do I export fee revenue data for accounting purposes?",
+      "Can I set different fee percentages for different merchant tiers?",
+      "What is the correlation between redemption volume and fee revenue?",
+      "How do I calculate the effective fee rate including all deductions?"
+    ]
+  },
+  {
+    "id": 71,
+    "title": "Merchant Churn Prediction & Prevention",
+    "targetUser": "Super Admin, Merchant Success Team, Finance Team",
+    "purpose": "To identify merchants at risk of cancelling their subscriptions, understand churn drivers, and implement proactive retention strategies to minimize merchant attrition.",
+    "keyTopics": [
+      "Churn Definition & Metrics",
+      "Churn Risk Indicators",
+      "Predictive Churn Models",
+      "Churn Prevention Strategies",
+      "Retention Campaigns",
+      "Churn Root Cause Analysis",
+      "Reactivation Strategies",
+      "Churn Segmentation"
+    ],
+    "exampleQuestions": [
+      "What defines merchant churn in the SkillXT platform?",
+      "How do I calculate the current merchant churn rate?",
+      "What are the early warning signs that a merchant is at risk of churning?",
+      "How does the inactivity report help identify churn risk?",
+      "What proactive steps can I take when a merchant enters the grace period?",
+      "How do I create an effective win-back campaign for churned merchants?",
+      "What metrics should I track to measure merchant retention success?",
+      "How can I use subscription data to predict churn?",
+      "What retention incentives have proven most effective?",
+      "How do I conduct a root cause analysis for merchant churn?"
+    ]
+  },
+  {
+    "id": 72,
+    "title": "Customer Churn Prediction & Prevention",
+    "targetUser": "Super Admin, Marketing Team, Merchant Success Team",
+    "purpose": "To identify customers at risk of becoming inactive or dormant, understand churn drivers in the loyalty ecosystem, and implement proactive re-engagement strategies to maximize customer retention.",
+    "keyTopics": [
+      "Customer Churn Definition",
+      "Churn Risk Indicators",
+      "Predictive Churn Models",
+      "Churn Prevention Strategies",
+      "Re-engagement Campaigns",
+      "Points-based Retention",
+      "Customer Experience Optimization",
+      "Segmentation Strategies"
+    ],
+    "exampleQuestions": [
+      "What defines customer churn in the SkillXT loyalty program?",
+      "How does the inactivity monitor classify customers?",
+      "What are the early warning signs that a customer is becoming inactive?",
+      "How can I use the inactivity reports to prevent customer churn?",
+      "What re-engagement campaigns are most effective for dormant customers?",
+      "How do I identify customers with high points balances who never redeem?",
+      "What metrics should I track to measure customer retention success?",
+      "How can I use points expiry warnings to re-engage customers?",
+      "What communication channels work best for customer re-engagement?",
+      "How do I calculate the ROI of customer retention campaigns?"
+    ]
+  },
+  {
+    "id": 73,
+    "title": "Re-engagement Campaign Strategies",
+    "targetUser": "Super Admin, Marketing Team, Merchant Success Team",
+    "purpose": "To design and execute effective re-engagement campaigns that reactivate dormant and at-risk customers, driving increased platform transactions and revenue recovery.",
+    "keyTopics": [
+      "Re-engagement Campaign Fundamentals",
+      "Dormant Customer Campaigns",
+      "Never-Redeemed Customer Campaigns",
+      "High-Balance No-Redemption Campaigns",
+      "Campaign Design Best Practices",
+      "Multi-channel Orchestration",
+      "Incentive & Offer Design",
+      "Campaign Automation"
+    ],
+    "exampleQuestions": [
+      "What is a re-engagement campaign and when should I use one?",
+      "How does SkillXT identify dormant customers for re-engagement?",
+      "What channels are available for re-engagement campaigns?",
+      "How do I create a re-engagement campaign for never-redeemed customers?",
+      "What incentives work best for reactivating dormant customers?",
+      "How often should I send re-engagement emails?",
+      "What metrics should I track to measure campaign success?",
+      "How do I personalize re-engagement messages for individual customers?",
+      "What is the typical reactivation rate for dormant customer campaigns?",
+      "How do I A/B test different re-engagement strategies?"
+    ]
+  },
+  {
+    "id": 74,
+    "title": "Win-back Campaigns for Dormant Users",
+    "targetUser": "Super Admin, Marketing Team, Merchant Success Team",
+    "purpose": "To systematically recover lost customers who have become dormant or inactive through targeted win-back campaigns, measuring recovery success and optimizing for long-term retention.",
+    "keyTopics": [
+      "Dormant User Classification",
+      "Win-back Campaign Strategy",
+      "Incentive Design for Win-back",
+      "Reactivation Funnel",
+      "Campaign Execution",
+      "Success Metrics",
+      "Advanced Win-back Tactics",
+      "Post-reactivation Nurturing"
+    ],
+    "exampleQuestions": [
+      "How does SkillXT define a dormant user?",
+      "What win-back incentives are most effective for different dormancy periods?",
+      "How do I create a win-back campaign for customers inactive for 90+ days?",
+      "What channels should I use for win-back campaigns?",
+      "How do I measure the success of a win-back campaign?",
+      "What is the typical reactivation rate for dormant customer campaigns?",
+      "How do I personalize win-back messages based on customer history?",
+      "What should I include in a win-back email subject line?",
+      "How often should I send win-back messages to dormant users?",
+      "How do I A/B test different win-back offers?"
+    ]
+  },
+  {
+    "id": 75,
+    "title": "Points Liability Management",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To manage the financial liability created by outstanding customer points, ensuring accurate accounting, proper provisioning, and strategic decisions about points valuation and redemption.",
+    "keyTopics": [
+      "Points Liability Fundamentals",
+      "Liability Calculation",
+      "Liability Reporting",
+      "Redemption Rate Monitoring",
+      "Points Expiry Management",
+      "Liability Risk Management",
+      "Financial Accounting",
+      "Valuation Strategies"
+    ],
+    "exampleQuestions": [
+      "How is points liability calculated in SkillXT?",
+      "What is the current total points liability for the platform?",
+      "How often is the points liability calculated and updated?",
+      "What is the redemption rate and how is it monitored?",
+      "How does points expiry affect the overall liability?",
+      "What reports are available for points liability analysis?",
+      "How do I account for points liability in financial statements?",
+      "What is breakage and how is it calculated?",
+      "How can I reduce points liability without hurting customer experience?",
+      "What happens to points when a customer account is closed?"
+    ]
+  },
+  {
+    "id": 76,
+    "title": "Outstanding Points Liability Reports",
+    "targetUser": "Super Admin, Finance Team, Accountants, Auditors",
+    "purpose": "To provide detailed reports and analysis of outstanding points liability, including breakdowns by customer, merchant, time period, and risk category for financial planning and compliance.",
+    "keyTopics": [
+      "Liability Report Types",
+      "Core Liability Metrics",
+      "Customer-level Liability Analysis",
+      "Merchant-level Liability Analysis",
+      "Time-based Liability Analysis",
+      "Risk Assessment Reports",
+      "Financial Statement Integration",
+      "Regulatory & Compliance Reporting"
+    ],
+    "exampleQuestions": [
+      "How do I access the outstanding points liability report?",
+      "What information is included in the executive summary liability report?",
+      "How can I see a breakdown of liability by individual customer?",
+      "What is the current total points liability and how is it calculated?",
+      "How do I identify customers with the highest point balances?",
+      "What reports show liability trends over time?",
+      "How can I export liability data for accounting purposes?",
+      "What is the redemption rate and how is it tracked?",
+      "How do I assess the risk associated with outstanding points liability?",
+      "What is breakage and how is it reported?"
+    ]
+  },
+  {
+    "id": 77,
+    "title": "Points Expiry Policy & Configuration",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To configure and manage points expiry policies that balance customer experience with financial liability management, ensuring transparent communication and optimal program sustainability.",
+    "keyTopics": [
+      "Points Expiry Fundamentals",
+      "Expiry Configuration Options",
+      "RewardSettings Configuration",
+      "Expiry Processing Logic",
+      "Customer Notification System",
+      "Communication Templates",
+      "Policy Communication",
+      "Exception Handling"
+    ],
+    "exampleQuestions": [
+      "What is the current points expiry policy in SkillXT?",
+      "How do I configure the points expiry period?",
+      "Where is the points expiry setting located in the admin panel?",
+      "What happens to points when they expire?",
+      "How are customers notified before their points expire?",
+      "Can I customize expiry notifications for different customer segments?",
+      "What is breakage and how is it recognized in accounting?",
+      "How do I handle customer complaints about expired points?",
+      "Can I manually extend points validity for specific customers?",
+      "What is the optimal expiry period for a loyalty program?"
+    ]
+  },
+  {
+    "id": 78,
+    "title": "Points Expiry Notification System",
+    "targetUser": "Super Admin, Marketing Team, Customer Support",
+    "purpose": "To configure and manage automated notification systems that alert customers before their points expire, maximizing redemption rates and minimizing customer dissatisfaction.",
+    "keyTopics": [
+      "Notification System Overview",
+      "Notification Timeline",
+      "Notification Channels",
+      "Notification Content",
+      "Email Template Design",
+      "SMS Template Design",
+      "Push Notification Design",
+      "Configuration Settings"
+    ],
+    "exampleQuestions": [
+      "How does the points expiry notification system work in SkillXT?",
+      "How many warnings do customers receive before points expire?",
+      "What notification channels are used for expiry warnings?",
+      "How do I configure the expiry notification timeline?",
+      "Can customers choose their preferred notification channel?",
+      "What information is included in expiry warning emails?",
+      "How do I track the effectiveness of expiry notifications?",
+      "What should I do if a customer says they didn't receive expiry notifications?",
+      "How do I customize expiry notification templates?",
+      "Can I send different notifications to different customer segments?"
+    ]
+  },
+  {
+    "id": 79,
+    "title": "Expired Points Recovery Strategies",
+    "targetUser": "Super Admin, Marketing Team, Customer Support",
+    "purpose": "To recover value from expired points and re-engage customers whose points have expired, balancing customer goodwill with program sustainability.",
+    "keyTopics": [
+      "Points Expiry Overview",
+      "Post-expiry Customer Behavior",
+      "Recovery Strategy Framework",
+      "Points Reinstatement Policies",
+      "Win-back Campaigns for Expired Points",
+      "Customer Communication",
+      "Support Process for Expired Points",
+      "Prevention Through Education"
+    ],
+    "exampleQuestions": [
+      "What happens when a customer's points expire in SkillXT?",
+      "Can expired points be reinstated or recovered?",
+      "How do I handle customer complaints about expired points?",
+      "What is the process for manually restoring expired points?",
+      "How can I win back customers after their points have expired?",
+      "What incentives work best for customers who lost points to expiry?",
+      "How do I measure the financial impact of points expiry?",
+      "What should I communicate to customers whose points have expired?",
+      "How can I reduce customer frustration with the points expiry policy?",
+      "What role does customer education play in reducing expiry complaints?"
+    ]
+  },
+  {
+    "id": 80,
+    "title": "Advertisement & Banner System Overview",
+    "targetUser": "Merchant, Super Admin, Marketing Team",
+    "purpose": "To provide a comprehensive understanding of the SkillXT advertisement and banner system, enabling merchants to promote their offers and admins to manage the advertising ecosystem.",
+    "keyTopics": [
+      "Advertisement System Architecture",
+      "Merchant Advertising Capabilities",
+      "Admin Advertisement Management",
+      "Banner Management System",
+      "Customer Ad Experience",
+      "Technical Implementation",
+      "Analytics & Reporting",
+      "Pricing & Billing"
+    ],
+    "exampleQuestions": [
+      "How does the advertisement system work in SkillXT?",
+      "How can merchants create and manage their advertisements?",
+      "What ad formats are supported by the platform?",
+      "How do I as a merchant track the performance of my ads?",
+      "What ad placement locations are available on the platform?",
+      "How does the admin review and approve merchant advertisements?",
+      "What analytics are available for ad performance?",
+      "How are ad impressions and clicks tracked?",
+      "Can merchants target specific customer segments with their ads?",
+      "How is advertising revenue calculated and reported?"
+    ]
+  },
+  {
+    "id": 81,
+    "title": "Advertisement Creation & Management",
+    "targetUser": "Merchant, Super Admin",
+    "purpose": "To guide merchants through creating effective advertisements on the SkillXT platform and enable admins to manage the advertising ecosystem efficiently.",
+    "keyTopics": [
+      "Merchant Ad Creation Process",
+      "Ad Content Requirements",
+      "Targeting & Audience Selection",
+      "Budget & Bidding Management",
+      "Scheduling & Delivery",
+      "Ad Management Dashboard",
+      "Admin Ad Management Tools",
+      "Creative Best Practices"
+    ],
+    "exampleQuestions": [
+      "How do I create a new advertisement as a merchant in SkillXT?",
+      "What ad formats can I use for my advertisement?",
+      "What are the image and video requirements for ads?",
+      "How do I set targeting options for my advertisement?",
+      "How do I manage my advertising budget in SkillXT?",
+      "Can I schedule my ads to run at specific times?",
+      "How do I track the performance of my advertisements?",
+      "What should I do if my ad is rejected by the admin?",
+      "How do I edit or pause an active advertising campaign?",
+      "Can I run multiple ads simultaneously for different offers?"
+    ]
+  },
+  {
+    "id": 82,
+    "title": "Advertisement Targeting & Placement",
+    "targetUser": "Merchant, Super Admin, Marketing Team",
+    "purpose": "To maximize advertising ROI through precise audience targeting and strategic ad placement across the SkillXT platform ecosystem.",
+    "keyTopics": [
+      "Targeting Fundamentals",
+      "Customer Segmentation Options",
+      "Targeting Parameters",
+      "Ad Placement Locations",
+      "Placement Strategy",
+      "Advanced Targeting Features",
+      "Dynamic Ad Placement",
+      "Admin Placement Controls"
+    ],
+    "exampleQuestions": [
+      "How do I target specific customer segments with my advertisements?",
+      "What customer data can I use for ad targeting?",
+      "Where do advertisements appear on the SkillXT platform?",
+      "How do I choose the best ad placement for my campaign?",
+      "Can I exclude certain customer groups from seeing my ads?",
+      "How do I create lookalike audiences for better targeting?",
+      "What is the optimal frequency for showing ads to customers?",
+      "How do I prevent ad fatigue among my target audience?",
+      "Can I target customers based on their location?",
+      "How do I measure the effectiveness of my targeting strategy?"
+    ]
+  },
+  {
+    "id": 83,
+    "title": "Advertisement Performance Analytics",
+    "targetUser": "Merchant, Super Admin, Marketing Team, Data Analysts",
+    "purpose": "To provide comprehensive analytics and reporting for advertisement performance, enabling data-driven optimization of advertising campaigns and ROI measurement.",
+    "keyTopics": [
+      "Core Performance Metrics",
+      "Merchant-facing Analytics",
+      "Admin Analytics Dashboard",
+      "Impression Analytics",
+      "Click Analytics",
+      "Conversion Tracking",
+      "Revenue Analytics",
+      "Audience Insights"
+    ],
+    "exampleQuestions": [
+      "How do I view the performance of my advertisements?",
+      "What key metrics should I track for my ad campaigns?",
+      "How do I calculate the ROI of my advertising spend?",
+      "What analytics are available for merchant advertising?",
+      "How do I see which customer segments are responding to my ads?",
+      "Can I export my advertising performance data?",
+      "How do I compare my ad performance to other merchants?",
+      "What is a good CTR for advertisements on SkillXT?",
+      "How do I track conversions from my ad campaigns?",
+      "How often should I review my ad performance?"
+    ]
+  },
+  {
+    "id": 84,
+    "title": "Banner Management & Scheduling",
+    "targetUser": "Super Admin, Marketing Team",
+    "purpose": "To manage promotional banners across the SkillXT platform, including creation, scheduling, placement, rotation, and performance tracking.",
+    "keyTopics": [
+      "Banner Management Overview",
+      "Banner Creation Process",
+      "Scheduling & Rotation",
+      "Banner Placement Strategy",
+      "Targeting & Personalization",
+      "Banner Analytics",
+      "Banner Optimization",
+      "Seasonal & Event Campaigns"
+    ],
+    "exampleQuestions": [
+      "How do I create and schedule a new banner for the SkillXT platform?",
+      "What banner sizes and formats are supported?",
+      "How do I set up banner rotation when I have multiple banners?",
+      "Can I target specific customer segments with different banners?",
+      "How do I preview a banner before making it live?",
+      "What analytics are available for banner performance?",
+      "How do I schedule banners for seasonal campaigns?",
+      "Can I run A/B tests on different banner designs?",
+      "How do I manage overlapping banner campaigns?",
+      "What happens when multiple banners target the same placement?"
+    ]
+  },
+  {
+    "id": 85,
+    "title": "Ad Impressions & Click Tracking",
+    "targetUser": "Merchant, Super Admin, Marketing Team, Data Analysts",
+    "purpose": "To implement and manage accurate tracking of advertisement impressions and clicks, ensuring reliable performance measurement and fair billing for advertising services.",
+    "keyTopics": [
+      "Impression Tracking Fundamentals",
+      "Click Tracking Fundamentals",
+      "Technical Implementation",
+      "Tracking Parameters",
+      "Impression Quality Metrics",
+      "Click Quality Metrics",
+      "Fraud Detection & Prevention",
+      "Data Accuracy & Validation"
+    ],
+    "exampleQuestions": [
+      "How are ad impressions tracked in the SkillXT platform?",
+      "What counts as a valid ad impression?",
+      "How are ad clicks tracked and recorded?",
+      "What measures are in place to prevent click fraud?",
+      "How can I verify that my ad impressions are being counted accurately?",
+      "What tracking parameters are used for ad analytics?",
+      "How do I view real-time impression and click data?",
+      "What is the difference between impressions and unique impressions?",
+      "How are invalid clicks identified and filtered out?",
+      "Can I export impression and click data for analysis?"
+    ]
+  },
+  {
+    "id": 86,
+    "title": "Advertisement Revenue Model",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To define and manage the advertising revenue model, including pricing structures, billing processes, revenue sharing, and financial reporting for the SkillXT platform's advertising ecosystem.",
+    "keyTopics": [
+      "Revenue Model Overview",
+      "Pricing Models",
+      "Merchant Pricing Packages",
+      "Revenue Sharing Model",
+      "Billing & Payment Processing",
+      "Financial Reporting",
+      "Admin Revenue Management",
+      "Merchant Billing Management"
+    ],
+    "exampleQuestions": [
+      "How does the advertising revenue model work in SkillXT?",
+      "What pricing models are available for merchant advertising?",
+      "How is advertising revenue shared between SkillXT and merchants?",
+      "How are merchants billed for their advertising spend?",
+      "What reporting is available for advertising revenue?",
+      "How do I calculate the ROI of advertising on the platform?",
+      "What packages or pricing tiers are available for advertisers?",
+      "How does the admin track advertising revenue?",
+      "Can I offer discounts or promotions on advertising?",
+      "How are advertising refunds handled?"
+    ]
+  },
+  {
+    "id": 87,
+    "title": "Rules Engine Overview",
+    "targetUser": "Super Admin, Merchant, Developer",
+    "purpose": "To provide a comprehensive understanding of the SkillXT rules engine that governs points earning, redemption, transfer, transaction validation, and platform operations.",
+    "keyTopics": [
+      "Rules Engine Architecture",
+      "Points Earning Rules",
+      "Points Redemption Rules",
+      "Points Transfer Rules",
+      "Transaction Validation Rules",
+      "Anti-fraud Rules",
+      "Subscription Rules",
+      "Notification Rules"
+    ],
+    "exampleQuestions": [
+      "What is the rules engine in SkillXT and how does it work?",
+      "How are points earning rules configured in the system?",
+      "What validation rules apply to point redemption transactions?",
+      "How are anti-fraud rules implemented in the platform?",
+      "Can I customize rules for individual merchants?",
+      "How do I test rules before deploying them to production?",
+      "What is the process for updating business rules?",
+      "How are rule violations detected and handled?",
+      "Can admins override rules in special circumstances?",
+      "How are rules logged for audit purposes?"
+    ]
+  },
+  {
+    "id": 88,
+    "title": "Points Earning Rules Configuration",
+    "targetUser": "Super Admin, Merchant",
+    "purpose": "To configure and manage the rules governing how customers earn points through purchases and other qualifying activities on the SkillXT platform.",
+    "keyTopics": [
+      "Basic Earning Configuration",
+      "RewardSettings Configuration",
+      "Merchant-specific Earning Rules",
+      "Promotional Earning Rules",
+      "Earning Exclusions & Restrictions",
+      "Transaction Processing Rules",
+      "Special Earning Scenarios",
+      "Points Issuance Process"
+    ],
+    "exampleQuestions": [
+      "How do I configure the points earning rate in SkillXT?",
+      "What is the default earning rate and how can I change it?",
+      "Can I set different earning rates for different merchants?",
+      "How do I create promotional earning multipliers?",
+      "What is the minimum purchase amount for earning points?",
+      "How are points rounded when earning fractional amounts?",
+      "Can I exclude certain products or categories from point earning?",
+      "How do I handle point adjustments for returned purchases?",
+      "What rules apply to maximum daily or monthly point earnings?",
+      "How do I set up bonus points for new customer referrals?"
+    ]
+  },
+  {
+    "id": 89,
+    "title": "Points Redemption Rules Configuration",
+    "targetUser": "Super Admin, Merchant",
+    "purpose": "To configure and manage the rules governing how customers redeem their earned points for discounts and rewards through the SkillXT platform.",
+    "keyTopics": [
+      "Basic Redemption Configuration",
+      "RewardSettings Configuration",
+      "Redemption Process Rules",
+      "Merchant-specific Redemption Rules",
+      "Redemption Validation Rules",
+      "Fee Application Rules",
+      "Redemption Restrictions",
+      "Redemption Processing"
+    ],
+    "exampleQuestions": [
+      "How do I configure the points redemption rate in SkillXT?",
+      "What is the minimum points required for redemption?",
+      "How is the platform fee calculated on redemptions?",
+      "Can I set different redemption rules for different merchants?",
+      "How do I handle redemptions when a customer has insufficient points?",
+      "What validation is performed before a redemption is processed?",
+      "Can I restrict redemptions for certain products or categories?",
+      "How do I reverse a completed redemption transaction?",
+      "What is the maximum redemption value per transaction?",
+      "How are redemption fees displayed to customers and merchants?"
+    ]
+  },
+  {
+    "id": 90,
+    "title": "Points Transfer Rules & Limits",
+    "targetUser": "Super Admin, Merchant, Customer",
+    "purpose": "To configure and manage the rules governing points transfers between customers, ensuring security, preventing abuse, and maintaining platform integrity.",
+    "keyTopics": [
+      "Transfer Overview",
+      "Eligibility Rules",
+      "Transfer Limits",
+      "Fee Structure",
+      "Transfer Validation Rules",
+      "Security & Fraud Prevention",
+      "Transfer Process Flow",
+      "Transfer Restrictions"
+    ],
+    "exampleQuestions": [
+      "How do I transfer points to another customer in SkillXT?",
+      "What are the limits on point transfers?",
+      "Are there any fees for transferring points?",
+      "Who can I transfer points to?",
+      "How do I reverse a point transfer?",
+      "What validation is performed before a transfer is processed?",
+      "Can I set transfer limits for specific customers?",
+      "How are transfer fraud attempts detected and prevented?",
+      "What is the process for disputing a transfer?",
+      "Can transfers be scheduled for future dates?"
+    ]
+  },
+  {
+    "id": 91,
+    "title": "Transaction Validation Rules",
+    "targetUser": "Super Admin, Merchant, Developer",
+    "purpose": "To ensure the integrity and security of all point transactions through comprehensive validation rules that prevent errors, fraud, and unauthorized activities.",
+    "keyTopics": [
+      "Validation Architecture",
+      "Pre-transaction Validation",
+      "Transaction Integrity Checks",
+      "Business Rule Validation",
+      "Security Validation",
+      "Fraud Detection Validation",
+      "Consistency Validation",
+      "Notification Validation"
+    ],
+    "exampleQuestions": [
+      "What validation rules apply to point earning transactions?",
+      "How does the system validate point redemption requests?",
+      "What checks are performed before processing a points transfer?",
+      "How are transaction amounts validated?",
+      "What happens when a transaction fails validation?",
+      "How does the system prevent duplicate transactions?",
+      "What fraud detection is built into transaction validation?",
+      "How are balance inconsistencies detected and resolved?",
+      "What security validations protect transaction processing?",
+      "Can validation rules be customized for specific scenarios?"
+    ]
+  },
+  {
+    "id": 92,
+    "title": "Anti-fraud Rules & Detection",
+    "targetUser": "Super Admin, Security Team, Developer",
+    "purpose": "To protect the SkillXT platform from fraudulent activities through comprehensive detection rules, monitoring systems, and response procedures.",
+    "keyTopics": [
+      "Fraud Landscape",
+      "Fraud Detection Methods",
+      "Detection Rules & Signals",
+      "Risk Scoring System",
+      "Fraud Prevention Measures",
+      "Real-time Monitoring",
+      "Investigation Process",
+      "Response Actions"
+    ],
+    "exampleQuestions": [
+      "What types of fraud does SkillXT protect against?",
+      "How does the platform detect fraudulent transactions?",
+      "What real-time monitoring is in place for fraud prevention?",
+      "How are suspicious transactions flagged for review?",
+      "What is the process for investigating suspected fraud?",
+      "How does the platform prevent account takeover?",
+      "What measures prevent transaction manipulation?",
+      "How are fraud alerts prioritized and handled?",
+      "Can I set custom fraud detection rules?",
+      "What happens when fraud is confirmed?"
+    ]
+  },
+  {
+    "id": 93,
+    "title": "Rate Limiting & Security Rules",
+    "targetUser": "Super Admin, Developer, Security Team",
+    "purpose": "To protect the SkillXT platform from abuse, attacks, and unauthorized access through comprehensive rate limiting, security headers, and access control rules.",
+    "keyTopics": [
+      "Rate Limiting Overview",
+      "Rate Limit Configuration",
+      "Security Headers (Helmet)",
+      "CORS Configuration",
+      "Authentication Security",
+      "Input Validation & Sanitization",
+      "Password Security",
+      "API Security"
+    ],
+    "exampleQuestions": [
+      "What rate limits are configured for the SkillXT API?",
+      "How does rate limiting work for authentication endpoints?",
+      "What security headers are implemented in the platform?",
+      "How is CORS configured for the API?",
+      "What password security measures are in place?",
+      "How does the platform prevent SQL injection attacks?",
+      "What input validation is performed on API requests?",
+      "How are JWT tokens secured in SkillXT?",
+      "What measures prevent brute force attacks on login?",
+      "How is sensitive data protected in transit and at rest?"
+    ]
+  },
+  {
+    "id": 94,
+    "title": "Compliance Policies Overview",
+    "targetUser": "Super Admin, Legal Team, Finance Team, Developer",
+    "purpose": "To ensure SkillXT operates within legal and regulatory frameworks, protecting customer data, maintaining financial compliance, and meeting industry standards.",
+    "keyTopics": [
+      "Regulatory Framework",
+      "Data Privacy & Protection",
+      "Customer Rights",
+      "Merchant Obligations",
+      "Financial Compliance",
+      "Loyalty Program Regulations",
+      "Cross-border Compliance",
+      "Consent & Permissions"
+    ],
+    "exampleQuestions": [
+      "What regulations apply to the SkillXT loyalty program?",
+      "How does SkillXT ensure compliance with data protection laws?",
+      "What customer data privacy rights are supported?",
+      "How is financial compliance maintained for the platform?",
+      "What are the key compliance policies for merchants?",
+      "How does SkillXT handle cross-border data transfers?",
+      "What consent management practices are implemented?",
+      "How are loyalty program regulations addressed?",
+      "What security standards must be maintained?",
+      "How is compliance monitored and enforced?"
+    ]
+  },
+  {
+    "id": 95,
+    "title": "Data Privacy & GDPR Compliance",
+    "targetUser": "Super Admin, Legal Team, Data Protection Officer, Developer",
+    "purpose": "To ensure SkillXT complies with global data protection regulations, particularly GDPR, and implements comprehensive privacy protections for all users.",
+    "keyTopics": [
+      "GDPR Fundamentals",
+      "Data Inventory & Mapping",
+      "Customer Data Rights",
+      "Lawful Basis for Processing",
+      "Consent Management",
+      "Data Security Measures",
+      "Data Breach Management",
+      "Third-party Processors"
+    ],
+    "exampleQuestions": [
+      "What is GDPR and does it apply to SkillXT?",
+      "How does SkillXT protect customer personal data?",
+      "What customer data privacy rights are supported?",
+      "How can a customer request their personal data?",
+      "What is the process for data deletion requests?",
+      "How is customer consent managed in SkillXT?",
+      "What security measures protect personal data?",
+      "How does SkillXT handle data breaches?",
+      "What third parties have access to customer data?",
+      "How long is customer data retained?"
+    ]
+  },
+  {
+    "id": 96,
+    "title": "Refund & Reversal Policies",
+    "targetUser": "Super Admin, Merchant, Customer, Finance Team",
+    "purpose": "To establish clear policies and procedures for refunds, reversals, and dispute resolution related to point transactions, ensuring fairness, consistency, and compliance.",
+    "keyTopics": [
+      "Refund & Reversal Overview",
+      "Reversal Eligibility",
+      "Refund Eligibility",
+      "Reversal Process",
+      "Point Adjustment Mechanics",
+      "Refund Amount Calculation",
+      "Merchant Refund Responsibilities",
+      "Customer Communication"
+    ],
+    "exampleQuestions": [
+      "What is the refund and reversal policy in SkillXT?",
+      "How do I request a refund or reversal for a transaction?",
+      "Who has the authority to approve refunds and reversals?",
+      "What are the eligibility criteria for transaction reversals?",
+      "How are points adjusted during a refund or reversal?",
+      "What is the process for reversing a fraudulent transaction?",
+      "How are merchants notified of refunds involving their transactions?",
+      "What documentation is required for refund requests?",
+      "How are partial refunds calculated and processed?",
+      "What happens to platform fees during refunds?"
+    ]
+  },
+  {
+    "id": 97,
+    "title": "Dispute Resolution Policies",
+    "targetUser": "Super Admin, Merchant, Customer, Legal Team",
+    "purpose": "To provide a fair and transparent process for resolving disputes between customers, merchants, and the platform, ensuring timely resolution and maintaining trust in the SkillXT ecosystem.",
+    "keyTopics": [
+      "Dispute Overview",
+      "Dispute Types & Categories",
+      "Dispute Initiation Process",
+      "Investigation Process",
+      "Resolution Methods",
+      "Resolution Timeline",
+      "Customer Dispute Process",
+      "Merchant Dispute Process"
+    ],
+    "exampleQuestions": [
+      "How do I file a dispute in SkillXT?",
+      "What types of disputes can be resolved through the platform?",
+      "What information do I need to submit a dispute?",
+      "How long does the dispute resolution process take?",
+      "What evidence should I provide for my dispute?",
+      "How are disputes investigated by the platform?",
+      "What resolution options are available for disputes?",
+      "Can I appeal a dispute resolution decision?",
+      "How does the platform ensure fair dispute resolution?",
+      "What happens if a merchant is found at fault in a dispute?"
+    ]
+  },
+  {
+    "id": 98,
+    "title": "Terms of Service for Merchants",
+    "targetUser": "Merchant, Super Admin, Legal Team",
+    "purpose": "To define the legal agreement between SkillXT and merchants, outlining rights, responsibilities, and rules for participating in the shared loyalty ecosystem.",
+    "keyTopics": [
+      "Agreement Overview",
+      "Merchant Responsibilities",
+      "Platform Responsibilities",
+      "Subscription & Billing Terms",
+      "Points & Rewards Terms",
+      "Advertising Terms",
+      "Data & Privacy Terms",
+      "Intellectual Property"
+    ],
+    "exampleQuestions": [
+      "What are the terms of service for merchants on SkillXT?",
+      "What responsibilities do merchants have under the agreement?",
+      "What are the subscription and billing terms for merchants?",
+      "How are points handled under the merchant terms of service?",
+      "What advertising terms apply to merchant campaigns?",
+      "What data privacy obligations do merchants have?",
+      "How is merchant intellectual property protected?",
+      "What liability protections exist for merchants?",
+      "How can a merchant terminate their agreement?",
+      "What happens when a merchant's subscription expires?"
+    ]
+  },
+  {
+    "id": 99,
+    "title": "Terms of Service for Customers",
+    "targetUser": "Customer, Super Admin, Legal Team",
+    "purpose": "To define the legal agreement between SkillXT and customers, outlining rights, responsibilities, and rules for participating in the shared loyalty ecosystem as a customer.",
+    "keyTopics": [
+      "Agreement Overview",
+      "Account Registration & Management",
+      "Points & Rewards Terms",
+      "Merchant Transactions",
+      "Privacy & Data Protection",
+      "Acceptable Use",
+      "Notifications & Communications",
+      "Dispute Resolution"
+    ],
+    "exampleQuestions": [
+      "What are the terms of service for customers on SkillXT?",
+      "How do I accept the terms of service for SkillXT?",
+      "What are my responsibilities as a SkillXT customer?",
+      "How is my personal data protected under the terms?",
+      "What are the rules for earning and redeeming points?",
+      "Can I transfer my points to another customer?",
+      "What happens to my points if I close my account?",
+      "How do I dispute a transaction on my account?",
+      "What communication can I expect from SkillXT?",
+      "How do I opt out of marketing communications?"
+    ]
+  },
+  {
+    "id": 100,
+    "title": "Troubleshooting: Common Merchant Issues",
+    "targetUser": "Merchant, Super Admin, Customer Support",
+    "purpose": "To provide solutions to common problems encountered by merchants using the SkillXT platform, enabling quick resolution and optimal platform utilization.",
+    "keyTopics": [
+      "Points Earning Issues",
+      "Points Redemption Issues",
+      "Customer Lookup Issues",
+      "Subscription Issues",
+      "Advertisement Issues",
+      "Dashboard & Reporting Issues",
+      "Technical Issues",
+      "Account Management Issues"
+    ],
+    "exampleQuestions": [
+      "Why are my customers not earning points for transactions?",
+      "How do I fix points not showing up after a transaction?",
+      "What should I do when a customer's redemption fails?",
+      "How do I troubleshoot QR code scanning issues?",
+      "Why is my merchant subscription showing as inactive?",
+      "What should I do when my advertisement is rejected?",
+      "How do I resolve billing discrepancies on my account?",
+      "Why is my dashboard not showing the correct data?",
+      "What should I do when I can't log into my merchant account?",
+      "How do I add or remove staff from my merchant account?"
+    ]
+  },
+  {
+    "id": 101,
+    "title": "Troubleshooting: Common Customer Issues",
+    "targetUser": "Customer, Merchant, Customer Support",
+    "purpose": "To provide solutions to common problems encountered by customers using the SkillXT platform, enabling quick self-resolution and improved customer experience.",
+    "keyTopics": [
+      "Account & Login Issues",
+      "Points Balance Issues",
+      "Points Earning Issues",
+      "Points Redemption Issues",
+      "Points Transfer Issues",
+      "Transaction History Issues",
+      "QR Code & Scanning Issues",
+      "Notification Issues"
+    ],
+    "exampleQuestions": [
+      "I can't log into my SkillXT customer account. What should I do?",
+      "Why is my points balance not updating after a purchase?",
+      "How do I reset my SkillXT password?",
+      "I didn't receive points for my last purchase. How can I fix this?",
+      "Why can't I redeem my points even though I have enough?",
+      "How do I transfer points to a friend or family member?",
+      "Why am I not receiving point expiration notifications?",
+      "My QR code isn't working. How do I get a new one?",
+      "How do I update my profile information in the app?",
+      "Why are my transaction dates showing incorrectly?"
+    ]
+  },
+  {
+    "id": 102,
+    "title": "Troubleshooting: Technical Issues",
+    "targetUser": "Super Admin, Developer, IT Support, Merchant, Customer",
+    "purpose": "To provide systematic troubleshooting guidance for technical issues affecting the SkillXT platform, covering common problems and their solutions.",
+    "keyTopics": [
+      "API & Backend Issues",
+      "Database Issues",
+      "Authentication & Authorization",
+      "Frontend Issues",
+      "Real-time Features",
+      "File & Media Issues",
+      "Email & Notification Issues",
+      "Payment & Billing Issues"
+    ],
+    "exampleQuestions": [
+      "The SkillXT API is returning errors. How do I debug this?",
+      "My database queries are running slowly. How can I optimize them?",
+      "I'm getting authentication errors. What should I check?",
+      "The frontend is not loading properly. How do I troubleshoot?",
+      "Real-time notifications are not working. What could be wrong?",
+      "Image uploads are failing. How do I fix this?",
+      "Emails are not being sent from the platform. What should I check?",
+      "Payment processing is failing. How do I resolve this?",
+      "The platform is running slowly. How can I improve performance?",
+      "My deployment failed. What are common deployment issues?"
+    ]
+  },
+  {
+    "id": 103,
+    "title": "Customer Journey Overview",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To provide a comprehensive map of the customer experience lifecycle on SkillXT, from initial discovery through long-term loyalty, enabling optimization of each stage for maximum engagement and retention.",
+    "keyTopics": [
+      "Journey Stages Overview",
+      "Journey Mapping Principles",
+      "Customer Personas",
+      "Journey Metrics & KPIs",
+      "Cross-channel Experience",
+      "Personalization Strategy",
+      "Friction Reduction",
+      "Delight Strategies"
+    ],
+    "exampleQuestions": [
+      "What is the customer journey on SkillXT?",
+      "What are the key stages of the customer lifecycle?",
+      "How do customers typically discover SkillXT?",
+      "What happens during customer onboarding?",
+      "How do customers earn their first points?",
+      "What is the typical path to first redemption?",
+      "How does the referral program fit into the customer journey?",
+      "What metrics should I track for each journey stage?",
+      "How can I identify where customers drop off in the journey?",
+      "What personalization opportunities exist in the customer journey?"
+    ]
+  },
+  {
+    "id": 104,
+    "title": "Customer Onboarding Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To design and optimize the customer onboarding experience, ensuring new customers quickly understand the value proposition and complete their first meaningful actions on SkillXT.",
+    "keyTopics": [
+      "Pre-onboarding Stage",
+      "Signup Process",
+      "Initial Setup",
+      "First Value Delivery",
+      "Education & Guidance",
+      "Engagement Drivers",
+      "Onboarding Metrics",
+      "Optimization Strategies"
+    ],
+    "exampleQuestions": [
+      "What is the customer onboarding process for SkillXT?",
+      "How long does the signup process take?",
+      "What information is required during signup?",
+      "How do customers receive their first points?",
+      "What welcome bonuses are offered to new customers?",
+      "How does the onboarding tutorial work?",
+      "What support is available during onboarding?",
+      "How do I measure onboarding success?",
+      "What are common drop-off points in onboarding?",
+      "How can I improve the onboarding experience?"
+    ]
+  },
+  {
+    "id": 105,
+    "title": "Customer Activation Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To guide customers from initial signup to their first meaningful platform interaction, ensuring they quickly experience the core value proposition of the SkillXT loyalty ecosystem.",
+    "keyTopics": [
+      "Activation Definition",
+      "Activation Milestones",
+      "Activation Campaigns",
+      "Early Engagement Strategies",
+      "Activation Channels",
+      "Activation Barriers & Solutions",
+      "Personalization for Activation",
+      "Measurement & Analytics"
+    ],
+    "exampleQuestions": [
+      "What is the activation goal for new SkillXT customers?",
+      "What counts as an activated customer on SkillXT?",
+      "How do I measure customer activation success?",
+      "What is the typical activation timeline for new customers?",
+      "What campaigns help drive customer activation?",
+      "How do I identify customers who haven't activated?",
+      "What barriers prevent customers from activating?",
+      "How can I personalize the activation experience?",
+      "What communication works best for activation?",
+      "How do I A/B test different activation strategies?"
+    ]
+  },
+  {
+    "id": 106,
+    "title": "Customer Earning Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To optimize the customer experience of earning points through purchases, maximizing engagement, transaction frequency, and overall platform value delivery.",
+    "keyTopics": [
+      "Earning Journey Stages",
+      "Point Earning Mechanics",
+      "Customer Earning Behavior",
+      "Earning Experience Optimization",
+      "Earning Incentives",
+      "Earning Education",
+      "Multi-channel Earning",
+      "Earning Analytics"
+    ],
+    "exampleQuestions": [
+      "How do customers earn points on SkillXT?",
+      "What is the default earning rate for points?",
+      "How do I maximize my point earnings?",
+      "What are the best categories for earning points?",
+      "How do promotional multipliers work?",
+      "Can I earn points for referring friends?",
+      "How do I track my point earning history?",
+      "What is the minimum purchase to earn points?",
+      "How do I know how many points I'll earn for a purchase?",
+      "Can I earn points at all participating merchants?"
+    ]
+  },
+  {
+    "id": 107,
+    "title": "Customer Redemption Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To optimize the customer experience of redeeming earned points for discounts, ensuring high redemption rates, customer satisfaction, and maximum platform value realization.",
+    "keyTopics": [
+      "Redemption Journey Stages",
+      "Redemption Decision Process",
+      "Redemption Experience Design",
+      "Redemption Touchpoints",
+      "Redemption Incentives",
+      "Redemption Friction Reduction",
+      "Redemption Analytics",
+      "Redemption Optimization"
+    ],
+    "exampleQuestions": [
+      "How do I redeem my SkillXT points for discounts?",
+      "What is the minimum number of points I can redeem?",
+      "How do I know how much my points are worth?",
+      "Where can I redeem my SkillXT points?",
+      "How do I find merchants that accept point redemptions?",
+      "What is the process for redeeming points at a merchant?",
+      "How do I redeem points using the mobile app?",
+      "Can I redeem partial point balances?",
+      "What fees apply to point redemptions?",
+      "How do I see my redemption history?"
+    ]
+  },
+  {
+    "id": 108,
+    "title": "Customer Referral Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To optimize the customer referral experience, encouraging existing customers to share SkillXT with friends and family, driving low-cost customer acquisition through word-of-mouth marketing.",
+    "keyTopics": [
+      "Referral Program Overview",
+      "Referral Journey Stages",
+      "Referral Mechanics",
+      "Referral Incentive Design",
+      "Referral Attribution",
+      "Referral Communication",
+      "Referral Experience Optimization",
+      "Referral Analytics"
+    ],
+    "exampleQuestions": [
+      "How does the referral program work in SkillXT?",
+      "What rewards do I get for referring friends?",
+      "How do I create a referral link or code?",
+      "How is my referral tracked and attributed?",
+      "What is the reward for the person I refer?",
+      "How many people can I refer for rewards?",
+      "How do I share my referral with friends?",
+      "What should I write in my referral message?",
+      "How do I know if my referral was successful?",
+      "How long does it take to receive referral rewards?"
+    ]
+  },
+  {
+    "id": 109,
+    "title": "Customer Retention Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To maintain and strengthen customer engagement over time, preventing churn and maximizing customer lifetime value through proactive retention strategies and personalized experiences.",
+    "keyTopics": [
+      "Retention Fundamentals",
+      "Customer Lifecycle Value",
+      "Engagement Strategies",
+      "Retention Campaigns",
+      "Churn Prevention",
+      "Segmentation Strategies",
+      "Retention Metrics",
+      "Personalization at Scale"
+    ],
+    "exampleQuestions": [
+      "What is customer retention and why is it important?",
+      "How do I measure customer retention on SkillXT?",
+      "What is the current customer retention rate?",
+      "What strategies work best for retaining customers?",
+      "How do I identify customers at risk of churning?",
+      "What proactive steps can I take to prevent churn?",
+      "How do I create effective win-back campaigns?",
+      "What role does personalization play in retention?",
+      "How do I measure the ROI of retention efforts?",
+      "What loyalty program features improve retention?"
+    ]
+  },
+  {
+    "id": 110,
+    "title": "Customer Win-back Journey",
+    "targetUser": "Super Admin, Marketing Team, Customer Success Team",
+    "purpose": "To systematically recover lapsed and dormant customers, bringing them back into active engagement with the SkillXT platform through targeted win-back strategies and campaigns.",
+    "keyTopics": [
+      "Win-back Fundamentals",
+      "Dormant Customer Classification",
+      "Win-back Campaign Strategy",
+      "Re-engagement Tactics",
+      "Incentive Design",
+      "Communication Strategy",
+      "Channel Optimization",
+      "Win-back Funnel"
+    ],
+    "exampleQuestions": [
+      "What is a win-back campaign and when should I use it?",
+      "How does SkillXT define a dormant customer?",
+      "What strategies work best for winning back inactive customers?",
+      "How do I create a win-back campaign for different dormancy levels?",
+      "What incentives are most effective for win-back campaigns?",
+      "How do I measure the success of win-back campaigns?",
+      "What communication channels work best for win-back?",
+      "How do I personalize win-back messages?",
+      "What is the optimal timing for win-back outreach?",
+      "How do I prevent reactivated customers from churning again?"
+    ]
+  },
+  {
+    "id": 111,
+    "title": "Merchant Journey Overview",
+    "targetUser": "Super Admin, Merchant Success Team, Marketing Team",
+    "purpose": "To map the complete merchant lifecycle on SkillXT, from initial discovery through long-term partnership, enabling optimization of each stage for merchant satisfaction and platform growth.",
+    "keyTopics": [
+      "Merchant Journey Stages",
+      "Merchant Personas",
+      "Journey Mapping Principles",
+      "Merchant Value Proposition",
+      "Journey Metrics & KPIs",
+      "Cross-channel Experience",
+      "Personalization Strategy",
+      "Friction Reduction"
+    ],
+    "exampleQuestions": [
+      "What is the merchant journey on SkillXT?",
+      "What are the key stages of the merchant lifecycle?",
+      "How do merchants typically discover SkillXT?",
+      "What happens during merchant onboarding?",
+      "How do merchants earn their first points transactions?",
+      "What is the typical path to merchant growth?",
+      "How does the subscription model fit into the merchant journey?",
+      "What metrics should I track for each journey stage?",
+      "How can I identify where merchants drop off in the journey?",
+      "What personalization opportunities exist for merchants?"
+    ]
+  },
+  {
+    "id": 112,
+    "title": "Merchant Onboarding Journey",
+    "targetUser": "Super Admin, Merchant Success Team, Marketing Team",
+    "purpose": "To design and optimize the merchant onboarding experience, ensuring new merchants quickly understand the value proposition and complete their first meaningful actions on SkillXT.",
+    "keyTopics": [
+      "Pre-onboarding Stage",
+      "Merchant Registration",
+      "Initial Setup",
+      "First Value Delivery",
+      "Merchant Education",
+      "Onboarding Support",
+      "Onboarding Metrics",
+      "Optimization Strategies"
+    ],
+    "exampleQuestions": [
+      "What is the merchant onboarding process for SkillXT?",
+      "How long does merchant onboarding take?",
+      "What information is required to register as a merchant?",
+      "How do I verify my business for SkillXT?",
+      "What setup steps are needed after registration?",
+      "How do I complete my first point-earning transaction?",
+      "What training resources are available for new merchants?",
+      "How do I measure onboarding success?",
+      "What are common drop-off points in merchant onboarding?",
+      "How can I improve the merchant onboarding experience?"
+    ]
+  },
+  {
+    "id": 113,
+    "title": "Merchant Activation Journey",
+    "targetUser": "Super Admin, Merchant Success Team, Marketing Team",
+    "purpose": "To guide merchants from initial signup to their first meaningful platform interactions, ensuring they quickly realize the value of participating in the SkillXT loyalty ecosystem.",
+    "keyTopics": [
+      "Activation Definition",
+      "Activation Milestones",
+      "Activation Campaigns",
+      "Early Engagement Strategies",
+      "Activation Channels",
+      "Activation Barriers & Solutions",
+      "Personalization for Activation",
+      "Measurement & Analytics"
+    ],
+    "exampleQuestions": [
+      "What is the activation goal for new merchants on SkillXT?",
+      "What counts as an activated merchant?",
+      "How do I measure merchant activation success?",
+      "What is the typical activation timeline for new merchants?",
+      "What campaigns help drive merchant activation?",
+      "How do I identify merchants who haven't activated?",
+      "What barriers prevent merchants from activating?",
+      "How can I personalize the activation experience?",
+      "What communication works best for merchant activation?",
+      "How do I A/B test different activation strategies?"
+    ]
+  },
+  {
+    "id": 114,
+    "title": "Merchant Points Issuance Journey",
+    "targetUser": "Merchant, Super Admin, Merchant Success Team",
+    "purpose": "To optimize the merchant experience of issuing points to customers, ensuring accurate, efficient, and valuable point transactions that drive customer loyalty and merchant growth.",
+    "keyTopics": [
+      "Points Issuance Overview",
+      "Issuance Process Flow",
+      "Customer Verification Methods",
+      "Points Calculation",
+      "Issuance Experience Design",
+      "Issuance Tools & Features",
+      "Issuance Analytics",
+      "Issuance Optimization"
+    ],
+    "exampleQuestions": [
+      "How do I issue points to customers at my merchant location?",
+      "What methods can I use to verify a customer for point issuance?",
+      "How are points calculated when I issue them?",
+      "What should I do if the QR scanner isn't working?",
+      "How do I issue points for a customer not in my system?",
+      "Can I issue points in bulk for multiple customers?",
+      "How do I correct a point issuance error?",
+      "What should I do if a customer disputes points they received?",
+      "How do I track my point issuance history?",
+      "Can I set custom point rates for my merchant?"
+    ]
+  },
+  {
+    "id": 115,
+    "title": "Merchant Subscription Journey",
+    "targetUser": "Merchant, Super Admin, Merchant Success Team, Finance Team",
+    "purpose": "To guide merchants through the subscription lifecycle, from initial plan selection through renewal and management, ensuring optimal subscription value and platform access.",
+    "keyTopics": [
+      "Subscription Overview",
+      "Plan Selection",
+      "Subscription Purchase",
+      "Subscription Management",
+      "Renewal Process",
+      "Grace Period Management",
+      "Subscription Changes",
+      "Subscription Cancellation"
+    ],
+    "exampleQuestions": [
+      "What subscription plans are available for merchants?",
+      "How do I purchase a SkillXT merchant subscription?",
+      "What payment methods are accepted for subscriptions?",
+      "How do I view my current subscription status?",
+      "How do I renew my merchant subscription?",
+      "What is the grace period and how does it work?",
+      "How do I upgrade or downgrade my subscription?",
+      "What happens when my subscription expires?",
+      "Can I cancel my subscription at any time?",
+      "How do I manage auto-renewal for my subscription?"
+    ]
+  },
+  {
+    "id": 116,
+    "title": "Merchant Advertising Journey",
+    "targetUser": "Merchant, Super Admin, Marketing Team",
+    "purpose": "To guide merchants through the advertising experience on SkillXT, from initial ad creation to performance optimization, maximizing marketing ROI and customer acquisition.",
+    "keyTopics": [
+      "Advertising Journey Stages",
+      "Advertising Value Proposition",
+      "Ad Creation Process",
+      "Campaign Launch",
+      "Ad Performance Optimization",
+      "Performance Analysis",
+      "Advanced Advertising Strategies",
+      "Advertising Budget Management"
+    ],
+    "exampleQuestions": [
+      "How does advertising work on the SkillXT platform?",
+      "How do I create my first advertisement as a merchant?",
+      "What ad formats are available for merchants?",
+      "How do I target specific customers with my ads?",
+      "How do I set and manage my advertising budget?",
+      "What analytics are available for my ad campaigns?",
+      "How do I optimize my ads for better performance?",
+      "What should I do if my ad is not getting impressions?",
+      "How do I A/B test different ad creatives?",
+      "How do I measure the ROI of my advertising?"
+    ]
+  },
+  {
+    "id": 117,
+    "title": "Merchant Analytics & Insights Journey",
+    "targetUser": "Merchant, Super Admin, Merchant Success Team",
+    "purpose": "To help merchants leverage SkillXT's analytics and insights to make data-driven business decisions, optimize operations, and grow their business through the platform.",
+    "keyTopics": [
+      "Analytics Overview",
+      "Core Business Metrics",
+      "Customer Analytics",
+      "Transaction Analytics",
+      "Points Analytics",
+      "Performance Benchmarking",
+      "Trend Analysis",
+      "Predictive Analytics"
+    ],
+    "exampleQuestions": [
+      "What analytics and insights are available to merchants?",
+      "How do I access my merchant analytics dashboard?",
+      "What key metrics should I track as a merchant?",
+      "How do I analyze customer behavior on the platform?",
+      "How can I use analytics to grow my business?",
+      "What benchmarking data is available?",
+      "How do I track the ROI of my advertising spend?",
+      "What trend analysis tools are available?",
+      "How do I export my analytics data?",
+      "Can I create custom reports for my business?"
+    ]
+  },
+  {
+    "id": 118,
+    "title": "Admin Journey Overview",
+    "targetUser": "Super Admin, Admin Team",
+    "purpose": "To provide a comprehensive understanding of the super admin role, responsibilities, and daily workflows in managing the SkillXT platform ecosystem.",
+    "keyTopics": [
+      "Super Admin Role Definition",
+      "Core Responsibilities",
+      "Admin Dashboard Features",
+      "Daily Admin Workflows",
+      "Key Admin Decisions",
+      "Admin Tool Access",
+      "Admin Security & Permissions",
+      "Cross-functional Coordination"
+    ],
+    "exampleQuestions": [
+      "What are the main responsibilities of a SkillXT super admin?",
+      "What tools and interfaces are available to super admins?",
+      "How do I access the admin dashboard?",
+      "What permissions do super admins have?",
+      "How do I manage merchant accounts as an admin?",
+      "What financial oversight responsibilities do admins have?",
+      "How do I handle escalated customer or merchant issues?",
+      "What compliance responsibilities do admins have?",
+      "How do I coordinate with other teams as an admin?",
+      "What strategic decisions do admins make?"
+    ]
+  },
+  {
+    "id": 119,
+    "title": "Admin Onboarding & Setup Journey",
+    "targetUser": "Super Admin, New Admin Team Members",
+    "purpose": "To guide new administrators through the setup and configuration of the SkillXT platform, ensuring proper initialization, security configuration, and operational readiness.",
+    "keyTopics": [
+      "Pre-launch Setup",
+      "Platform Configuration",
+      "User Management Setup",
+      "Content & Media Setup",
+      "Integration Setup",
+      "Testing & Validation",
+      "Documentation & Training",
+      "Go-live Preparation"
+    ],
+    "exampleQuestions": [
+      "What is involved in setting up the SkillXT platform?",
+      "How do I configure the initial admin settings?",
+      "What infrastructure is needed to run SkillXT?",
+      "How do I set up email and SMS notifications?",
+      "What integrations should I configure during setup?",
+      "How do I create the first admin accounts?",
+      "What testing should I perform before going live?",
+      "How do I configure payment processing?",
+      "What documentation should I prepare during setup?",
+      "How do I ensure platform security during setup?"
+    ]
+  },
+  {
+    "id": 120,
+    "title": "Admin Merchant Management Journey",
+    "targetUser": "Super Admin, Merchant Success Team",
+    "purpose": "To manage the complete merchant lifecycle on SkillXT, from application review through ongoing management, support, and optimization of merchant partnerships.",
+    "keyTopics": [
+      "Merchant Application Process",
+      "Merchant Onboarding",
+      "Merchant Monitoring",
+      "Merchant Support",
+      "Merchant Optimization",
+      "Merchant Lifecycle Management",
+      "Merchant Communication",
+      "Merchant Dispute Resolution"
+    ],
+    "exampleQuestions": [
+      "How do I manage merchant accounts as an admin?",
+      "What is the merchant application review process?",
+      "How do I onboard a new merchant to the platform?",
+      "How do I monitor merchant performance?",
+      "What support can I provide to struggling merchants?",
+      "How do I handle merchant disputes and complaints?",
+      "How do I measure merchant success and health?",
+      "What communication should I have with merchants?",
+      "How do I optimize merchant performance?",
+      "How do I manage the merchant lifecycle?"
+    ]
+  },
+  {
+    "id": 121,
+    "title": "Admin Customer Management Journey",
+    "targetUser": "Super Admin, Customer Success Team",
+    "purpose": "To manage the complete customer lifecycle on SkillXT, from registration through ongoing engagement, support, and retention optimization.",
+    "keyTopics": [
+      "Customer Registration Management",
+      "Customer Profile Management",
+      "Customer Support",
+      "Customer Engagement",
+      "Points & Transaction Management",
+      "Customer Retention",
+      "Customer Analytics",
+      "Customer Lifecycle Management"
+    ],
+    "exampleQuestions": [
+      "How do I manage customer accounts as an admin?",
+      "How do I handle customer registration and verification?",
+      "What customer support tools are available to admins?",
+      "How do I resolve customer disputes and complaints?",
+      "How do I identify at-risk customers?",
+      "What re-engagement strategies can I use for dormant customers?",
+      "How do I analyze customer behavior and trends?",
+      "How do I measure customer retention and churn?",
+      "What communication can I send to customers?",
+      "How do I manage customer data and privacy?"
+    ]
+  },
+  {
+    "id": 122,
+    "title": "Admin Financial Management Journey",
+    "targetUser": "Super Admin, Finance Team, Accountants",
+    "purpose": "To manage the complete financial lifecycle of the SkillXT platform, from revenue tracking and billing to financial reporting, compliance, and strategic financial planning.",
+    "keyTopics": [
+      "Financial Overview",
+      "Revenue Management",
+      "Subscription Revenue",
+      "Platform Fee Revenue",
+      "Advertising Revenue",
+      "Expense Management",
+      "Billing & Collections",
+      "Financial Reporting"
+    ],
+    "exampleQuestions": [
+      "What financial responsibilities do SkillXT admins have?",
+      "How do I track platform revenue as an admin?",
+      "What financial reports are available?",
+      "How do I manage merchant billing and collections?",
+      "How do I calculate and track MRR and ARR?",
+      "How do I handle financial compliance requirements?",
+      "What expense tracking tools are available?",
+      "How do I create financial forecasts?",
+      "How do I reconcile payments with transactions?",
+      "What tax compliance is required for the platform?"
+    ]
+  },
+  {
+    "id": 123,
+    "title": "Admin Compliance & Audit Journey",
+    "targetUser": "Super Admin, Legal Team, Finance Team, Compliance Officer",
+    "purpose": "To ensure SkillXT maintains comprehensive compliance with legal, regulatory, and internal policy requirements through systematic auditing, monitoring, and remediation processes.",
+    "keyTopics": [
+      "Compliance Framework",
+      "Regulatory Compliance",
+      "Audit Program",
+      "Internal Controls",
+      "Financial Compliance",
+      "Data Privacy Compliance",
+      "Merchant Compliance",
+      "Customer Compliance"
+    ],
+    "exampleQuestions": [
+      "What compliance requirements apply to SkillXT?",
+      "How do I ensure the platform meets regulatory requirements?",
+      "What audits are conducted on the SkillXT platform?",
+      "How do I manage compliance for merchant partners?",
+      "What data privacy compliance is required?",
+      "How do I handle compliance incidents?",
+      "What internal controls should be in place?",
+      "How do I prepare for external audits?",
+      "How do I track remediation of compliance issues?",
+      "What training is needed for compliance?"
+    ]
+  },
+  {
+    "id": 124,
+    "title": "SkillXT Business Model Overview",
+    "targetUser": "Super Admin, Investors, Business Development Team",
+    "purpose": "To provide a comprehensive understanding of SkillXT's business model, including value proposition, revenue streams, cost structure, and competitive positioning.",
+    "keyTopics": [
+      "Business Model Canvas",
+      "Value Proposition",
+      "Business Model Type",
+      "Revenue Streams",
+      "Cost Structure",
+      "Unit Economics",
+      "Growth Strategy",
+      "Competitive Positioning"
+    ],
+    "exampleQuestions": [
+      "What is the SkillXT business model?",
+      "How does SkillXT generate revenue?",
+      "What is the value proposition for customers?",
+      "What is the value proposition for merchants?",
+      "How does the multi-sided marketplace model work?",
+      "What are the main cost components of the business?",
+      "How does SkillXT achieve profitability?",
+      "What is the customer acquisition strategy?",
+      "How does SkillXT acquire new merchants?",
+      "What competitive advantages does SkillXT have?"
+    ]
+  },
+  {
+    "id": 125,
+    "title": "Revenue Streams & Monetization",
+    "targetUser": "Super Admin, Finance Team, Business Development Team",
+    "purpose": "To detail all revenue streams available to SkillXT and optimize monetization strategies for sustainable growth and profitability.",
+    "keyTopics": [
+      "Revenue Stream Portfolio",
+      "Subscription Revenue",
+      "Transaction Fee Revenue",
+      "Advertising Revenue",
+      "Premium Feature Revenue",
+      "Data & Insights Revenue",
+      "Partnership Revenue",
+      "Ancillary Revenue"
+    ],
+    "exampleQuestions": [
+      "What are all the revenue streams for SkillXT?",
+      "How does subscription revenue contribute to the business?",
+      "What is the platform fee revenue model?",
+      "How does advertising revenue work?",
+      "What premium features generate additional revenue?",
+      "How is data monetized on the platform?",
+      "What partnership revenue opportunities exist?",
+      "How do I optimize revenue from each stream?",
+      "What is the optimal pricing strategy?",
+      "How do I forecast future revenue?"
+    ]
+  },
+  {
+    "id": 126,
+    "title": "Unit Economics & CAC/LTV",
+    "targetUser": "Super Admin, Finance Team, Business Development Team",
+    "purpose": "To analyze and optimize the unit economics of the SkillXT platform, ensuring sustainable growth through positive unit economics and healthy customer lifetime value relative to acquisition cost.",
+    "keyTopics": [
+      "Unit Economics Fundamentals",
+      "Customer Unit Economics",
+      "Merchant Unit Economics",
+      "CAC Components",
+      "LTV Components",
+      "Unit Economics Optimization",
+      "Unit Economics Metrics",
+      "Cohort Analysis"
+    ],
+    "exampleQuestions": [
+      "What are unit economics and why are they important?",
+      "How do I calculate CAC for SkillXT customers?",
+      "How do I calculate LTV for SkillXT customers?",
+      "What is a healthy LTV:CAC ratio?",
+      "How do I improve unit economics?",
+      "What is the customer payback period?",
+      "How do I calculate merchant unit economics?",
+      "How does churn affect unit economics?",
+      "What metrics should I track for unit economics?",
+      "How do I optimize CAC for the platform?"
+    ]
+  },
+  {
+    "id": 127,
+    "title": "Scalability & Growth Strategy",
+    "targetUser": "Super Admin, Business Development Team, Product Team",
+    "purpose": "To develop and execute strategies for scaling the SkillXT platform, expanding market reach, and achieving sustainable long-term growth.",
+    "keyTopics": [
+      "Scalability Assessment",
+      "Growth Strategy Framework",
+      "Market Expansion",
+      "Customer Acquisition Strategy",
+      "Merchant Acquisition Strategy",
+      "Product-Led Growth",
+      "Sales-Led Growth",
+      "Marketing-Led Growth"
+    ],
+    "exampleQuestions": [
+      "What is the growth strategy for SkillXT?",
+      "How does SkillXT plan to scale operations?",
+      "What markets is SkillXT targeting for expansion?",
+      "How does SkillXT acquire new customers?",
+      "How does SkillXT acquire new merchants?",
+      "What product features drive growth?",
+      "How does SkillXT leverage network effects?",
+      "What partnerships support growth strategy?",
+      "How does SkillXT measure growth success?",
+      "What are the key growth metrics?"
+    ]
+  },
+  {
+    "id": 128,
+    "title": "Competitive Advantage & Market Position",
+    "targetUser": "Super Admin, Business Development Team, Marketing Team",
+    "purpose": "To analyze SkillXT's competitive position, identify sustainable advantages, and develop strategies to maintain and strengthen market leadership in the loyalty and rewards industry.",
+    "keyTopics": [
+      "Competitive Landscape",
+      "Competitive Analysis",
+      "Core Competitive Advantages",
+      "Sustainable Advantages",
+      "Differentiation Strategy",
+      "Market Position",
+      "Competitive Response Strategy",
+      "Barriers to Entry"
+    ],
+    "exampleQuestions": [
+      "Who are SkillXT's main competitors?",
+      "What competitive advantages does SkillXT have?",
+      "How does SkillXT differentiate from competitors?",
+      "What is SkillXT's market position?",
+      "How does SkillXT maintain competitive advantage?",
+      "What barriers protect SkillXT from competition?",
+      "How does SkillXT respond to competitive threats?",
+      "What market trends affect SkillXT's position?",
+      "How does SkillXT plan to achieve market leadership?",
+      "What unique value does SkillXT offer?"
+    ]
+  },
+  {
+    "id": 129,
+    "title": "Examples: Points Earning Calculations",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To provide practical examples of points earning calculations, helping all stakeholders understand how points are earned in various scenarios on the SkillXT platform.",
+    "keyTopics": [
+      "Basic Earning Calculation",
+      "Category Bonus Calculations",
+      "Promotional Multiplier Calculations",
+      "Referral Bonus Calculations",
+      "Tier-based Earning",
+      "Mixed Purchase Calculations",
+      "Minimum Purchase Scenarios",
+      "Rounding Rules"
+    ],
+    "exampleQuestions": [
+      "How many points do I earn for a ₹1,000 purchase?",
+      "How are bonus points calculated for different categories?",
+      "What happens when my purchase amount results in fractional points?",
+      "How do I calculate points with promotional multipliers?",
+      "What is the minimum purchase to earn points?",
+      "How do tier-based earning rates work?",
+      "How are points calculated for mixed-category purchases?",
+      "What are the daily and monthly points earning limits?",
+      "How do I calculate points for referral bonuses?",
+      "What special bonuses apply to my purchases?"
+    ]
+  },
+  {
+    "id": 130,
+    "title": "Examples: Redemption Calculations",
+    "targetUser": "Customer, Merchant, Super Admin",
+    "purpose": "To provide practical examples of points redemption calculations, helping all stakeholders understand how discounts are computed and fees are applied during point redemption.",
+    "keyTopics": [
+      "Basic Redemption Calculation",
+      "Platform Fee Calculation",
+      "Partial Redemption Scenarios",
+      "Multiple Redemption Scenarios",
+      "Minimum Purchase with Redemption",
+      "Insufficient Balance Scenarios",
+      "Merchant-specific Redemption",
+      "Redemption Frequency Limits"
+    ],
+    "exampleQuestions": [
+      "How much discount do I get for redeeming 500 points?",
+      "How is the platform fee calculated on redemptions?",
+      "What is the net discount after fees for 1,000 points?",
+      "Can I redeem partial point balances?",
+      "What happens if I redeem more points than I have?",
+      "How do I calculate the effective value of my points?",
+      "Are there limits on how much I can redeem at once?",
+      "How do merchant-specific redemption rules work?",
+      "Can I combine point redemption with other discounts?",
+      "What happens if my purchase is below the minimum for redemption?"
+    ]
+  },
+  {
+    "id": 131,
+    "title": "Examples: Fee Revenue Calculations",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To provide practical examples of platform fee revenue calculations, helping stakeholders understand how redemption fees are computed, tracked, and impact overall platform revenue.",
+    "keyTopics": [
+      "Basic Fee Calculation",
+      "Monthly Fee Revenue Aggregation",
+      "Fee Revenue by Merchant",
+      "Fee Revenue Growth Calculation",
+      "Fee Revenue per Transaction",
+      "Fee Revenue vs Subscription Revenue",
+      "Fee Revenue Forecasting",
+      "Fee Revenue Optimization"
+    ],
+    "exampleQuestions": [
+      "How is the platform fee calculated on redemptions?",
+      "What is the total platform fee revenue for a given period?",
+      "How do I calculate the average fee per transaction?",
+      "How does fee revenue grow month-over-month?",
+      "How do I break down fee revenue by merchant?",
+      "What is the relationship between redemption volume and fee revenue?",
+      "How do I forecast future fee revenue?",
+      "How does changing the fee percentage affect revenue?",
+      "How do I measure fee revenue by customer segment?",
+      "What reports are available for fee revenue analysis?"
+    ]
+  },
+  {
+    "id": 132,
+    "title": "Examples: Subscription Revenue Calculations",
+    "targetUser": "Super Admin, Finance Team, Merchant Success Team",
+    "purpose": "To provide practical examples of subscription revenue calculations, helping stakeholders understand how merchant subscription fees are computed, tracked, and contribute to overall platform revenue.",
+    "keyTopics": [
+      "Basic Subscription Calculation",
+      "MRR Calculation Methods",
+      "ARR Calculation",
+      "Subscription Churn Calculation",
+      "Subscription Renewal Calculation",
+      "Subscription Revenue Recognition",
+      "Grace Period Revenue Impact",
+      "Subscription Upgrade/Downgrade"
+    ],
+    "exampleQuestions": [
+      "How is subscription revenue calculated for merchants?",
+      "What is MRR and how is it calculated?",
+      "How do I calculate ARR from MRR?",
+      "How is subscription churn measured?",
+      "What is the renewal rate and how is it tracked?",
+      "How does the grace period affect subscription revenue?",
+      "How are subscription upgrades and downgrades handled?",
+      "How do I forecast future subscription revenue?",
+      "What is the impact of plan mix on revenue?",
+      "How do I calculate the value of the subscription pipeline?"
+    ]
+  },
+  {
+    "id": 133,
+    "title": "Examples: Retention Rate Calculations",
+    "targetUser": "Super Admin, Marketing Team, Data Analysts",
+    "purpose": "To provide practical examples of retention rate calculations, helping stakeholders measure customer and merchant retention, understand churn patterns, and optimize retention strategies.",
+    "keyTopics": [
+      "Customer Retention Rate Calculation",
+      "Merchant Retention Rate Calculation",
+      "Cohort Retention Analysis",
+      "Revenue Retention Calculation",
+      "Churn Rate Calculation",
+      "Retention by Segment",
+      "Retention by Acquisition Channel",
+      "Retention Periods"
+    ],
+    "exampleQuestions": [
+      "How is customer retention rate calculated?",
+      "What is the current customer retention rate?",
+      "How do I calculate merchant retention rate?",
+      "What is the difference between retention and churn?",
+      "How do I measure cohort retention?",
+      "What is Net Revenue Retention (NRR)?",
+      "How do I calculate churn rate from retention rate?",
+      "How do I measure retention by customer segment?",
+      "How does retention vary by acquisition channel?",
+      "How do I calculate repeat purchase rate?"
+    ]
+  },
+  {
+    "id": 134,
+    "title": "Examples: Liability Calculations",
+    "targetUser": "Super Admin, Finance Team, Accountants",
+    "purpose": "To provide practical examples of points liability calculations, helping stakeholders understand how outstanding points are valued, tracked, and managed for financial reporting and compliance.",
+    "keyTopics": [
+      "Basic Liability Calculation",
+      "Multi-customer Liability Aggregation",
+      "Monthly Liability Tracking",
+      "Breakage Calculation",
+      "Liability by Merchant",
+      "Liability vs Redemption Rate",
+      "Dynamic Balance Verification",
+      "Liability Projection"
+    ],
+    "exampleQuestions": [
+      "How is points liability calculated?",
+      "What is the current total points liability?",
+      "How do I break down liability by customer?",
+      "How does liability change over time?",
+      "What is breakage and how is it calculated?",
+      "How do I track liability by merchant?",
+      "How do I project future liability?",
+      "What is the relationship between redemption rate and liability?",
+      "How do I assess liability risk?",
+      "How does liability appear in financial statements?"
+    ]
+  }
+]

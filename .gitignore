@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+
+# Environment secrets
+.env
+.env.production
+.env.local
+
+# PostgreSQL runtime data (do NOT commit)
+postgres_data/
+pgsql/
+postgresql.zip
+postgres.log
+
+# Nested duplicate project copy
+SkillXT Reward program/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Backend
+backend/.env
+backend/auth-check.js
+
+# Test coverage
+coverage/
+.nyc_output/

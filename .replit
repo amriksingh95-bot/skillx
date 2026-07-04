@@ -1,0 +1,2 @@
+[run]
+command = "cd backend && npm install && npx prisma migrate deploy && npx prisma db seed && node src/index.js & cd frontend && npm install && npm run dev"
