@@ -220,6 +220,10 @@ router.get('/points-health', merchantController.getPointsHealth);
 
 router.get('/repeat-customers', merchantController.getRepeatCustomers);
 
+router.get('/roi-report', merchantController.getROIReport);
+
+router.get('/top-customers', merchantController.getTopCustomers);
+
 router.get(
   '/customer/:identifier',
   [

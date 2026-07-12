@@ -1267,7 +1267,7 @@ async function updateMerchantPassword(req, res, next) {
 }
 
 /**
- * Get points health report for the merchant: all-time issued, redeemed, redemption rate, and outstanding liability.
+ * Get points health report for the merchant: all-time issued, redeemed, and points in circulation.
  */
 async function getPointsHealth(req, res, next) {
   try {
@@ -1288,7 +1288,7 @@ async function getPointsHealth(req, res, next) {
     const pointsIssued = totals[0]?.pointsIssued || 0;
     const pointsRedeemed = totals[0]?.pointsRedeemed || 0;
 
-    // Query 2: Non-expired points only (PointsLedger JOIN Transaction) for liability
+    // Query 2: Non-expired points only (PointsLedger JOIN Transaction) for circulation
     const active = await prisma.$queryRaw`
       SELECT
         COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedActive",
@@ -1304,12 +1304,7 @@ async function getPointsHealth(req, res, next) {
     const pointsIssuedActive = active[0]?.pointsIssuedActive || 0;
     const pointsRedeemedActive = active[0]?.pointsRedeemedActive || 0;
 
-    // Compute redemption rate (guard divide-by-zero)
-    const redemptionRate = pointsIssued > 0
-      ? parseFloat(((pointsRedeemed / pointsIssued) * 100).toFixed(1))
-      : 0;
-
-    // Points liability = outstanding non-expired points
+    // Points in circulation = outstanding non-expired points
     const pointsLiability = pointsIssuedActive - pointsRedeemedActive;
 
     res.status(200).json({
@@ -1318,7 +1313,6 @@ async function getPointsHealth(req, res, next) {
       data: {
         pointsIssued,
         pointsRedeemed,
-        redemptionRate,
         pointsLiability
       }
     });
@@ -1395,6 +1389,218 @@ async function getRepeatCustomers(req, res, next) {
   }
 }
 
+/**
+ * Get merchant ROI report: cost vs business impact.
+ */
+async function getROIReport(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+    console.log('[roi-report] merchantId:', merchantId, '| type:', typeof merchantId);
+
+    // --- COST (all-time) ---
+    // Subscription spend: SUM of plan.price across all subscriptions for this merchant
+    console.log('[roi-report] Running subCost query...');
+    const subCost = await prisma.$queryRaw`
+      SELECT COALESCE(SUM(sp."price"), 0)::float AS "subscriptionTotal"
+      FROM "MerchantSubscription" ms
+      JOIN "SubscriptionPlan" sp ON sp.id = ms."planId"
+      WHERE ms."merchantId" = ${merchantId}
+    `;
+    console.log('[roi-report] subCost raw:', JSON.stringify(subCost));
+    const subscriptionTotal = subCost[0]?.subscriptionTotal || 0;
+
+    // Top-up spend: SUM of amountPaid for confirmed top-ups
+    console.log('[roi-report] Running topUpCost query...');
+    const topUpCost = await prisma.$queryRaw`
+      SELECT COALESCE(SUM("amountPaid"), 0)::float AS "topUpTotal"
+      FROM "PointsTopUp"
+      WHERE "merchantId" = ${merchantId} AND status = 'confirmed'
+    `;
+    console.log('[roi-report] topUpCost raw:', JSON.stringify(topUpCost));
+    const topUpTotal = topUpCost[0]?.topUpTotal || 0;
+    const totalSpent = subscriptionTotal + topUpTotal;
+
+    // --- BUSINESS IMPACT (all-time) ---
+    console.log('[roi-report] Running impact query...');
+    const impact = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN type = 'earn' AND status = 'completed' THEN "purchaseAmount" END), 0)::float AS "totalSalesVolume",
+        COUNT(DISTINCT CASE WHEN status = 'completed' THEN "customerId" END)::int AS "uniqueCustomers"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+    `;
+    console.log('[roi-report] impact raw:', JSON.stringify(impact));
+    const totalSalesVolume = impact[0]?.totalSalesVolume || 0;
+    const uniqueCustomers = impact[0]?.uniqueCustomers || 0;
+
+    // --- AVG BILL VALUE TREND (last 90 days, monthly buckets) ---
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    console.log('[roi-report] Running avgBillTrend query... ninetyDaysAgo:', ninetyDaysAgo.toISOString());
+    const avgBillTrend = await prisma.$queryRaw`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS "month",
+        ROUND(AVG("purchaseAmount")::numeric, 2)::float AS "avgBillValue"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+        AND type = 'earn'
+        AND status = 'completed'
+        AND "createdAt" >= ${ninetyDaysAgo}
+      GROUP BY DATE_TRUNC('month', "createdAt")
+      ORDER BY DATE_TRUNC('month', "createdAt") ASC
+    `;
+    console.log('[roi-report] avgBillTrend raw:', JSON.stringify(avgBillTrend));
+
+    // --- LOYALTY (all-time) ---
+    console.log('[roi-report] Running loyalty query...');
+    const loyalty = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN type = 'redeem' AND status = 'completed' THEN "purchaseAmount" END), 0)::float AS "totalDiscountsGiven",
+        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') AND status = 'completed' THEN points END), 0)::int AS "pointsIssued",
+        COALESCE(SUM(CASE WHEN type = 'redeem' AND status = 'completed' THEN points END), 0)::int AS "pointsRedeemed"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+    `;
+    console.log('[roi-report] loyalty raw:', JSON.stringify(loyalty));
+    const totalDiscountsGiven = loyalty[0]?.totalDiscountsGiven || 0;
+    const pointsIssued = loyalty[0]?.pointsIssued || 0;
+    const pointsRedeemed = loyalty[0]?.pointsRedeemed || 0;
+    console.log('[roi-report] FINAL: subscriptionTotal=', subscriptionTotal, 'topUpTotal=', topUpTotal, 'totalSalesVolume=', totalSalesVolume, 'uniqueCustomers=', uniqueCustomers, 'totalDiscountsGiven=', totalDiscountsGiven, 'pointsIssued=', pointsIssued, 'pointsRedeemed=', pointsRedeemed);
+
+    res.status(200).json({
+      success: true,
+      message: 'Merchant ROI report retrieved.',
+      data: {
+        cost: {
+          subscriptionTotal: parseFloat(subscriptionTotal.toFixed(2)),
+          topUpTotal: parseFloat(topUpTotal.toFixed(2)),
+          totalSpent: parseFloat(totalSpent.toFixed(2))
+        },
+        impact: {
+          totalSalesVolume: parseFloat(totalSalesVolume.toFixed(2)),
+          uniqueCustomers,
+          avgBillTrend: avgBillTrend.map(r => ({
+            month: r.month,
+            avgBillValue: r.avgBillValue || 0
+          }))
+        },
+        loyalty: {
+          totalDiscountsGiven: parseFloat(totalDiscountsGiven.toFixed(2)),
+          pointsIssued,
+          pointsRedeemed
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get top customers report for the merchant.
+ */
+async function getTopCustomers(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+
+    // 1. Aggregate per-customer metrics from Transaction table
+    const topCustomersRaw = await prisma.$queryRaw`
+      SELECT
+        "customerId",
+        COALESCE(SUM(CASE WHEN type = 'earn' THEN "purchaseAmount" END), 0)::float AS "totalSpent",
+        COUNT(CASE WHEN type = 'earn' THEN 1 END)::int AS "orders",
+        COALESCE(SUM(CASE WHEN type = 'earn' THEN points END), 0)::int AS "pointsEarned",
+        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points END), 0)::int AS "pointsRedeemed",
+        MAX(CASE WHEN type = 'earn' THEN "createdAt" END) AS "lastPurchase"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+        AND status = 'completed'
+      GROUP BY "customerId"
+      ORDER BY "totalSpent" DESC
+      LIMIT 50
+    `;
+
+    if (topCustomersRaw.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Top customers report retrieved.',
+        data: {
+          summary: {
+            totalTopCustomers: 0,
+            revenueFromTopCustomers: 0,
+            averageSpend: 0,
+            activeCustomersLast30Days: 0
+          },
+          customers: []
+        }
+      });
+    }
+
+    // 2. Fetch customer names, join dates, and mobiles
+    const customerIds = topCustomersRaw.map(c => c.customerId);
+    const customersMeta = await prisma.customer.findMany({
+      where: { id: { in: customerIds } },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        user: { select: { mobile: true } }
+      }
+    });
+    const metaMap = new Map(customersMeta.map(c => [c.id, c]));
+
+    // 3. Compute derived fields
+    const grandTotalSpent = topCustomersRaw.reduce((sum, c) => sum + c.totalSpent, 0);
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const customers = topCustomersRaw.map((row, idx) => {
+      const meta = metaMap.get(row.customerId);
+      const avgOrderValue = row.orders > 0 ? row.totalSpent / row.orders : 0;
+      const revenueContributionPct = grandTotalSpent > 0
+        ? parseFloat(((row.totalSpent / grandTotalSpent) * 100).toFixed(1))
+        : 0;
+      const status = row.lastPurchase && row.lastPurchase >= thirtyDaysAgo ? 'active' : 'inactive';
+
+      return {
+        rank: idx + 1,
+        name: meta?.name || 'Unknown',
+        mobile: meta?.user?.mobile || null,
+        totalSpent: parseFloat(row.totalSpent.toFixed(2)),
+        orders: row.orders,
+        avgOrderValue: parseFloat(avgOrderValue.toFixed(2)),
+        pointsEarned: row.pointsEarned,
+        pointsRedeemed: row.pointsRedeemed,
+        revenueContributionPct,
+        lastPurchase: row.lastPurchase || null,
+        joinDate: meta?.createdAt || null,
+        status
+      };
+    });
+
+    // 4. Summary
+    const activeCount = customers.filter(c => c.status === 'active').length;
+    const summary = {
+      totalTopCustomers: customers.length,
+      revenueFromTopCustomers: parseFloat(grandTotalSpent.toFixed(2)),
+      averageSpend: customers.length > 0
+        ? parseFloat((grandTotalSpent / customers.length).toFixed(2))
+        : 0,
+      activeCustomersLast30Days: activeCount
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Top customers report retrieved.',
+      data: { summary, customers }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   earn,
@@ -1415,6 +1621,8 @@ module.exports = {
   getCustomerInsights,
   getPointsHealth,
   getRepeatCustomers,
+  getROIReport,
+  getTopCustomers,
   uploadPaymentScreenshot,
   uploadRenewalScreenshot,
   upload,
