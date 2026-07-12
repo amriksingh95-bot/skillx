@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Menu, Sun, Moon, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -16,7 +16,7 @@ export default function Navbar({ onMenuToggle }) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors"
+          className="lg:hidden p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors btn-press"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -33,7 +33,7 @@ export default function Navbar({ onMenuToggle }) {
         {/* Dark Mode Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 rounded-xl transition-colors text-slate-500 dark:text-slate-400"
+          className="p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700/80 rounded-xl transition-colors text-slate-500 dark:text-slate-400 btn-press"
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -55,7 +55,7 @@ export default function Navbar({ onMenuToggle }) {
         {/* Logout */}
         <button
           onClick={logout}
-          className="p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-colors"
+          className="p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30"
           title="Sign Out"
         >
           <LogOut className="w-4 h-4" />

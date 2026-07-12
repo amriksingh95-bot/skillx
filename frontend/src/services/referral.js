@@ -27,8 +27,10 @@ export function buildWhatsAppShareText(referralCode) {
 
 I'm inviting you to earn loyalty points at your favourite local stores in Ludhiana.
 
-👉 *Referral Code:* ${referralCode}
 🎉 We both get *20 bonus points* instantly on signup!
+
+👉 *Referral Code:*
+${referralCode}
 
 📲 *Click to join:*
 ${url}`;

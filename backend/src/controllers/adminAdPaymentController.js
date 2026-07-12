@@ -11,6 +11,10 @@ async function getPendingAdPayments(req, res, next) {
             id: true,
             title: true,
             package: true,
+            status: true,
+            approvedAt: true,
+            startDate: true,
+            payments: true,
             merchant: {
               select: {
                 id: true,
@@ -66,31 +70,47 @@ async function confirmAdPayment(req, res, next) {
 
     const ad = payment.advertisement;
 
+    const PACKAGE_DAYS = {
+      starter: 7,
+      growth: 15,
+      premium: 30
+    };
+    const days = PACKAGE_DAYS[(ad.package || '').toLowerCase()] || 7;
+    const now = new Date();
+    const startDate = now;
+    const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
     await prisma.$transaction(async (tx) => {
       await tx.adPayment.update({
         where: { id },
         data: {
           status: 'confirmed',
           confirmedBy: adminId,
-          confirmedAt: new Date()
+          confirmedAt: now
         }
       });
 
       await tx.advertisement.update({
         where: { id: ad.id },
-        data: { status: 'queued' }
+        data: {
+          status: 'live',
+          startDate,
+          endDate
+        }
       });
     });
 
     await createAuditLog(adminId, 'AD_PAYMENT_CONFIRMED', 'AdPayment', id, {
       advertisementId: payment.advertisementId,
       amountPaid: payment.amountPaid,
-      adStatus: 'queued'
+      adStatus: 'live',
+      startDate,
+      endDate
     }, req.ip);
 
     res.status(200).json({
       success: true,
-      message: 'Ad payment confirmed. Advertisement queued for activation.'
+      message: 'Ad payment confirmed. Advertisement is now live.'
     });
   } catch (error) {
     next(error);

@@ -14,9 +14,10 @@ const colorMap = {
   expired: 'bg-surface-secondary text-text-secondary dark:bg-slate-800 dark:text-slate-400 border border-border dark:border-slate-700',
   live: 'bg-success/10 text-success dark:bg-success/20 dark:text-success-light border border-success/20 dark:border-success/30',
   paused: 'bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning-light border border-warning/20 dark:border-warning/30',
-  queued: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light border border-primary/20 dark:border-primary/30',
 
   earn: 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light border border-primary/20 dark:border-primary/30',
+  bonus: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 border border-violet-200 dark:border-violet-700/50',
+  referral: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 border border-sky-200 dark:border-sky-700/50',
   redeem: 'bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning-light border border-warning/20 dark:border-warning/30',
   adjustment: 'bg-info/10 text-info dark:bg-info/20 dark:text-info-light border border-info/20 dark:border-info/30',
   reversal: 'bg-danger/10 text-danger dark:bg-danger/20 dark:text-danger-light border border-danger/20 dark:border-danger/30',
@@ -27,6 +28,10 @@ const colorMap = {
 
   grace_period: 'bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning-light border border-warning/20 dark:border-warning/30',
   expired_subscription: 'bg-danger/10 text-danger dark:bg-danger/20 dark:text-danger-light border border-danger/20 dark:border-danger/30',
+
+  critical: 'bg-danger/10 text-danger dark:bg-danger/20 dark:text-danger-light border border-danger/20 dark:border-danger/30',
+  warning: 'bg-warning/10 text-warning dark:bg-warning/20 dark:text-warning-light border border-warning/20 dark:border-warning/30',
+  healthy: 'bg-success/10 text-success dark:bg-success/20 dark:text-success-light border border-success/20 dark:border-success/30',
 };
 
 export default function Badge({ type, children, size = 'default', dot = false }) {

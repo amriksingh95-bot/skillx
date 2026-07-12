@@ -63,7 +63,7 @@ router.post(
 router.post(
   '/request-otp',
   [
-    body('mobile').isLength({ min: 10, max: 10 }).isNumeric().withMessage('Mobile must be exactly 10 digits.'),
+    validateMobile,
     validateEmail
   ],
   validate,
@@ -92,7 +92,7 @@ router.post(
 router.post(
   '/reset-password',
   [
-    body('mobile').isLength({ min: 10, max: 10 }).isNumeric().withMessage('Mobile must be exactly 10 digits.'),
+    validateMobile,
     body('otp').notEmpty().withMessage('OTP is required.'),
     validateNewPassword
   ],
@@ -118,7 +118,7 @@ router.post(
   '/merchant-signup',
   [
     body('businessName').trim().notEmpty().withMessage('Business name is required.'),
-    body('mobile').isLength({ min: 10, max: 10 }).isNumeric().withMessage('Mobile must be exactly 10 digits.'),
+    validateMobile,
     validateEmail,
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
     body('category').optional().trim(),

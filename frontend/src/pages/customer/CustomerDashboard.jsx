@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
@@ -78,7 +78,8 @@ export default function CustomerDashboard() {
       setProfile(res.data.data);
       setNewEmail(res.data.data.email || '');
     } catch (err) {
-      toast.error('Failed to load profile.');
+      console.error('Profile fetch failed:', err);
+      toast.error(err?.response?.data?.message || 'Failed to load profile.');
     }
   };
 
@@ -174,7 +175,7 @@ export default function CustomerDashboard() {
             if (data.type === 'POINTS_RECEIVED') {
               toast.success(
                 <div className="flex flex-col text-left">
-                  <span className="font-bold">🎉 Points Received!</span>
+                  <span className="font-bold">?? Points Received!</span>
                   <span className="text-xs mt-0.5">You received {data.points} points from {data.merchantName}.</span>
                 </div>,
                 { duration: 6000 }
@@ -224,7 +225,7 @@ export default function CustomerDashboard() {
         </div>
         <button
           onClick={handleRefresh}
-          className="px-6 py-2.5 bg-primary text-white font-extrabold rounded-xl transition-all hover:bg-primary-dark shadow-sm text-xs"
+          className="px-6 py-2.5 bg-primary text-white font-extrabold rounded-xl transition-all hover:bg-primary-dark shadow-sm text-xs btn-press"
         >
           Retry
         </button>
@@ -272,7 +273,7 @@ export default function CustomerDashboard() {
       accessor: 'platformFee',
       render: (row) => {
         if (row.type !== 'redeem' || (!row.platformFee && !row.netAmount)) {
-          return <span className="text-slate-400">—</span>;
+          return <span className="text-slate-400">-</span>;
         }
         const gross = parseFloat(row.purchaseAmount) || 0;
         const fee = parseFloat(row.platformFee) || 0;
@@ -310,7 +311,7 @@ export default function CustomerDashboard() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsQrModalOpen(true)}
-            className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-bold"
+            className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-bold btn-press"
           >
             <QrCode className="w-4 h-4" />
             <span className="hidden sm:inline">My QR Code</span>
@@ -318,7 +319,7 @@ export default function CustomerDashboard() {
           </button>
           <button
             onClick={handleRefresh}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           >
             <RefreshCw className="w-4 h-4" />
             <span className="hidden sm:inline">Refresh</span>
@@ -447,14 +448,14 @@ export default function CustomerDashboard() {
               <div className="flex flex-col gap-2 w-full sm:w-auto">
                 <button
                   onClick={handleCopyCode}
-                  className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                  className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5 btn-press"
                 >
                   <Copy className="w-3.5 h-3.5" />
                   Copy Code
                 </button>
                 <button
                   onClick={handleWhatsApp}
-                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5"
+                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center justify-center gap-1.5 btn-press"
                 >
                   Share on WhatsApp
                 </button>
@@ -515,7 +516,7 @@ export default function CustomerDashboard() {
                       <div className="mt-2 text-xs font-bold">
                         {m.isUnlocked ? (
                           <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            ✅ Unlocked! You earned {m.bonusPoints} bonus points
+                            ? Unlocked! You earned {m.bonusPoints} bonus points
                           </span>
                         ) : (
                           <span className="text-slate-400 dark:text-slate-400">
@@ -550,7 +551,7 @@ export default function CustomerDashboard() {
                 </div>
                 <div>
                   <span className="block text-xs text-slate-400">Mobile Connection</span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">+91 {profile?.user?.mobile || profile?.mobile}</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">+91 {profile?.mobile}</span>
                 </div>
               </div>
 
@@ -574,7 +575,7 @@ export default function CustomerDashboard() {
                       <button
                         type="submit"
                         disabled={isSavingEmail}
-                        className="px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-semibold shadow-sm transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 btn-press"
                       >
                         {isSavingEmail ? 'Saving...' : 'Save'}
                       </button>
@@ -585,7 +586,7 @@ export default function CustomerDashboard() {
                             setIsEditingEmail(false);
                             setNewEmail(profile.email || '');
                           }}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors btn-press"
                         >
                           Cancel
                         </button>
@@ -599,7 +600,7 @@ export default function CustomerDashboard() {
                       <button
                         type="button"
                         onClick={() => setIsEditingEmail(true)}
-                        className="text-xs text-primary hover:underline font-bold"
+                        className="text-xs text-primary hover:underline font-bold btn-press"
                       >
                         Edit
                       </button>
@@ -665,7 +666,7 @@ export default function CustomerDashboard() {
             </p>
             <button
               onClick={() => setIsComplaintModalOpen(true)}
-              className="w-full mt-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/10 transition-colors"
+              className="w-full mt-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/10 transition-colors btn-press"
             >
               Submit Complaint or Feedback
             </button>

@@ -30,7 +30,7 @@ export default class ErrorBoundary extends React.Component {
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="mt-6 w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all"
+              className="mt-6 w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all btn-press"
             >
               Reload Application
             </button>

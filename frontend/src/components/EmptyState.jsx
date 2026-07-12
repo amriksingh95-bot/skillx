@@ -25,7 +25,7 @@ export default function EmptyState({
       {(action || onAction) && (
         <button
           onClick={onAction || action}
-          className="ui-btn-primary"
+          className="ui-btn-primary btn-press"
         >
           {actionLabel || 'Get Started'}
         </button>

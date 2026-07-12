@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import {
   Users,
@@ -14,7 +14,9 @@ import {
   AlertTriangle,
   BarChart3,
   Activity,
-  Clock
+  Clock,
+  Wallet,
+  Megaphone
 } from 'lucide-react';
 import {
   LineChart,
@@ -101,7 +103,7 @@ export default function AdminDashboard() {
         <p className="text-slate-500 dark:text-slate-400 mb-4 font-semibold">Failed to retrieve administrative dashboard metrics.</p>
         <button
           onClick={handleRefresh}
-          className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all"
+          className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all btn-press"
         >
           Retry Loading
         </button>
@@ -124,7 +126,7 @@ export default function AdminDashboard() {
         </div>
         <button
           onClick={handleRefresh}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -156,46 +158,110 @@ export default function AdminDashboard() {
           icon={Layers}
           label="Transactions Processed"
           value={cards.totalTransactions}
+          trend={
+            (cards.transactionsThisMonth || cards.transactionsLastMonth)
+              ? { type: 'up', value: `${cards.transactionsThisMonth || 0} this month` }
+              : undefined
+          }
         />
         <StatCard
           icon={DollarSign}
           label="Reward Liability"
-          value={`₹${cards.liability.toLocaleString('en-IN')}`}
+          value={`?${cards.liability.toLocaleString('en-IN')}`}
           trend={{ type: 'down', value: 'Outstanding' }}
         />
         <StatCard
           icon={ArrowUpRight}
           label="Total Points Issued"
           value={cards.pointsIssued.toLocaleString('en-IN')}
+          trend={
+            (cards.pointsIssuedThisMonth || cards.pointsIssuedLastMonth)
+              ? { type: 'up', value: `${(cards.pointsIssuedThisMonth || 0).toLocaleString('en-IN')} this month` }
+              : undefined
+          }
         />
         <StatCard
           icon={ArrowDownLeft}
           label="Total Points Redeemed"
           value={cards.pointsRedeemed.toLocaleString('en-IN')}
+          trend={
+            (cards.pointsRedeemedThisMonth || cards.pointsRedeemedLastMonth)
+              ? { type: 'up', value: `${(cards.pointsRedeemedThisMonth || 0).toLocaleString('en-IN')} this month` }
+              : undefined
+          }
         />
         <StatCard
           icon={TrendingUp}
           label="Outstanding Balance"
           value={(cards.pointsIssued - cards.pointsRedeemed).toLocaleString('en-IN')}
         />
-        <StatCard
-          icon={CreditCard}
-          label="Platform Fee Revenue (Total)"
-          value={`₹${(cards.totalFeeRevenue || 0).toLocaleString('en-IN')}`}
-          trend={{ type: 'up', value: 'All Time' }}
-        />
-        <StatCard
-          icon={CreditCard}
-          label="Fee Revenue (This Month)"
-          value={`₹${(cards.feeRevenueThisMonth || 0).toLocaleString('en-IN')}`}
-          trend={{ type: 'up', value: 'Current Month' }}
-        />
-        <StatCard
-          icon={CreditCard}
-          label="Fee Revenue (Last Month)"
-          value={`₹${(cards.feeRevenueLastMonth || 0).toLocaleString('en-IN')}`}
-          trend={{ type: 'down', value: 'Previous Month' }}
-        />
+
+        {/* Revenue Comparison Cards */}
+        <div className="ui-card-hover p-5">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-2 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg">
+              <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Platform Fee Revenue</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 mb-1.5">
+            <span>This month</span>
+            <span>Last month</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-4">
+            <span className="text-2xl font-bold text-text-primary dark:text-white">₹{(cards.feeRevenueThisMonth || 0).toLocaleString('en-IN')}</span>
+            <span className="text-lg font-semibold text-slate-400 dark:text-slate-500">₹{(cards.feeRevenueLastMonth || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Up from last month
+            </span>
+          </div>
+        </div>
+
+        <div className="ui-card-hover p-5">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-2 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-lg">
+              <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top-Up Revenue</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 mb-1.5">
+            <span>This month</span>
+            <span>Last month</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-4">
+            <span className="text-2xl font-bold text-text-primary dark:text-white">₹{(cards.topUpRevenueThisMonth || 0).toLocaleString('en-IN')}</span>
+            <span className="text-lg font-semibold text-slate-400 dark:text-slate-500">₹{(cards.topUpRevenueLastMonth || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Up from last month
+            </span>
+          </div>
+        </div>
+
+        <div className="ui-card-hover p-5">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-2 bg-teal-500/10 dark:bg-teal-500/20 rounded-lg">
+              <Megaphone className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ad Payment Revenue</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 mb-1.5">
+            <span>This month</span>
+            <span>Last month</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-4">
+            <span className="text-2xl font-bold text-text-primary dark:text-white">₹{(cards.adPaymentRevenueThisMonth || 0).toLocaleString('en-IN')}</span>
+            <span className="text-lg font-semibold text-slate-400 dark:text-slate-500">₹{(cards.adPaymentRevenueLastMonth || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <ArrowUpRight className="w-3.5 h-3.5" /> Up from last month
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Decline Alerts */}
@@ -227,7 +293,7 @@ export default function AdminDashboard() {
             changePercent: wow.changes.transactionCount?.change || 0
           },
           {
-            label: 'Volume (₹)',
+            label: 'Volume (?)',
             current: parseFloat(wow.thisWeek.volume || 0),
             previous: parseFloat(wow.lastWeek.volume || 0),
             changePercent: wow.changes.volume?.change || 0

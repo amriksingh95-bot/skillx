@@ -88,7 +88,8 @@ router.get('/subscription', async (req, res, next) => {
       message: 'Subscription status retrieved.',
       data: {
         ...status,
-        availablePlans: plans
+        availablePlans: plans,
+        upiId: process.env.UPI_ID || ''
       }
     });
   } catch (error) {
@@ -116,36 +117,6 @@ router.get('/subscription/history', async (req, res, next) => {
     next(error);
   }
 });
-
-// Purchase Subscription
-router.post(
-  '/subscription/purchase',
-  [
-    body('planId').isUUID().withMessage('Invalid plan ID.'),
-    body('paymentRef').trim().notEmpty().withMessage('Payment reference is required for self-service purchase.')
-  ],
-  validate,
-  async (req, res, next) => {
-    try {
-      const merchantId = req.user.merchantId;
-      const { planId } = req.body;
-
-      const subscription = await subscriptionService.purchaseSubscription(
-        merchantId,
-        planId,
-        req.body.paymentRef
-      );
-
-      res.status(201).json({
-        success: true,
-        message: 'Subscription purchased successfully.',
-        data: subscription
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 // Renew Current Subscription
 router.post(
@@ -186,6 +157,19 @@ router.post(
   merchantController.uploadPaymentScreenshot
 );
 
+// Screenshot upload for subscription renewal payment proof
+router.post(
+  '/subscription/renewal/upload-screenshot',
+  [
+    body('subscriptionId').isUUID().withMessage('Invalid subscription ID.')
+  ],
+  validate,
+  authenticate,
+  authorize('merchant'),
+  upload.single('screenshot'),
+  merchantController.uploadRenewalScreenshot
+);
+
 router.use(requireActiveMerchant);
 
 router.get('/dashboard', merchantController.getDashboard);
@@ -215,7 +199,7 @@ router.post(
   [
     validatePoints,
     body('pointsToRedeem').notEmpty().isInt({ min: 1 }).withMessage('Points to redeem is required.'),
-    body('purchaseAmount').optional({ checkFalsy: true }).isFloat({ min: 0.01 }).withMessage('Purchase amount must be a positive number.'),
+    body('purchaseAmount').notEmpty().withMessage('Purchase amount is required.').isFloat({ min: 0.01 }).withMessage('Purchase amount must be a positive number.'),
     body().custom((value) => {
       if (!value.customerId && !value.mobile) {
         throw new Error('Either customerId or mobile is required.');
@@ -231,6 +215,10 @@ router.post(
 );
 
 router.get('/transactions', merchantController.getTransactions);
+
+router.get('/points-health', merchantController.getPointsHealth);
+
+router.get('/repeat-customers', merchantController.getRepeatCustomers);
 
 router.get(
   '/customer/:identifier',

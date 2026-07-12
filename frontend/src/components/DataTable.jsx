@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, ChevronDown, Check } from 'lucide-react';
 import SearchInput from './SearchInput';
 import LoadingSpinner from './LoadingSpinner';
@@ -23,6 +23,9 @@ export default function DataTable({
 }) {
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
+  const scrollContainerRef = useRef(null);
+  const [scrollThumbLeft, setScrollThumbLeft] = useState(0);
+  const [scrollThumbWidth, setScrollThumbWidth] = useState(100);
 
   const handleSort = (colKey) => {
     if (!colKey) return;
@@ -32,6 +35,61 @@ export default function DataTable({
       setSortColumn(colKey);
       setSortDirection('asc');
     }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const updateThumb = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      if (scrollWidth <= clientWidth) {
+        setScrollThumbWidth(0);
+        return;
+      }
+      const trackWidth = clientWidth;
+      const thumbW = Math.max(30, (clientWidth / scrollWidth) * trackWidth);
+      const maxLeft = trackWidth - thumbW;
+      const thumbL = (scrollLeft / (scrollWidth - clientWidth)) * maxLeft;
+      setScrollThumbWidth(thumbW);
+      setScrollThumbLeft(thumbL);
+    };
+    updateThumb();
+    container.addEventListener('scroll', updateThumb, { passive: true });
+    const ro = new ResizeObserver(updateThumb);
+    ro.observe(container);
+    return () => {
+      container.removeEventListener('scroll', updateThumb);
+      ro.disconnect();
+    };
+  }, [data, isLoading]);
+
+  const draggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
+
+  const handleScrollThumbMouseDown = (e) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, scrollLeft: scrollContainerRef.current?.scrollLeft || 0 };
+    document.addEventListener('mousemove', handleScrollThumbMouseMove);
+    document.addEventListener('mouseup', handleScrollThumbMouseUp);
+  };
+
+  const handleScrollThumbMouseMove = (e) => {
+    if (!draggingRef.current || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const { scrollWidth, clientWidth } = container;
+    const trackWidth = clientWidth;
+    const thumbW = Math.max(30, (clientWidth / scrollWidth) * trackWidth);
+    const maxLeft = trackWidth - thumbW;
+    const dx = e.clientX - dragStartRef.current.x;
+    const scrollRatio = maxLeft > 0 ? dx / maxLeft : 0;
+    container.scrollLeft = dragStartRef.current.scrollLeft + scrollRatio * (scrollWidth - clientWidth);
+  };
+
+  const handleScrollThumbMouseUp = () => {
+    draggingRef.current = false;
+    document.removeEventListener('mousemove', handleScrollThumbMouseMove);
+    document.removeEventListener('mouseup', handleScrollThumbMouseUp);
   };
 
   const sortedData = useMemo(() => {
@@ -110,16 +168,42 @@ export default function DataTable({
         </div>
       )}
 
+      {/* Sticky horizontal scrollbar at top � outside scroll container so it doesn't scroll with content */}
+      {stickyHeader && scrollThumbWidth > 0 && (
+        <div
+          className="w-full relative z-10"
+          style={{ height: 16 }}
+        >
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onMouseDown={(e) => {
+              if (!scrollContainerRef.current || !e.target.dataset.thumb) return;
+              e.preventDefault();
+              draggingRef.current = true;
+              dragStartRef.current = { x: e.clientX, scrollLeft: scrollContainerRef.current.scrollLeft };
+              document.addEventListener('mousemove', handleScrollThumbMouseMove);
+              document.addEventListener('mouseup', handleScrollThumbMouseUp);
+            }}
+          >
+            <div
+              data-thumb="true"
+              className="absolute top-1/2 -translate-y-1/2 rounded-full bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500 transition-colors"
+              style={{ left: scrollThumbLeft, width: scrollThumbWidth, height: 10, cursor: 'grab' }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Desktop Table */}
-      <div className={`hidden md:block w-full overflow-x-auto relative ${compact ? 'min-h-[100px]' : 'min-h-[150px]'}`}>
+      <div ref={scrollContainerRef} className={`hidden md:block w-full overflow-x-auto relative scrollbar-none ${compact ? 'min-h-[100px]' : 'min-h-[150px]'}`}>
         {isLoading && (
-          <div className="absolute inset-0 bg-white/70 dark:bg-dark-bg/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-white/70 dark:bg-dark-bg/60 backdrop-blur-[1px] flex items-center justify-center z-30">
             <LoadingSpinner size="medium" />
           </div>
         )}
 
         <table className="w-full text-left border-collapse">
-          <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
+          <thead className={stickyHeader ? 'sticky top-0 z-20' : ''}>
             <tr className="bg-surface-secondary dark:bg-slate-800/50 border-b border-border dark:border-dark-border">
               {selectable && (
                 <th className={`${headerPadding} w-12`}>
@@ -131,7 +215,7 @@ export default function DataTable({
                         : isIndeterminate
                           ? 'bg-primary/50 border-primary'
                           : 'border-border-strong dark:border-slate-600 hover:border-primary'
-                    }`}
+                    } btn-press`}
                     aria-label="Select all rows"
                   >
                     {(isAllSelected || isIndeterminate) && <Check className="w-3 h-3 text-white" />}
@@ -190,7 +274,7 @@ export default function DataTable({
                             isSelected
                               ? 'bg-primary border-primary'
                               : 'border-border-strong dark:border-slate-600 hover:border-primary'
-                          }`}
+                          } btn-press`}
                           aria-label={`Select row ${rowIdx + 1}`}
                         >
                           {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -257,7 +341,7 @@ export default function DataTable({
                           isSelected
                             ? 'bg-primary border-primary'
                             : 'border-border-strong dark:border-slate-600'
-                        }`}
+                        } btn-press`}
                         aria-label={`Select row ${rowIdx + 1}`}
                       >
                         {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -311,7 +395,7 @@ export default function DataTable({
             <button
               onClick={handlePrevPage}
               disabled={pagination.page <= 1}
-              className="p-2 border border-border dark:border-dark-border rounded-xl hover:bg-surface-secondary dark:hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+              className="p-2 border border-border dark:border-dark-border rounded-xl hover:bg-surface-secondary dark:hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors btn-press"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -323,7 +407,7 @@ export default function DataTable({
             <button
               onClick={handleNextPage}
               disabled={pagination.page >= pagination.totalPages}
-              className="p-2 border border-border dark:border-dark-border rounded-xl hover:bg-surface-secondary dark:hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+              className="p-2 border border-border dark:border-dark-border rounded-xl hover:bg-surface-secondary dark:hover:bg-slate-800 disabled:opacity-50 disabled:hover:bg-transparent transition-colors btn-press"
               aria-label="Next page"
             >
               <ChevronRight className="w-4 h-4" />

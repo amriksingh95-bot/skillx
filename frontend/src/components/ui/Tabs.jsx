@@ -52,7 +52,7 @@ export function Tab({ value, label, icon: Icon, isActive, onClick, badge, classN
         isActive
           ? 'text-primary border-primary bg-primary/5 dark:bg-primary/10'
           : 'text-text-tertiary dark:text-slate-500 border-transparent hover:text-text-secondary dark:hover:text-slate-300 hover:border-border-strong dark:hover:border-slate-600'
-      } ${className}`}
+      } ${className} btn-press`}
     >
       {Icon && <Icon className="w-4 h-4" />}
       {label}

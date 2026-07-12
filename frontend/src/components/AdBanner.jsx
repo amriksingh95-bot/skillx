@@ -201,7 +201,7 @@ const DEMO_ADS = [
   },
 ];
 
-function getDirectionsUrl(ad) {
+export function getDirectionsUrl(ad) {
   if (!ad) return null;
   const m = ad.merchant;
   if (!m) return null;
@@ -221,6 +221,7 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
   const canShowDirections = ad.showDirections && directionsUrl;
   const locationText = [ad.merchant?.address, ad.merchant?.city].filter(Boolean).join(', ') || 'Location not set';
   const accent = ad.accent || '#f59e0b';
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div
@@ -305,9 +306,9 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
             border: `1px solid ${accent}66`,
           }}
         >
-          {ad.icon || (ad.imageUrl ? (
-            <img src={ad.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} />
-          ) : '🏪')}
+          {ad.imageUrl && !imgError ? (
+            <img src={ad.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} onError={() => setImgError(true)} />
+          ) : ad.icon || '🏪'}
         </div>
         <div style={{ minWidth: 0, flex: '1 1 auto', maxWidth: '100%' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
@@ -319,11 +320,16 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
         </div>
       </div>
 
-      {/* Column 3: Headline content */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Column 3: Headline + Description content */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.3, width: '100%', textAlign: 'center' }}>
           {ad.title}
         </div>
+        {ad.description && (
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, width: '100%', textAlign: 'center', whiteSpace: 'pre-wrap', marginTop: 4 }}>
+            {ad.description}
+          </div>
+        )}
       </div>
 
       {/* Column 4: Badge */}
@@ -401,7 +407,7 @@ function AdModal({ ad, onClose }) {
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Sponsored</div>
           {ad?.description && (
-            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>{ad.description}</p>
+            <p style={{ fontSize: 14, color: '#64748b', marginTop: 4, whiteSpace: 'pre-wrap' }}>{ad.description}</p>
           )}
         </div>
         <div style={{ background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
@@ -420,6 +426,16 @@ function AdModal({ ad, onClose }) {
               Get Directions ↗
             </a>
           )}
+          {ad?.ctaLink && (
+            <a
+              href={ad.ctaLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 700, color: '#00bcd4', marginTop: 6, textDecoration: 'none' }}
+            >
+              {ad.ctaText || 'Visit Offer'} ↗
+            </a>
+          )}
         </div>
       </div>
     </Modal>
@@ -430,6 +446,7 @@ function AdCarousel({ ads, accent, onBadgeClick }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
   const timeoutRef = useRef(null);
+  const impressionSentRef = useRef(new Set());
 
   useEffect(() => {
     if (ads.length <= 1) return;
@@ -445,6 +462,13 @@ function AdCarousel({ ads, accent, onBadgeClick }) {
       clearTimeout(timeoutRef.current);
     };
   }, [ads]);
+
+  useEffect(() => {
+    const ad = ads[currentIndex];
+    if (!ad?.id || impressionSentRef.current.has(ad.id)) return;
+    impressionSentRef.current.add(ad.id);
+    api.patch(`/api/merchant/ads/${ad.id}/impression`).catch(() => {});
+  }, [currentIndex, ads]);
 
   const goTo = (index) => {
     clearTimeout(timeoutRef.current);

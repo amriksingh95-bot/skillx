@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs');
 const { v4: uuidv4 } = require('uuid');
 const { getCustomerBalance, processReversal } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
+const { GRACE_PERIOD_DAYS } = require('../services/subscriptionService');
 
 /**
  * Helper to format date to YYYY-MM-DD
@@ -61,6 +62,57 @@ async function getDashboard(req, res, next) {
     const totalFeeRevenue = parseFloat(feeRevenueAgg[0]?.totalFeeRevenue || 0);
     const feeRevenueThisMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueThisMonth || 0);
     const feeRevenueLastMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueLastMonth || 0);
+
+    // Top-Up Revenue Aggregation
+    const topUpRevenueAgg = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalTopUpRevenue",
+        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueThisMonth",
+        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueLastMonth"
+      FROM "PointsTopUp"
+    `;
+    const totalTopUpRevenue = parseFloat(topUpRevenueAgg[0]?.totalTopUpRevenue || 0);
+    const topUpRevenueThisMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueThisMonth || 0);
+    const topUpRevenueLastMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueLastMonth || 0);
+
+    // Ad Payment Revenue Aggregation
+    const adPaymentRevenueAgg = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalAdPaymentRevenue",
+        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueThisMonth",
+        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueLastMonth"
+      FROM "AdPayment"
+    `;
+    const totalAdPaymentRevenue = parseFloat(adPaymentRevenueAgg[0]?.totalAdPaymentRevenue || 0);
+    const adPaymentRevenueThisMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueThisMonth || 0);
+    const adPaymentRevenueLastMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueLastMonth || 0);
+
+    // Transactions Processed — this month / last month
+    const txAgg = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayThisMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsThisMonth",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsLastMonth"
+      FROM "Transaction"
+      WHERE status = 'completed'
+    `;
+    const transactionsThisMonth = Number(txAgg[0]?.transactionsThisMonth || 0);
+    const transactionsLastMonth = Number(txAgg[0]?.transactionsLastMonth || 0);
+
+    // Points Issued / Redeemed — this month / last month
+    const pointsMonthAgg = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedThisMonth",
+        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedLastMonth",
+        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedThisMonth",
+        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedLastMonth"
+      FROM "PointsLedger" pl
+      JOIN "Transaction" t ON t.id = pl."transactionId"
+      WHERE t.type != 'reversal'
+    `;
+    const pointsIssuedThisMonth = Number(pointsMonthAgg[0]?.pointsIssuedThisMonth || 0);
+    const pointsIssuedLastMonth = Number(pointsMonthAgg[0]?.pointsIssuedLastMonth || 0);
+    const pointsRedeemedThisMonth = Number(pointsMonthAgg[0]?.pointsRedeemedThisMonth || 0);
+    const pointsRedeemedLastMonth = Number(pointsMonthAgg[0]?.pointsRedeemedLastMonth || 0);
 
     // 2. Chart 1: Points Issued vs Redeemed over last 30 days (SQL aggregation)
     const thirtyDaysAgo = new Date();
@@ -307,12 +359,24 @@ async function getDashboard(req, res, next) {
           totalMerchants,
           activeMerchants,
           totalTransactions,
+          transactionsThisMonth,
+          transactionsLastMonth,
           pointsIssued,
+          pointsIssuedThisMonth,
+          pointsIssuedLastMonth,
           pointsRedeemed,
+          pointsRedeemedThisMonth,
+          pointsRedeemedLastMonth,
           liability: parseFloat(liability.toFixed(2)),
           totalFeeRevenue: parseFloat(totalFeeRevenue.toFixed(2)),
           feeRevenueThisMonth: parseFloat(feeRevenueThisMonth.toFixed(2)),
-          feeRevenueLastMonth: parseFloat(feeRevenueLastMonth.toFixed(2))
+          feeRevenueLastMonth: parseFloat(feeRevenueLastMonth.toFixed(2)),
+          totalTopUpRevenue: parseFloat(totalTopUpRevenue.toFixed(2)),
+          topUpRevenueThisMonth: parseFloat(topUpRevenueThisMonth.toFixed(2)),
+          topUpRevenueLastMonth: parseFloat(topUpRevenueLastMonth.toFixed(2)),
+          totalAdPaymentRevenue: parseFloat(totalAdPaymentRevenue.toFixed(2)),
+          adPaymentRevenueThisMonth: parseFloat(adPaymentRevenueThisMonth.toFixed(2)),
+          adPaymentRevenueLastMonth: parseFloat(adPaymentRevenueLastMonth.toFixed(2))
         },
         charts: {
           pointsIssuedVsRedeemed: chartPointsIssuedVsRedeemed,
@@ -2098,7 +2162,15 @@ async function getAdvertisements(req, res, next) {
         where: whereCondition,
         include: {
           merchant: {
-            select: { businessName: true }
+            select: {
+              businessName: true,
+              address: true,
+              city: true,
+              landmark: true,
+              latitude: true,
+              longitude: true,
+              googleMapsUrl: true
+            }
           },
           payments: true
         },
@@ -2132,10 +2204,10 @@ async function getAdvertisements(req, res, next) {
  */
 async function updateAdStatus(req, res, next) {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, rejectionReason } = req.body;
 
-  if (!['approved', 'rejected', 'expired', 'live', 'paused', 'queued'].includes(status)) {
-    const err = new Error('Invalid status. Must be approved, rejected, expired, live, paused, or queued.');
+  if (!['approved', 'rejected', 'expired', 'live', 'paused'].includes(status)) {
+    const err = new Error('Invalid status. Must be approved, rejected, expired, live, or paused.');
     err.status = 400;
     err.code = 'VALIDATION_ERROR';
     return next(err);
@@ -2164,22 +2236,50 @@ async function updateAdStatus(req, res, next) {
       }
     }
 
-    const updateData = { status };
+    if (status === 'rejected') {
+      const updated = await prisma.$transaction(async (tx) => {
+        const adUpdate = await tx.advertisement.update({
+          where: { id },
+          data: {
+            status: 'rejected',
+            rejectionReason: rejectionReason || null
+          }
+        });
 
-    if (status === 'approved') {
-      updateData.approvedAt = new Date();
+        await tx.adPayment.updateMany({
+          where: {
+            advertisementId: id,
+            status: { not: 'rejected' }
+          },
+          data: { status: 'rejected' }
+        });
+
+        return adUpdate;
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Advertisement rejected.',
+        data: updated
+      });
+    } else {
+      const updateData = { status };
+
+      if (status === 'approved') {
+        updateData.approvedAt = new Date();
+      }
+
+      const updated = await prisma.advertisement.update({
+        where: { id },
+        data: updateData
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Advertisement status updated to ${status}.`,
+        data: updated
+      });
     }
-
-    const updated = await prisma.advertisement.update({
-      where: { id },
-      data: updateData
-    });
-
-    res.status(200).json({
-      success: true,
-      message: `Advertisement status updated to ${status}.`,
-      data: updated
-    });
   } catch (error) {
     next(error);
   }
@@ -2637,6 +2737,176 @@ async function rejectMerchantPayment(req, res, next) {
 }
 
 /**
+ * Confirm renewal payment: renew subscription + credit 1000 bonus points.
+ */
+async function confirmRenewalPayment(req, res, next) {
+  try {
+    const merchantId = req.params.id;
+    const { paymentRef } = req.body;
+
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: merchantId }
+    });
+
+    if (!merchant) {
+      const err = new Error('Merchant not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    if (merchant.status !== 'payment_pending') {
+      const err = new Error('Merchant is not awaiting payment verification.');
+      err.status = 400;
+      err.code = 'INVALID_STATUS';
+      return next(err);
+    }
+
+    if (!merchant.pendingRenewalSubscriptionId) {
+      const err = new Error('No pending renewal found for this merchant. Use confirm-payment for first-time activation.');
+      err.status = 400;
+      err.code = 'NO_RENEWAL_PENDING';
+      return next(err);
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const existing = await tx.merchantSubscription.findUnique({
+        where: { id: merchant.pendingRenewalSubscriptionId },
+        include: { plan: true }
+      });
+
+      if (!existing || existing.merchantId !== merchantId) {
+        throw new Error('Subscription not found or does not belong to this merchant.');
+      }
+
+      const plan = existing.plan;
+      if (!plan || !plan.isActive) {
+        throw new Error('Original plan is no longer active.');
+      }
+
+      const baseDate = new Date() > existing.endDate ? new Date() : existing.endDate;
+      const newEndDate = new Date(baseDate);
+      newEndDate.setDate(newEndDate.getDate() + plan.durationDays);
+
+      const newGracePeriodEnd = new Date(newEndDate);
+      newGracePeriodEnd.setDate(newGracePeriodEnd.getDate() + GRACE_PERIOD_DAYS);
+
+      const subscription = await tx.merchantSubscription.update({
+        where: { id: merchant.pendingRenewalSubscriptionId },
+        data: {
+          endDate: newEndDate,
+          gracePeriodEnd: newGracePeriodEnd,
+          status: 'active',
+          paymentRef: paymentRef || existing.paymentRef
+        },
+        include: { plan: true }
+      });
+
+      const updatedMerchant = await tx.merchant.update({
+        where: { id: merchantId },
+        data: {
+          status: 'active',
+          pendingRenewalSubscriptionId: null,
+          pointsBalance: { increment: 1000 }
+        }
+      });
+
+      return { subscription, updatedMerchant };
+    });
+
+    await createAuditLog(
+      req.user.id,
+      'MERCHANT_RENEWAL_CONFIRMED',
+      'Merchant',
+      merchantId,
+      {
+        businessName: merchant.businessName,
+        subscriptionId: merchant.pendingRenewalSubscriptionId,
+        newEndDate: result.subscription.endDate,
+        pointsCredited: 1000,
+        newPointsBalance: result.updatedMerchant.pointsBalance
+      },
+      req.ip
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Renewal confirmed. Subscription extended and 1,000 bonus points credited.',
+      data: {
+        merchantId,
+        subscriptionId: result.subscription.id,
+        newEndDate: result.subscription.endDate,
+        pointsBalance: result.updatedMerchant.pointsBalance
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Reject renewal payment: reset to active, clear pending renewal.
+ */
+async function rejectRenewalPayment(req, res, next) {
+  try {
+    const merchantId = req.params.id;
+
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: merchantId }
+    });
+
+    if (!merchant) {
+      const err = new Error('Merchant not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    if (merchant.status !== 'payment_pending') {
+      const err = new Error('Merchant is not awaiting payment verification.');
+      err.status = 400;
+      err.code = 'INVALID_STATUS';
+      return next(err);
+    }
+
+    if (!merchant.pendingRenewalSubscriptionId) {
+      const err = new Error('No pending renewal found for this merchant. Use reject-payment for first-time activation.');
+      err.status = 400;
+      err.code = 'NO_RENEWAL_PENDING';
+      return next(err);
+    }
+
+    await prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        status: 'active',
+        pendingRenewalSubscriptionId: null
+      }
+    });
+
+    await createAuditLog(
+      req.user.id,
+      'MERCHANT_RENEWAL_REJECTED',
+      'Merchant',
+      merchantId,
+      {
+        businessName: merchant.businessName,
+        subscriptionId: merchant.pendingRenewalSubscriptionId
+      },
+      req.ip
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Renewal rejected. Merchant status restored to active.',
+      data: { merchantId }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Get chatbot analytics for admin dashboard.
  */
 async function getChatbotAnalytics(req, res, next) {
@@ -2750,7 +3020,247 @@ module.exports = {
   getPendingPayments,
   confirmMerchantPayment,
   rejectMerchantPayment,
-  getChatbotAnalytics
+  confirmRenewalPayment,
+  rejectRenewalPayment,
+  getChatbotAnalytics,
+  getPointsLiabilityTrend,
+  getMerchantHealth
 };
+
+/**
+ * GET /api/admin/reports/points-liability-trend
+ * Weekly outstanding points balance (issued minus redeemed) for the last 12 weeks.
+ */
+async function getPointsLiabilityTrend(req, res, next) {
+  try {
+    const weeklyRows = await prisma.$queryRaw`
+      SELECT
+        TO_CHAR(DATE_TRUNC('week', t."createdAt"), 'YYYY-MM-DD') AS "weekEnd",
+        COALESCE(SUM(CASE WHEN t.type IN ('earn','transfer') THEN t.points ELSE 0 END), 0)::int AS "pointsIssued",
+        COALESCE(SUM(CASE WHEN t.type = 'redeem' THEN t.points ELSE 0 END), 0)::int AS "pointsRedeemed"
+      FROM "Transaction" t
+      WHERE t.status = 'completed'
+        AND t."reversedById" IS NULL
+        AND t."createdAt" >= (DATE_TRUNC('week', NOW()) - INTERVAL '11 weeks')
+      GROUP BY DATE_TRUNC('week', t."createdAt")
+      ORDER BY DATE_TRUNC('week', t."createdAt") ASC
+    `;
+
+    const weeks = [];
+    let cumulativeIssued = 0;
+    let cumulativeRedeemed = 0;
+
+    for (const row of weeklyRows) {
+      cumulativeIssued += row.pointsIssued;
+      cumulativeRedeemed += row.pointsRedeemed;
+      weeks.push({
+        weekEnd: row.weekEnd,
+        pointsIssued: row.pointsIssued,
+        pointsRedeemed: row.pointsRedeemed,
+        outstandingBalance: cumulativeIssued - cumulativeRedeemed
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Points liability trend retrieved successfully.',
+      data: {
+        weeks,
+        currentOutstanding: cumulativeIssued - cumulativeRedeemed,
+        summary: {
+          totalIssued12W: cumulativeIssued,
+          totalRedeemed12W: cumulativeRedeemed,
+          netOutstanding12W: cumulativeIssued - cumulativeRedeemed
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/admin/reports/merchant-health
+ * Classifies active merchants into critical / warning / healthy tiers.
+ */
+async function getMerchantHealth(req, res, next) {
+  try {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const merchants = await prisma.merchant.findMany({
+      where: { isActive: true, status: 'active' },
+      select: {
+        id: true,
+        businessName: true,
+        category: true
+      }
+    });
+
+    if (merchants.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Merchant health retrieved successfully.',
+        data: { summary: { totalMerchants: 0, critical: 0, warning: 0, healthy: 0 }, merchants: [] }
+      });
+    }
+
+    const merchantIds = merchants.map(m => m.id);
+
+    const placeholders = merchantIds.map((_, i) => `$${i + 1}`).join(',');
+
+    const lastTxRows = await prisma.$queryRawUnsafe(`
+      SELECT "merchantId", MAX("createdAt") AS "lastTxDate"
+      FROM "Transaction"
+      WHERE "merchantId" IN (${placeholders}) AND status = 'completed'
+      GROUP BY "merchantId"
+    `, ...merchantIds);
+
+    const lastTxMap = {};
+    for (const row of lastTxRows) {
+      lastTxMap[row.merchantId] = row.lastTxDate;
+    }
+
+    const thisMonthTxRows = await prisma.$queryRawUnsafe(`
+      SELECT "merchantId", COUNT(*)::int AS "txCount"
+      FROM "Transaction"
+      WHERE "merchantId" IN (${placeholders})
+        AND status = 'completed'
+        AND "createdAt" >= '${startOfThisMonth.toISOString()}'
+      GROUP BY "merchantId"
+    `, ...merchantIds);
+
+    const lastMonthTxRows = await prisma.$queryRawUnsafe(`
+      SELECT "merchantId", COUNT(*)::int AS "txCount"
+      FROM "Transaction"
+      WHERE "merchantId" IN (${placeholders})
+        AND status = 'completed'
+        AND "createdAt" >= '${startOfLastMonth.toISOString()}' AND "createdAt" < '${startOfThisMonth.toISOString()}'
+      GROUP BY "merchantId"
+    `, ...merchantIds);
+
+    const thisMonthTxMap = {};
+    for (const row of thisMonthTxRows) thisMonthTxMap[row.merchantId] = row.txCount;
+    const lastMonthTxMap = {};
+    for (const row of lastMonthTxRows) lastMonthTxMap[row.merchantId] = row.txCount;
+
+    const topUpRows = await prisma.$queryRawUnsafe(`
+      SELECT
+        "merchantId",
+        COUNT(*)::int AS "totalTopUps",
+        COUNT(*) FILTER (WHERE status = 'rejected')::int AS "failedTopUps",
+        COUNT(*) FILTER (WHERE status = 'pending' AND "createdAt" < '${thirtyDaysAgo.toISOString()}')::int AS "lateTopUps"
+      FROM "PointsTopUp"
+      WHERE "merchantId" IN (${placeholders})
+      GROUP BY "merchantId"
+    `, ...merchantIds);
+
+    const topUpMap = {};
+    for (const row of topUpRows) topUpMap[row.merchantId] = row;
+
+    const subRows = await prisma.$queryRawUnsafe(`
+      SELECT
+        "merchantId",
+        "endDate",
+        "status" AS "subStatus"
+      FROM "MerchantSubscription"
+      WHERE "merchantId" IN (${placeholders})
+        AND "status" IN ('active','grace_period')
+      ORDER BY "endDate" DESC
+      LIMIT ${merchants.length}
+    `, ...merchantIds);
+
+    const subMap = {};
+    for (const row of subRows) {
+      if (!subMap[row.merchantId]) subMap[row.merchantId] = row;
+    }
+
+    const enrichedMerchants = merchants.map(m => {
+      const lastTx = lastTxMap[m.id] || null;
+      const thisMonthTx = thisMonthTxMap[m.id] || 0;
+      const lastMonthTx = lastMonthTxMap[m.id] || 0;
+      const topUp = topUpMap[m.id] || { failedTopUps: 0, lateTopUps: 0 };
+      const sub = subMap[m.id] || null;
+
+      const daysSinceLastTx = lastTx
+        ? Math.floor((now - new Date(lastTx)) / (1000 * 60 * 60 * 24))
+        : null;
+
+      const volumeDropPercent = lastMonthTx > 0 && thisMonthTx < lastMonthTx
+        ? Math.round(((lastMonthTx - thisMonthTx) / lastMonthTx) * 100)
+        : 0;
+
+      const subExpiringInDays = sub
+        ? Math.ceil((new Date(sub.endDate) - now) / (1000 * 60 * 60 * 24))
+        : null;
+
+      return {
+        merchantId: m.id,
+        businessName: m.businessName,
+        category: m.category,
+        flags: [],
+        metrics: {
+          lastTransactionDate: lastTx,
+          daysSinceLastTx,
+          thisMonthTxCount: thisMonthTx,
+          lastMonthTxCount: lastMonthTx,
+          volumeDropPercent,
+          failedTopUps: topUp.failedTopUps,
+          lateTopUps: topUp.lateTopUps,
+          subscriptionEndDate: sub ? sub.endDate : null,
+          subscriptionStatus: sub ? sub.subStatus : null,
+          subscriptionExpiringInDays: subExpiringInDays
+        }
+      };
+    });
+
+    for (const m of enrichedMerchants) {
+      const isCriticalZeroTx = m.metrics.daysSinceLastTx !== null && m.metrics.daysSinceLastTx >= 30;
+      const isCriticalTopUp = (m.metrics.failedTopUps + m.metrics.lateTopUps) >= 2;
+      if (isCriticalZeroTx) m.flags.push({ reason: 'zero_transactions_30d', detail: `No transactions since ${m.metrics.lastTransactionDate ? new Date(m.metrics.lastTransactionDate).toISOString().split('T')[0] : 'N/A'} (${m.metrics.daysSinceLastTx} days)` });
+      if (isCriticalTopUp) m.flags.push({ reason: 'failed_late_topups_2plus', detail: `${m.metrics.failedTopUps} failed, ${m.metrics.lateTopUps} late top-up payments` });
+
+      if (m.flags.length === 0) {
+        const isWarningSub = m.metrics.subscriptionExpiringInDays !== null && m.metrics.subscriptionExpiringInDays <= 7 && m.metrics.subscriptionExpiringInDays >= 0;
+        const isWarningVolume = m.metrics.volumeDropPercent >= 50;
+        if (isWarningSub) m.flags.push({ reason: 'subscription_expiring_7d', detail: `Subscription expires ${new Date(m.metrics.subscriptionEndDate).toISOString().split('T')[0]} (${m.metrics.subscriptionExpiringInDays} days)` });
+        if (isWarningVolume) m.flags.push({ reason: 'volume_drop_50pct', detail: `Volume dropped ${m.metrics.volumeDropPercent}% vs last month (${m.metrics.lastMonthTxCount} → ${m.metrics.thisMonthTxCount} transactions)` });
+      }
+    }
+
+    const tiered = enrichedMerchants.map(m => ({
+      ...m,
+      tier: m.flags.some(f => f.reason.startsWith('zero_transactions') || f.reason.startsWith('failed_late'))
+        ? 'critical'
+        : m.flags.length > 0
+          ? 'warning'
+          : 'healthy'
+    }));
+
+    const summary = {
+      totalMerchants: tiered.length,
+      critical: tiered.filter(m => m.tier === 'critical').length,
+      warning: tiered.filter(m => m.tier === 'warning').length,
+      healthy: tiered.filter(m => m.tier === 'healthy').length
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Merchant health retrieved successfully.',
+      data: {
+        summary,
+        merchants: tiered.sort((a, b) => {
+          const order = { critical: 0, warning: 1, healthy: 2 };
+          return order[a.tier] - order[b.tier];
+        })
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 

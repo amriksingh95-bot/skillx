@@ -161,22 +161,6 @@ async function checkMerchantSubscriptionStatus(merchantId) {
 }
 
 /**
- * Purchase or renew a subscription for a merchant.
- * @param {string} merchantId
- * @param {string} planId
- * @param {string} [paymentRef]
- * @returns {Promise<object>}
- */
-async function purchaseSubscription(merchantId, planId, paymentRef = null) {
-  const plan = await getPlanById(planId);
-  if (!plan || !plan.isActive) {
-    throw new Error('Invalid or inactive subscription plan.');
-  }
-
-  return createMerchantSubscriptionRecord(merchantId, plan, paymentRef);
-}
-
-/**
  * Create a subscription for a merchant (admin override - allows inactive plans).
  * @param {string} merchantId
  * @param {string} planId
@@ -332,7 +316,6 @@ module.exports = {
   updatePlan,
   getMerchantSubscription,
   checkMerchantSubscriptionStatus,
-  purchaseSubscription,
   createMerchantSubscriptionRecord,
   renewSubscription,
   getAllMerchantSubscriptions,

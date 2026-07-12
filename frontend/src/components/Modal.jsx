@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, footer, size = 'md', closeOnOverlay = true }) {
@@ -30,7 +31,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
     full: 'max-w-6xl',
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       {/* Backdrop */}
       <div
@@ -49,7 +50,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
             <h3 id="modal-title" className="text-lg font-semibold text-text-primary dark:text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-xl text-text-tertiary hover:text-text-primary dark:text-slate-400 dark:hover:text-white hover:bg-surface-secondary dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-xl text-text-tertiary hover:text-text-primary dark:text-slate-400 dark:hover:text-white hover:bg-surface-secondary dark:hover:bg-slate-800 transition-colors btn-press"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -69,6 +70,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

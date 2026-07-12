@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
@@ -112,9 +112,9 @@ export default function AdminMerchantSubscriptions() {
       await api.patch(`/api/admin/merchants/${merchantId}/confirm-payment`);
       setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' });
       fetchPendingPayments();
-      alert('✅ Payment confirmed! Merchant is now active.');
+      alert('? Payment confirmed! Merchant is now active.');
     } catch (err) {
-      alert('❌ Failed to confirm payment: ' + (err.response?.data?.message || err.message));
+      alert('? Failed to confirm payment: ' + (err.response?.data?.message || err.message));
     } finally {
       setConfirmingPayment(false);
     }
@@ -127,7 +127,7 @@ export default function AdminMerchantSubscriptions() {
     await api.patch(`/api/admin/merchants/${merchantId}/reject-payment`);
     setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' });
     fetchPendingPayments();
-    alert('❌ Payment rejected. Merchant notified to re-upload.');
+    alert('? Payment rejected. Merchant notified to re-upload.');
   } catch (err) {
     alert('Failed to reject payment: ' + (err.response?.data?.message || err.message));
   } finally {
@@ -322,7 +322,7 @@ const handleOpenAdd = () => {
       render: (row) => (
         <button
           onClick={() => handleOpenRenew(row)}
-          className="text-primary hover:text-primary-dark font-bold text-xs flex items-center gap-1"
+          className="text-primary hover:text-primary-dark font-bold text-xs flex items-center gap-1 btn-press"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           Renew
@@ -397,16 +397,16 @@ const handleOpenAdd = () => {
               <div key={merchant.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{merchant.businessName}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{merchant.user?.email} · {merchant.user?.mobile}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{merchant.user?.email} � {merchant.user?.mobile}</p>
                   <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${merchant.status === 'payment_pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {merchant.status === 'payment_pending' ? '⏳ Screenshot uploaded' : '🕐 Awaiting payment'}
+                    {merchant.status === 'payment_pending' ? '? Screenshot uploaded' : '?? Awaiting payment'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   {merchant.paymentScreenshot ? (
                     <button
                       onClick={() => setScreenshotModal({ open: true, url: merchant.paymentScreenshot, merchantId: merchant.id, merchantName: merchant.businessName })}
-                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium rounded-lg border border-blue-200 transition"
+                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-medium rounded-lg border border-blue-200 transition btn-press"
                     >
                       View Screenshot
                     </button>
@@ -426,34 +426,34 @@ const handleOpenAdd = () => {
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-slate-800 dark:text-slate-100">Payment Screenshot</h3>
-              <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+              <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl btn-press">�</button>
             </div>
             <p className="text-sm text-slate-500">{screenshotModal.merchantName}</p>
             <img
-              src={`http://localhost:5000${screenshotModal.url}`}
+              src={`${api.defaults.baseURL}${screenshotModal.url}`}
               alt="Payment Screenshot"
               className="w-full rounded-xl border border-slate-200 object-contain max-h-80"
             />
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50"
+                className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 btn-press"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleRejectPayment(screenshotModal.merchantId)}
                 disabled={confirmingPayment}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 btn-press"
               >
-                ❌ Reject
+                ? Reject
               </button>
               <button
                 onClick={() => handleConfirmPayment(screenshotModal.merchantId)}
                 disabled={confirmingPayment}
-                className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 btn-press"
               >
-                {confirmingPayment ? 'Confirming...' : '✅ Confirm Payment'}
+                {confirmingPayment ? 'Confirming...' : '? Confirm Payment'}
               </button>
             </div>
           </div>
@@ -471,14 +471,14 @@ const handleOpenAdd = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => { fetchSubscriptions(); fetchExpiringSubscriptions(); }}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
           <button
             onClick={handleOpenAdd}
-            className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-all"
+            className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-all btn-press"
           >
             <Plus className="w-4 h-4" />
             Create Subscription
@@ -495,7 +495,7 @@ const handleOpenAdd = () => {
               <button
                 key={idx}
                 onClick={() => { setStatusFilter(card.filter); setPage(1); }}
-                className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl p-4 text-left hover:shadow-md transition-all"
+                className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl p-4 text-left hover:shadow-md transition-all btn-press"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-1.5 rounded-lg ${card.bg}`}>
@@ -514,7 +514,7 @@ const handleOpenAdd = () => {
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
           { value: '', label: 'All' },
-          { value: 'payment_pending', label: '⏳ Pending Payment' },
+          { value: 'payment_pending', label: '? Pending Payment' },
           { value: 'active', label: 'Active' },
           { value: 'grace_period', label: 'Grace Period' },
           { value: 'expired', label: 'Expired' },
@@ -527,7 +527,7 @@ const handleOpenAdd = () => {
               statusFilter === tab.value
                 ? 'bg-primary text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
+            } btn-press`}
           >
             {tab.label}
           </button>
@@ -580,7 +580,7 @@ const handleOpenAdd = () => {
               ) : (
                 plans.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.displayName} - ₹{p.price}{!p.isActive ? ' (Inactive)' : ''}
+                    {p.displayName} - ?{p.price}{!p.isActive ? ' (Inactive)' : ''}
                   </option>
                 ))
               )}
@@ -604,14 +604,14 @@ const handleOpenAdd = () => {
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Plus className="w-4 h-4" />}
               Create Subscription
@@ -665,14 +665,14 @@ const handleOpenAdd = () => {
             <button
               type="button"
               onClick={() => { setIsRenewOpen(false); setSelectedSubscription(null); }}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <RefreshCw className="w-4 h-4" />}
               Renew Subscription

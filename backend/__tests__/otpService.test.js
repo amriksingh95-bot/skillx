@@ -2,6 +2,7 @@ jest.mock('../src/lib/prisma', () => ({
   oTPVerification: {
     deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
     create: jest.fn().mockResolvedValue({ id: 'test-id' }),
+    upsert: jest.fn().mockResolvedValue({ id: 'test-id' }),
     findFirst: jest.fn().mockResolvedValue(null),
     update: jest.fn().mockResolvedValue({})
   },
@@ -33,9 +34,10 @@ describe('OTP Service', () => {
 
     it('creates OTP record with correct purpose', async () => {
       await generateAndSendOTP('9876543210', null, 'register');
-      expect(prisma.oTPVerification.create).toHaveBeenCalledWith(
+      expect(prisma.oTPVerification.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
+          where: { mobile_purpose: { mobile: '9876543210', purpose: 'register' } },
+          create: expect.objectContaining({
             mobile: '9876543210',
             purpose: 'register'
           })
@@ -62,11 +64,11 @@ describe('OTP Service', () => {
       expect(sendOTPEmail).not.toHaveBeenCalled();
     });
 
-    it('cleans up old OTPs for same mobile+purpose before creating', async () => {
+    it('upserts OTP for same mobile+purpose (overwrites existing)', async () => {
       await generateAndSendOTP('9876543210', null, 'change_mobile');
-      expect(prisma.oTPVerification.deleteMany).toHaveBeenCalledWith(
+      expect(prisma.oTPVerification.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { mobile: '9876543210', purpose: 'change_mobile', verified: false }
+          where: { mobile_purpose: { mobile: '9876543210', purpose: 'change_mobile' } }
         })
       );
     });

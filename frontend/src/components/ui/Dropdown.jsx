@@ -109,7 +109,7 @@ export function DropdownItem({
         danger
           ? 'text-danger hover:bg-danger/10 dark:hover:bg-danger/20'
           : 'text-text-primary dark:text-slate-200 hover:bg-surface-secondary dark:hover:bg-slate-800'
-      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} btn-press`}
     >
       {Icon && <Icon className={`w-4 h-4 ${danger ? 'text-danger' : 'text-text-tertiary dark:text-slate-500'}`} />}
       {label}
@@ -135,7 +135,7 @@ export function DropdownCheckbox({ label, checked, onChange, icon: Icon }) {
       role="menuitemcheckbox"
       aria-checked={checked}
       onClick={() => onChange?.(!checked)}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-text-primary dark:text-slate-200 hover:bg-surface-secondary dark:hover:bg-slate-800 transition-colors"
+      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-text-primary dark:text-slate-200 hover:bg-surface-secondary dark:hover:bg-slate-800 transition-colors btn-press"
     >
       <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
         checked

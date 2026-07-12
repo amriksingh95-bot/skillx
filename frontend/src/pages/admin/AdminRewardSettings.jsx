@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Settings, Save, AlertCircle, RefreshCw, Info, Check, RotateCcw, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -152,7 +152,7 @@ export default function AdminRewardSettings() {
         </div>
         <button
           onClick={fetchSettings}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           title="Reload active settings"
         >
           <RefreshCw className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function AdminRewardSettings() {
             
             <button
               onClick={handleResetToDefaults}
-              className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 rounded-xl text-xs font-bold transition-all"
+              className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Reset to Defaults
             </button>
@@ -318,7 +318,7 @@ export default function AdminRewardSettings() {
                 type="button"
                 onClick={handleResetToSaved}
                 disabled={!hasUnsavedChanges}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 btn-press"
               >
                 <RotateCcw className="w-4 h-4" />
                 Reset to Saved
@@ -327,7 +327,7 @@ export default function AdminRewardSettings() {
                 type="submit"
                 onClick={handleSave}
                 disabled={isSaving || !hasUnsavedChanges}
-                className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed btn-press"
               >
                 {isSaving ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Save className="w-4 h-4" />}
                 Save Settings
@@ -462,13 +462,13 @@ export default function AdminRewardSettings() {
           <div className="flex gap-3">
             <button
               onClick={() => setShowConfirmReset(false)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmResetDefaults}
-              className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-500/20"
+              className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-500/20 btn-press"
             >
               Yes, Reset Defaults
             </button>

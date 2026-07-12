@@ -51,14 +51,30 @@ export default function MerchantTransactions() {
     {
       header: 'Type',
       accessor: 'type',
-      render: (row) => <Badge type={row.type}>{row.type}</Badge>
+      render: (row) => {
+        if (row.type === 'earn' && !row.purchaseAmount) {
+          const remarks = row.remarks || '';
+          if (/bonus/i.test(remarks)) {
+            return <Badge type="bonus">Bonus</Badge>;
+          }
+          if (/referral/i.test(remarks)) {
+            return <Badge type="referral">Referral</Badge>;
+          }
+        }
+        return <Badge type={row.type}>{row.type}</Badge>;
+      }
     },
     {
       header: 'Invoice Amount',
       accessor: 'invoiceAmount',
       render: (row) => {
-        const amount = row.type === 'earn' ? row.purchaseAmount : row.invoiceAmount;
-        return amount ? `₹${parseFloat(amount).toLocaleString('en-IN')}` : '-';
+        if (row.type === 'earn') {
+          if (row.purchaseAmount) {
+            return `₹${parseFloat(row.purchaseAmount).toLocaleString('en-IN')}`;
+          }
+          return row.remarks || '-';
+        }
+        return row.invoiceAmount ? `₹${parseFloat(row.invoiceAmount).toLocaleString('en-IN')}` : '-';
       }
     },
     {

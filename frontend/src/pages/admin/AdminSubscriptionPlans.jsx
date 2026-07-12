@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
@@ -187,7 +187,7 @@ export default function AdminSubscriptionPlans() {
       render: (row) => (
         <button
           onClick={() => handleOpenEdit(row)}
-          className="text-primary hover:text-primary-dark font-bold text-xs flex items-center gap-1"
+          className="text-primary hover:text-primary-dark font-bold text-xs flex items-center gap-1 btn-press"
         >
           <Edit2 className="w-3.5 h-3.5" />
           Edit
@@ -218,14 +218,14 @@ export default function AdminSubscriptionPlans() {
         <div className="flex items-center gap-3">
           <button
             onClick={fetchPlans}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
           <button
             onClick={handleOpenAdd}
-            className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-all"
+            className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-all btn-press"
           >
             <Plus className="w-4 h-4" />
             Add Plan
@@ -273,7 +273,7 @@ export default function AdminSubscriptionPlans() {
 
             <button
               onClick={() => handleOpenEdit(plan)}
-              className="w-full mt-6 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              className="w-full mt-6 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 btn-press"
             >
               <Edit2 className="w-3.5 h-3.5" />
               Edit Plan
@@ -316,7 +316,7 @@ export default function AdminSubscriptionPlans() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Price (₹) *
+                Price (?) *
               </label>
               <input
                 type="number"
@@ -362,14 +362,14 @@ export default function AdminSubscriptionPlans() {
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Plus className="w-4 h-4" />}
               Create Plan
@@ -409,7 +409,7 @@ export default function AdminSubscriptionPlans() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Price (₹) *
+                Price (?) *
               </label>
               <input
                 type="number"
@@ -464,14 +464,14 @@ export default function AdminSubscriptionPlans() {
             <button
               type="button"
               onClick={() => { setIsEditOpen(false); setSelectedPlan(null); }}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Edit2 className="w-4 h-4" />}
               Update Plan

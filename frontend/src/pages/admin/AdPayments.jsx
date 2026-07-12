@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { CheckCircle, XCircle, Clock, Image as ImageIcon, RefreshCw } from 'lucide-react';
+import AdStepper from '../../components/AdStepper';
 
 export default function AdPayments() {
   const [payments, setPayments] = useState([]);
@@ -72,7 +73,7 @@ export default function AdPayments() {
         </div>
         <button
           onClick={fetchPending}
-          className="p-2 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+          className="p-2 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all btn-press"
         >
           <RefreshCw className="w-5 h-5 text-slate-600" />
         </button>
@@ -130,7 +131,7 @@ export default function AdPayments() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {getStatusBadge(item.status)}
+                        <AdStepper ad={item.advertisement} />
                         {item.status === 'pending' && item.paidAt && new Date(item.paidAt) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) && (
                           <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-700 whitespace-nowrap">
                             Verification Overdue
@@ -145,7 +146,7 @@ export default function AdPayments() {
                           <button
                             onClick={() => handleConfirm(item.id)}
                             disabled={actioning === item.id}
-                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50 btn-press"
                             title="Confirm"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -153,7 +154,7 @@ export default function AdPayments() {
                           <button
                             onClick={() => handleReject(item.id)}
                             disabled={actioning === item.id}
-                            className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                            className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 btn-press"
                             title="Reject"
                           >
                             <XCircle className="w-4 h-4" />

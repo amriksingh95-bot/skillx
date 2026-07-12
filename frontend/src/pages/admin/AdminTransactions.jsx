@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Badge from '../../components/Badge';
@@ -148,7 +148,7 @@ export default function AdminTransactions() {
         return (
           <button
             onClick={() => handleOpenReverseConfirm(row)}
-            className="p-1.5 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg text-rose-600 dark:text-rose-400 transition-colors"
+            className="p-1.5 bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg text-rose-600 dark:text-rose-400 transition-colors btn-press"
             title="Reverse Transaction"
           >
             <Undo className="w-3.5 h-3.5" />
@@ -213,7 +213,7 @@ export default function AdminTransactions() {
             <div className="relative">
               <input
                 type="date"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm dark:text-slate-100"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
@@ -224,7 +224,7 @@ export default function AdminTransactions() {
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">End Date</label>
             <input
               type="date"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm dark:text-slate-100"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -234,7 +234,7 @@ export default function AdminTransactions() {
         <div className="flex justify-end gap-2 pt-2">
           <button
             onClick={handleClearFilters}
-            className="px-4 py-2 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors"
+            className="px-4 py-2 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors btn-press"
           >
             Clear Filters
           </button>

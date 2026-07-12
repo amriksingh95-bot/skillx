@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -47,6 +48,7 @@ model Merchant {
   statusChangedAt DateTime?
   statusChangedBy String?
   paymentScreenshot String?
+  pendingRenewalSubscriptionId String?
   alternativePhone  String?
   merchantCode      String?       @unique
   advertisements  Advertisement[]
@@ -230,8 +232,9 @@ model Advertisement {
   ctaText          String        @default("Learn More")
   ctaLink          String?
   package          String
-  status           String        @default("pending") // pending, approved, rejected, expired, live, paused, queued
+  status           String        @default("pending") // pending, approved, rejected, expired, live, paused
   pausedReason     String?
+  rejectionReason  String?
   queuedAfterAdId  String?
   approvedAt       DateTime?
   startDate        DateTime?

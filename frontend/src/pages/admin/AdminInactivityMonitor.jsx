@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import Badge from '../../components/Badge';
 import { RefreshCw, Users, Store, AlertTriangle, AlertCircle, CheckCircle, Clock, TrendingDown, Shield, Activity, Calendar, Zap, AlertOctagon, CheckSquare } from 'lucide-react';
@@ -422,7 +422,7 @@ export default function AdminInactivityMonitor() {
         <button
           onClick={handleRefresh}
           disabled={isLoadingReport}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
         >
           <RefreshCw className={`w-4 h-4 ${isLoadingReport ? 'animate-spin' : ''}`} />
           Refresh
@@ -434,7 +434,7 @@ export default function AdminInactivityMonitor() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: 'Total', value: currentSummary?.total || 0, icon: Users, color: 'text-slate-600 dark:text-slate-300', bg: 'bg-slate-100 dark:bg-slate-800', filter: '' },
-            { label: 'Active (≤30d)', value: currentSummary?.active || 0, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', filter: 'active' },
+            { label: 'Active (=30d)', value: currentSummary?.active || 0, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', filter: 'active' },
             { label: 'At Risk (31-60d)', value: currentSummary?.atRisk || 0, icon: AlertCircle, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-900/30', filter: 'at_risk' },
             { label: 'Inactive (61-90d)', value: currentSummary?.inactive || 0, icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30', filter: 'inactive' },
             { label: 'Dormant (>90d)', value: currentSummary?.dormant || 0, icon: Shield, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', filter: 'dormant' }
@@ -448,7 +448,7 @@ export default function AdminInactivityMonitor() {
                   statusFilter === card.filter
                     ? 'border-primary ring-2 ring-primary/20'
                     : 'border-slate-100 dark:border-dark-border'
-                }`}
+                } btn-press`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-1.5 rounded-lg ${card.bg}`}>
@@ -478,7 +478,7 @@ export default function AdminInactivityMonitor() {
                 activeTab === tab.value
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+              } btn-press`}
             >
               <Icon className="w-3.5 h-3.5" />
               {tab.label}
@@ -488,7 +488,7 @@ export default function AdminInactivityMonitor() {
         {statusFilter && (
           <button
             onClick={() => setStatusFilter('')}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all flex items-center gap-1"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all flex items-center gap-1 btn-press"
           >
             Clear filter
           </button>

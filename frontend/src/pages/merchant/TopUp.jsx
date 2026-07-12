@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon } from 'lucide-react';
+import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import Modal from '../../components/Modal';
+import gpayQR from '../../assets/gpay-qr.png';
 
 const PACKAGES = {
   starter: { label: 'Starter', amount: 500, points: 5000, icon: '🚀' },
@@ -17,6 +19,9 @@ export default function TopUp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [topUpId, setTopUpId] = useState(null);
+  const [upiCopied, setUpiCopied] = useState(false);
 
   useEffect(() => {
     fetchBalance();
@@ -46,18 +51,22 @@ export default function TopUp() {
   };
 
   const handleRequest = async (e) => {
-    e.preventDefault();
-    if (!selectedPackage) return;
+    if (e?.preventDefault) e.preventDefault();
+    if (!selectedPackage) return null;
 
     setIsSubmitting(true);
     try {
       const res = await api.post('/api/merchant/topup/request', {
         packageName: selectedPackage
       });
+      const id = res.data.data.topUpId;
+      setTopUpId(id);
       toast.success('Top-up request created. Upload your payment screenshot.');
       await fetchHistory();
+      return id;
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create top-up request.');
+      return null;
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +80,7 @@ export default function TopUp() {
     try {
       const formData = new FormData();
       formData.append('screenshot', screenshot);
-      await api.post(`/api/merchant/topup/upload-screenshot`, formData, {
+      await api.post(`/api/merchant/topup/upload-screenshot/${topUpId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Screenshot uploaded. Admin will verify within 24 hours.');
@@ -124,7 +133,7 @@ export default function TopUp() {
         {Object.entries(PACKAGES).map(([key, pkg]) => (
           <div
             key={key}
-            onClick={() => setSelectedPackage(key)}
+            onClick={() => { setSelectedPackage(key); setTopUpId(null); }}
             className={`cursor-pointer rounded-2xl p-6 border-2 transition-all ${
               selectedPackage === key
                 ? 'border-primary bg-primary/5 shadow-md'
@@ -167,7 +176,16 @@ export default function TopUp() {
             <IndianRupee className="w-10 h-10 text-primary" />
           </div>
 
-          <form onSubmit={handleUpload} className="space-y-4">
+          <button
+            onClick={async () => { const id = await handleRequest(); if (id) setIsPaymentModalOpen(true); }}
+            disabled={isSubmitting}
+            className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all duration-150 active:scale-95 active:shadow-none active:brightness-90 flex items-center justify-center gap-2"
+          >
+            Pay ₹{PACKAGES[selectedPackage].amount} via GPay / UPI
+          </button>
+
+          {topUpId && (
+          <form onSubmit={handleUpload} className="space-y-4" key={topUpId}>
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 Upload Payment Screenshot
@@ -191,12 +209,13 @@ export default function TopUp() {
             <button
               type="submit"
               disabled={!screenshot || isSubmitting}
-              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting && <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />}
               Submit Payment Proof
             </button>
           </form>
+          )}
         </div>
       )}
 
@@ -236,6 +255,48 @@ export default function TopUp() {
           </div>
         )}
       </div>
+      {/* Payment Modal */}
+      <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title="Pay via GPay / UPI">
+        <div className="space-y-4 text-center">
+          <p className="text-sm text-slate-500">
+            Scan QR code to pay ₹{selectedPackage ? PACKAGES[selectedPackage].amount : ''}
+          </p>
+
+          <div className="flex justify-center">
+            <img
+              src={gpayQR}
+              alt="GPay QR Code"
+              className="w-48 h-48 rounded-xl border border-slate-200 object-contain"
+            />
+          </div>
+
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-slate-400">UPI ID</p>
+            <div className="flex items-center justify-between bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-dark-border">
+              <span className="text-sm font-bold text-slate-800 dark:text-white select-all">amriksingh95@okhdfcbank</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText('amriksingh95@okhdfcbank');
+                  setUpiCopied(true);
+                  setTimeout(() => setUpiCopied(false), 2000);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  upiCopied
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 scale-105'
+                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                } btn-press`}
+              >
+                {upiCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {upiCopied ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-xs text-amber-600 font-medium">
+            After payment, close this and upload your payment screenshot below.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 }

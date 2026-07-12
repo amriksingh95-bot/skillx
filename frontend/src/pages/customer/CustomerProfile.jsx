@@ -283,7 +283,7 @@ export default function CustomerProfile() {
             setLoading(true);
             fetchProfile();
           }}
-          className="px-6 py-2.5 bg-primary text-white font-extrabold rounded-xl transition-all hover:bg-primary-dark shadow-sm text-xs"
+          className="px-6 py-2.5 bg-primary text-white font-extrabold rounded-xl transition-all hover:bg-primary-dark shadow-sm text-xs btn-press"
         >
           Retry
         </button>
@@ -325,7 +325,7 @@ export default function CustomerProfile() {
                 <button
                   type="button"
                   onClick={() => setIsQrModalOpen(true)}
-                  className="px-3 py-1 bg-primary text-white hover:bg-primary-dark rounded-lg text-[11px] font-extrabold transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-3 py-1 bg-primary text-white hover:bg-primary-dark rounded-lg text-[11px] font-extrabold transition-all flex items-center gap-1.5 shadow-sm btn-press"
                 >
                   <QrCode className="w-3.5 h-3.5" /> My QR Code
                 </button>
@@ -359,7 +359,7 @@ export default function CustomerProfile() {
               </span>
               <button 
                 onClick={handleCopyReferral}
-                className="p-2.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40 rounded-xl transition-all shadow-sm"
+                className="p-2.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 hover:border-primary/40 rounded-xl transition-all shadow-sm btn-press"
                 title="Copy Referral Code"
               >
                 <Copy className="w-4 h-4" />
@@ -424,7 +424,7 @@ export default function CustomerProfile() {
                 activeTab === tab.id
                   ? 'border-primary text-primary bg-primary/5'
                   : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
+              } btn-press`}
             >
               {tab.label}
             </button>
@@ -709,7 +709,7 @@ export default function CustomerProfile() {
                   onClick={() => handleInputChange('notificationOptIn', !formData.notificationOptIn)}
                   className={`w-11 h-6 flex items-center rounded-full p-1 transition-all duration-300 ${
                     formData.notificationOptIn ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
-                  }`}
+                  } btn-press`}
                 >
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-all duration-300 ${
                     formData.notificationOptIn ? 'translate-x-5' : 'translate-x-0'
@@ -750,7 +750,7 @@ export default function CustomerProfile() {
                 <button
                   type="button"
                   onClick={() => setIsMobileModalOpen(true)}
-                  className="px-5 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                  className="px-5 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 btn-press"
                 >
                   <Smartphone className="w-4 h-4 text-slate-400" />
                   Change Mobile Number
@@ -759,7 +759,7 @@ export default function CustomerProfile() {
                 <button
                   type="button"
                   onClick={() => setIsPasswordModalOpen(true)}
-                  className="px-5 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
+                  className="px-5 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 btn-press"
                 >
                   <KeyRound className="w-4 h-4 text-slate-400" />
                   Change Password
@@ -778,14 +778,14 @@ export default function CustomerProfile() {
                 <button
                   type="button"
                   onClick={() => setFormData(originalData)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all btn-press"
                 >
                   Reset
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2"
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 btn-press"
                 >
                   {isSaving ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
                   Save Changes
@@ -823,14 +823,14 @@ export default function CustomerProfile() {
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => setIsMobileModalOpen(false)}
-                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800"
+                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 btn-press"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleRequestMobileOtp}
                     disabled={requestOtpLoading}
-                    className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5 btn-press"
                   >
                     {requestOtpLoading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
                     Send OTP Code
@@ -875,14 +875,14 @@ export default function CustomerProfile() {
                       setDevOtp(null);
                       setMobileOtp('');
                     }}
-                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800"
+                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 btn-press"
                   >
                     Go Back
                   </button>
                   <button
                     type="submit"
                     disabled={submitMobileLoading}
-                    className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5 btn-press"
                   >
                     {submitMobileLoading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
                     Verify & Save
@@ -948,14 +948,14 @@ export default function CustomerProfile() {
                 <button
                   type="button"
                   onClick={() => setIsPasswordModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800"
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-950 text-slate-900 dark:text-white text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 btn-press"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPasswordSaving || newPassword.length < 6 || newPassword !== confirmPassword}
-                  className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50 btn-press"
                 >
                   {isPasswordSaving ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
                   Update Password

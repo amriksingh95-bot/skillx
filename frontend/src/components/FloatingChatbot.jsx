@@ -100,7 +100,7 @@ export default function FloatingChatbot() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 hover:bg-indigo-700 rounded-lg transition-colors"
+              className="p-1 hover:bg-indigo-700 rounded-lg transition-colors btn-press"
             >
               <X className="w-4 h-4" />
             </button>
@@ -150,7 +150,7 @@ export default function FloatingChatbot() {
                               <button
                                 key={i}
                                 onClick={() => handleSend(q)}
-                                className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-500 dark:text-slate-400 rounded text-[9px] transition-all"
+                                className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-500 dark:text-slate-400 rounded text-[9px] transition-all btn-press"
                               >
                                 {q}
                               </button>
@@ -198,7 +198,7 @@ export default function FloatingChatbot() {
                   <button
                     key={idx}
                     onClick={() => handleSend(suggestion)}
-                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-[11px] font-medium transition-all border border-slate-200 dark:border-dark-border"
+                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg text-[11px] font-medium transition-all border border-slate-200 dark:border-dark-border btn-press"
                   >
                     {suggestion}
                   </button>
@@ -220,7 +220,7 @@ export default function FloatingChatbot() {
               <button
                 type="submit"
                 disabled={!input.trim() || isTyping}
-                className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed btn-press"
               >
                 <Send className="w-4 h-4" />
               </button>

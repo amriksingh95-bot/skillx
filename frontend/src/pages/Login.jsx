@@ -371,7 +371,7 @@ export default function Login() {
           setMerchantSignupMode(false);
           setActiveScreen('select');
         }}
-        className="absolute top-6 left-6 p-2.5 text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all flex items-center justify-center z-20"
+        className="absolute top-6 left-6 p-2.5 text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all flex items-center justify-center z-20 btn-press"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
@@ -463,7 +463,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowCustPassword(!showCustPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
                     >
                       {showCustPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
                     </button>
@@ -565,7 +565,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowMerchantPassword(!showMerchantPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
                     >
                       {showMerchantPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
                     </button>
@@ -732,7 +732,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowSignupPassword(!showSignupPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
                     >
                       {showSignupPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
                     </button>
@@ -823,7 +823,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setShowAdminPassword(!showAdminPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
                     >
                       {showAdminPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
                     </button>

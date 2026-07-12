@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { MerchantSubscriptionProvider } from './context/MerchantSubscriptionContext';
 import Layout from './components/Layout';
 import RoleGuard from './components/RoleGuard';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -37,8 +38,10 @@ import MerchantAddPoints from './pages/merchant/MerchantAddPoints';
 import MerchantRedeemPoints from './pages/merchant/MerchantRedeemPoints';
 import MerchantTransactions from './pages/merchant/MerchantTransactions';
 import MerchantSubscription from './pages/merchant/MerchantSubscription';
+import MerchantReports from './pages/merchant/MerchantReports';
 import TopUp from './pages/merchant/TopUp';
 import MerchantProfile from './pages/merchant/MerchantProfile';
+import MerchantPromote from './pages/merchant/MerchantPromote';
 
 // Customer Pages
 import CustomerDashboard from './pages/customer/CustomerDashboard';
@@ -71,7 +74,7 @@ export default function App() {
 <Route path="/suspended" element={<Suspended />} />
 
             {/* Authenticated Routes with Shell Layout */}
-            <Route path="/" element={<Layout />}>
+            <Route path="/" element={<MerchantSubscriptionProvider><Layout /></MerchantSubscriptionProvider>}>
               {/* Root redirect to correct dashboard */}
               <Route index element={<DashboardRedirect />} />
 
@@ -231,10 +234,26 @@ export default function App() {
                 }
               />
               <Route
+                path="merchant/reports"
+                element={
+                  <RoleGuard allowedRoles={['merchant']}>
+                    <MerchantReports />
+                  </RoleGuard>
+                }
+              />
+              <Route
                 path="merchant/subscription"
                 element={
                   <RoleGuard allowedRoles={['merchant']}>
                     <MerchantSubscription />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="merchant/promote"
+                element={
+                  <RoleGuard allowedRoles={['merchant']}>
+                    <MerchantPromote />
                   </RoleGuard>
                 }
               />

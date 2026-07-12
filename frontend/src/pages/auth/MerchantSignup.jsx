@@ -330,7 +330,7 @@ export default function MerchantSignup() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
               >
                 {showPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
               </button>
@@ -359,7 +359,7 @@ export default function MerchantSignup() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
               </button>
@@ -416,7 +416,7 @@ export default function MerchantSignup() {
                 type="button"
                 onClick={detectLocation}
                 disabled={isDetectingLocation}
-                className="px-3 py-2.5 bg-[#38bdf8]/10 text-[#38bdf8] rounded-xl text-xs font-bold hover:bg-[#38bdf8]/20 transition-all disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                className="px-3 py-2.5 bg-[#38bdf8]/10 text-[#38bdf8] rounded-xl text-xs font-bold hover:bg-[#38bdf8]/20 transition-all disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap btn-press"
                 title="Detect My Location"
               >
                 {isDetectingLocation ? (

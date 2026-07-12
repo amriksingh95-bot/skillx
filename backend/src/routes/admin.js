@@ -137,6 +137,25 @@ router.patch(
   adminController.rejectMerchantPayment
 );
 
+router.patch(
+  '/merchants/:id/confirm-renewal',
+  [
+    param('id').isUUID().withMessage('Invalid ID format.'),
+    body('paymentRef').optional().trim().notEmpty().withMessage('Payment reference cannot be empty.')
+  ],
+  validate,
+  adminController.confirmRenewalPayment
+);
+
+router.patch(
+  '/merchants/:id/reject-renewal',
+  [
+    param('id').isUUID().withMessage('Invalid ID format.')
+  ],
+  validate,
+  adminController.rejectRenewalPayment
+);
+
 router.get('/customers', adminController.getCustomers);
 
 router.post(
@@ -266,11 +285,15 @@ router.patch(
   '/advertisements/:id/status',
   [
     param('id').isUUID().withMessage('Invalid ID format.'),
-    body('status').isIn(['approved', 'rejected', 'expired', 'live', 'paused', 'queued']).withMessage('Invalid status.')
+    body('status').isIn(['approved', 'rejected', 'expired', 'live', 'paused']).withMessage('Invalid status.')
   ],
   validate,
   adminController.updateAdStatus
 );
+
+// Reports – Points Liability Trend & Merchant Health
+router.get('/reports/points-liability-trend', adminController.getPointsLiabilityTrend);
+router.get('/reports/merchant-health', adminController.getMerchantHealth);
 
 // Fee Revenue Routes
 router.get('/fee-revenue/merchant-wise', adminController.getMerchantFeeRevenue);

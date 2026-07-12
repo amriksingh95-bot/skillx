@@ -72,7 +72,7 @@ export default function TopUpRequests() {
         </div>
         <button
           onClick={fetchPending}
-          className="p-2 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+          className="p-2 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all btn-press"
         >
           <RefreshCw className="w-5 h-5 text-slate-600" />
         </button>
@@ -116,7 +116,7 @@ export default function TopUpRequests() {
                     <td className="px-4 py-3">
                       {item.screenshotPath ? (
                         <a
-                          href={item.screenshotPath}
+                          href={`${api.defaults.baseURL}${item.screenshotPath}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 font-medium"
@@ -136,7 +136,7 @@ export default function TopUpRequests() {
                           <button
                             onClick={() => handleConfirm(item.id)}
                             disabled={actioning === item.id}
-                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-50 btn-press"
                             title="Confirm"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -144,7 +144,7 @@ export default function TopUpRequests() {
                           <button
                             onClick={() => handleReject(item.id)}
                             disabled={actioning === item.id}
-                            className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                            className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 btn-press"
                             title="Reject"
                           >
                             <XCircle className="w-4 h-4" />

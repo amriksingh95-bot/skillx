@@ -164,7 +164,7 @@ export default function MerchantProfile() {
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
+            } btn-press`}
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -258,7 +258,7 @@ export default function MerchantProfile() {
                 <button
                   type="button"
                   onClick={() => setIsPasswordModalOpen(true)}
-                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition"
+                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition btn-press"
                 >
                   Change Password
                 </button>
@@ -275,10 +275,10 @@ export default function MerchantProfile() {
         {modifiedCount > 0 && activeTab !== 'security' && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg px-6 py-3 flex items-center gap-4 z-50">
             <span className="text-sm text-slate-600 dark:text-slate-300">{modifiedCount} change{modifiedCount > 1 ? 's' : ''} unsaved</span>
-            <button type="button" onClick={handleReset} className="flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg hover:bg-slate-50">
+            <button type="button" onClick={handleReset} className="flex items-center gap-1 px-3 py-1.5 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 btn-press">
               <X className="w-3.5 h-3.5" /> Reset
             </button>
-            <button type="submit" disabled={isSaving} className="flex items-center gap-1 px-4 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark disabled:opacity-50">
+            <button type="submit" disabled={isSaving} className="flex items-center gap-1 px-4 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark disabled:opacity-50 btn-press">
               <Save className="w-3.5 h-3.5" />
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -292,7 +292,7 @@ export default function MerchantProfile() {
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-sm space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-slate-800 dark:text-slate-100">Change Password</h3>
-              <button onClick={() => setIsPasswordModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+              <button onClick={() => setIsPasswordModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl btn-press">×</button>
             </div>
             <form onSubmit={handlePasswordChange} className="space-y-3">
               <div>
@@ -308,8 +308,8 @@ export default function MerchantProfile() {
                 <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputClass} required />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm">Cancel</button>
-                <button type="submit" disabled={isPasswordSaving} className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50">
+                <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm btn-press">Cancel</button>
+                <button type="submit" disabled={isPasswordSaving} className="flex-1 px-4 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50 btn-press">
                   {isPasswordSaving ? 'Saving...' : 'Update Password'}
                 </button>
               </div>

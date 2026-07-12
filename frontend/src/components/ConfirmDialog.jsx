@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Modal from './Modal';
 
@@ -17,7 +17,7 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title = 'Con
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 btn-press"
           >
             Cancel
           </button>
@@ -25,7 +25,7 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title = 'Con
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 btn-press"
           >
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />

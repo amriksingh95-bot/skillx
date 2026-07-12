@@ -1,7 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Badge from '../../components/Badge';
+import AdStepper from '../../components/AdStepper';
+import { getDirectionsUrl } from '../../components/AdBanner';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { Megaphone, Eye, MousePointerClick, RefreshCw, Check, X, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -19,6 +21,9 @@ export default function AdvertisementsPage() {
   const [previewAd, setPreviewAd] = useState(null);
   const [resumeAd, setResumeAd] = useState(null);
   const [resumeTargetStatus, setResumeTargetStatus] = useState('live');
+  const [rejectAd, setRejectAd] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
 
   const tabs = ['All', 'Pending', 'Approved', 'Rejected', 'Expired', 'Live', 'Paused', 'Queued'];
 
@@ -80,10 +85,12 @@ export default function AdvertisementsPage() {
     loadData();
   }, [page, activeTab]);
 
-  const handleUpdateStatus = async (id, status) => {
+  const handleUpdateStatus = async (id, status, rejectionReason) => {
     setActionInProgress(id);
     try {
-      const res = await api.patch(`/api/admin/advertisements/${id}/status`, { status });
+      const body = { status };
+      if (rejectionReason !== undefined) body.rejectionReason = rejectionReason;
+      const res = await api.patch(`/api/admin/advertisements/${id}/status`, body);
       toast.success(res.data.message || `Status updated to ${status}.`);
       loadData();
     } catch (err) {
@@ -139,7 +146,7 @@ export default function AdvertisementsPage() {
         );
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge type={row.status}>{row.status}</Badge>
+            <AdStepper ad={row} />
             {isPaymentOverdue && (
               <span className="inline-flex items-center px-2 py-0.5 text-2xs font-bold rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200/50 dark:border-red-900/50 whitespace-nowrap">
                 Payment Verification Overdue
@@ -152,11 +159,33 @@ export default function AdvertisementsPage() {
     {
       header: 'Directions',
       accessor: 'showDirections',
-      render: (row) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize ${row.showDirections ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-200/50' : 'bg-slate-500/10 text-slate-400 border border-slate-700'}`}>
-          {row.showDirections ? 'Show Directions' : 'Awareness Only'}
-        </span>
-      )
+      render: (row) => {
+        const url = row.showDirections ? getDirectionsUrl(row) : null;
+        if (!row.showDirections) {
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize bg-slate-500/10 text-slate-400 border border-slate-700">
+              Awareness Only
+            </span>
+          );
+        }
+        if (!url) {
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize bg-amber-500/10 text-amber-600 border border-amber-200/50">
+              No Location Set
+            </span>
+          );
+        }
+        return (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize bg-emerald-500/10 text-emerald-600 border border-emerald-200/50 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+          >
+            Show Directions
+          </a>
+        );
+      }
     },
     {
       header: 'Impressions',
@@ -215,7 +244,7 @@ export default function AdvertisementsPage() {
               onClick={() => setPreviewAd(row)}
               style={{ cursor: 'pointer' }}
               title="Click to preview rendered ad"
-              className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 mr-3"
+              className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 mr-3 btn-press"
             >
               <div
                 style={{
@@ -236,7 +265,7 @@ export default function AdvertisementsPage() {
             </button>
             <button
               onClick={() => setPreviewAd(row)}
-              className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-700/50 border border-slate-200/50 dark:border-slate-700/50 rounded-lg transition-colors flex items-center gap-1"
+              className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-700/50 border border-slate-200/50 dark:border-slate-700/50 rounded-lg transition-colors flex items-center gap-1 btn-press"
             >
               <Eye className="w-3.5 h-3.5" />
               Preview
@@ -245,7 +274,7 @@ export default function AdvertisementsPage() {
               <button
                 disabled={isBusy}
                 onClick={() => handleUpdateStatus(row.id, 'approved')}
-                className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200/50 dark:border-emerald-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200/50 dark:border-emerald-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
               >
                 <Check className="w-3.5 h-3.5" />
                 Approve
@@ -254,8 +283,8 @@ export default function AdvertisementsPage() {
             {row.status === 'pending' && (
               <button
                 disabled={isBusy}
-                onClick={() => handleUpdateStatus(row.id, 'rejected')}
-                className="px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-400 dark:hover:bg-rose-900/30 border border-rose-200/50 dark:border-rose-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                onClick={() => { setRejectAd(row); setRejectReason(''); }}
+                className="px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:text-rose-400 dark:hover:bg-rose-900/30 border border-rose-200/50 dark:border-rose-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
               >
                 <X className="w-3.5 h-3.5" />
                 Reject
@@ -265,7 +294,7 @@ export default function AdvertisementsPage() {
               <button
                 disabled={isBusy}
                 onClick={() => handleUpdateStatus(row.id, 'expired')}
-                className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
               >
                 <AlertCircle className="w-3.5 h-3.5" />
                 Expire
@@ -275,7 +304,7 @@ export default function AdvertisementsPage() {
               <button
                 disabled={isBusy}
                 onClick={() => handleUpdateStatus(row.id, 'paused')}
-                className="px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-900/30 border border-amber-200/50 dark:border-amber-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                className="px-2.5 py-1 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:hover:bg-amber-900/30 border border-amber-200/50 dark:border-amber-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
               >
                 <AlertCircle className="w-3.5 h-3.5" />
                 Pause
@@ -285,7 +314,7 @@ export default function AdvertisementsPage() {
               <button
                 disabled={isBusy}
                 onClick={() => handleResume(row)}
-                className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200/50 dark:border-emerald-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50"
+                className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-900/30 border border-emerald-200/50 dark:border-emerald-900/50 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
               >
                 <Check className="w-3.5 h-3.5" />
                 Resume
@@ -312,7 +341,7 @@ export default function AdvertisementsPage() {
         </div>
         <button
           onClick={loadData}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold"
+          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           title="Reload statistics and list"
         >
           <RefreshCw className="w-4 h-4" />
@@ -375,7 +404,7 @@ export default function AdvertisementsPage() {
                 activeTab === tab
                   ? 'bg-primary text-white shadow-sm shadow-primary/20'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-              }`}
+              } btn-press`}
             >
               {tab}
             </button>
@@ -389,6 +418,7 @@ export default function AdvertisementsPage() {
           pagination={pagination}
           onPageChange={setPage}
           isLoading={isLoading}
+          stickyHeader
         />
       </div>
 
@@ -457,7 +487,7 @@ export default function AdvertisementsPage() {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setResumeAd(null)}
-                className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors btn-press"
               >
                 Cancel
               </button>
@@ -466,9 +496,65 @@ export default function AdvertisementsPage() {
                   handleUpdateStatus(resumeAd.id, resumeTargetStatus);
                   setResumeAd(null);
                 }}
-                className="px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors btn-press"
               >
                 Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectAd && (
+        <div
+          onClick={() => !isRejecting && setRejectAd(null)}
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5"
+          >
+            <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded-2xl">
+              <h4 className="font-extrabold text-sm text-slate-800 dark:text-white mb-1">
+                Reject {rejectAd.title}?
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                This will mark the advertisement as rejected and reject any pending payments. This action can be reviewed later.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Rejection Reason (Optional)</label>
+              <textarea
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white h-24 resize-none"
+                placeholder="Reason for rejection..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-dark-border pt-4">
+              <button
+                type="button"
+                disabled={isRejecting}
+                onClick={() => setRejectAd(null)}
+                className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-300 transition-colors btn-press"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isRejecting}
+                onClick={() => {
+                  setIsRejecting(true);
+                  handleUpdateStatus(rejectAd.id, 'rejected', rejectReason);
+                  setRejectAd(null);
+                  setIsRejecting(false);
+                }}
+                className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-md shadow-rose-500/10 transition-colors flex items-center gap-1.5 btn-press"
+              >
+                {isRejecting ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
+                ) : null}
+                Reject Advertisement
               </button>
             </div>
           </div>
@@ -493,7 +579,7 @@ export default function AdvertisementsPage() {
             <div
               className="ad-preview-grid"
               style={{
-                height: 160,
+                minHeight: 160,
                 display: 'grid',
                 gridTemplateColumns: '36px 200px 1fr 100px 36px',
                 gap: '12px',
@@ -507,21 +593,22 @@ export default function AdvertisementsPage() {
                 @media (max-width: 640px) {
                   .ad-preview-grid {
                     grid-template-columns: 36px 1fr 36px !important;
-                    grid-template-rows: auto auto !important;
+                    grid-template-rows: auto auto auto !important;
                   }
-                  .ad-preview-grid > div:nth-child(1) { grid-column: 1; }
-                  .ad-preview-grid > div:nth-child(2) { grid-column: 2 / -1; }
-                  .ad-preview-grid > div:nth-child(3) { grid-column: 2; }
-                  .ad-preview-grid > div:nth-child(4) { grid-column: 2 / -1; grid-row: 2; justify-self: end; margin-right: 36px; }
-                  .ad-preview-grid > div:nth-child(5) { grid-column: 3; }
+                  .ap-arrow-first { grid-column: 1; }
+                  .ap-brand { grid-column: 2 / -1; }
+                  .ap-headline { grid-column: 2; }
+                  .ap-desc { grid-column: 2 / -1; font-size: 12px; }
+                  .ap-badge { grid-column: 2 / -1; grid-row: 3; justify-self: end; margin-right: 36px; }
+                  .ap-arrow-last { grid-column: 3; grid-row: auto; justify-self: auto; margin-right: 0; font-size: inherit; }
                 }
               `}</style>
 
               {/* Arrow spacer */}
-              <div></div>
+              <div className="ap-arrow-first"></div>
 
               {/* Brand identity */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="ap-brand" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div
                   style={{
                     width: 48,
@@ -554,14 +641,21 @@ export default function AdvertisementsPage() {
               </div>
 
               {/* Headline */}
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className="ap-headline" style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.3, width: '100%', textAlign: 'center' }}>
                   {previewAd.title}
                 </div>
               </div>
 
+              {/* Description */}
+              {previewAd.description && (
+                <div className="ap-desc" style={{ gridColumn: '2 / -1', fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                  {previewAd.description}
+                </div>
+              )}
+
               {/* Badge */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="ap-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <button
                   style={{
                     width: 96,
@@ -586,7 +680,7 @@ export default function AdvertisementsPage() {
               </div>
 
               {/* Arrow spacer */}
-              <div></div>
+              <div className="ap-arrow-last"></div>
             </div>
             <button
               onClick={() => setPreviewAd(null)}
@@ -601,7 +695,7 @@ export default function AdvertisementsPage() {
                 fontWeight: 'bold',
                 fontSize: '16px'
               }}
-            >×</button>
+            >�</button>
           </div>
         </div>
       )}

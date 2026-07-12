@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Store,
@@ -70,8 +70,10 @@ const merchantLinks = [
   { path: '/merchant/add-points', label: 'Add Points', icon: PlusCircle },
   { path: '/merchant/redeem-points', label: 'Redeem Points', icon: Gift },
   { path: '/merchant/transactions', label: 'Transactions', icon: History },
+  { path: '/merchant/reports', label: 'Reports', icon: BarChart3 },
   { path: '/merchant/subscription', label: 'Subscription', icon: CreditCard },
   { path: '/merchant/topup', label: 'Top Up Points', icon: Wallet },
+  { path: '/merchant/promote', label: 'Promote Business', icon: Megaphone },
 ];
 
 const customerLinks = [
@@ -83,6 +85,7 @@ const customerLinks = [
 export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const [collapsedSections, setCollapsedSections] = useState({});
+  const location = useLocation();
 
   if (!user) return null;
 
@@ -93,23 +96,71 @@ export default function Sidebar({ isOpen, onClose }) {
     }));
   };
 
-  const renderNavLink = (link) => (
-    <NavLink
-      key={link.path}
-      to={link.path}
-      onClick={onClose}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-          isActive
-            ? 'bg-primary text-white shadow-sm shadow-primary/20'
-            : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-        }`
+  const renderNavLink = (link) => {
+    const hashIndex = link.path.indexOf('#');
+    const isHashLink = hashIndex !== -1;
+
+    if (isHashLink) {
+      const basePath = link.path.substring(0, hashIndex);
+      const hash = link.path.substring(hashIndex);
+      const isAlreadyOnPage = location.pathname === basePath;
+
+      if (isAlreadyOnPage) {
+        return (
+          <a
+            key={link.path}
+            href={link.path}
+            onClick={(e) => {
+              e.preventDefault();
+              onClose();
+              const el = document.getElementById(hash.substring(1));
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 bg-primary text-white shadow-sm shadow-primary/20"
+          >
+            <link.icon className="w-[18px] h-[18px] shrink-0" />
+            <span className="truncate">{link.label}</span>
+          </a>
+        );
       }
-    >
-      <link.icon className="w-[18px] h-[18px] shrink-0" />
-      <span className="truncate">{link.label}</span>
-    </NavLink>
-  );
+
+      return (
+        <NavLink
+          key={link.path}
+          to={link.path}
+          onClick={onClose}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              isActive
+                ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
+            }`
+          }
+        >
+          <link.icon className="w-[18px] h-[18px] shrink-0" />
+          <span className="truncate">{link.label}</span>
+        </NavLink>
+      );
+    }
+
+    return (
+      <NavLink
+        key={link.path}
+        to={link.path}
+        onClick={onClose}
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+            isActive
+              ? 'bg-primary text-white shadow-sm shadow-primary/20'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
+          }`
+        }
+      >
+        <link.icon className="w-[18px] h-[18px] shrink-0" />
+        <span className="truncate">{link.label}</span>
+      </NavLink>
+    );
+  };
 
   const renderAdminNav = () => (
     <div className="space-y-4">
@@ -119,7 +170,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <div key={section.label}>
             <button
               onClick={() => toggleSection(section.label)}
-              className="w-full flex items-center justify-between px-4 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-tertiary dark:text-slate-500 hover:text-text-secondary dark:hover:text-slate-400 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-1.5 text-2xs font-bold uppercase tracking-wider text-text-tertiary dark:text-slate-500 hover:text-text-secondary dark:hover:text-slate-400 transition-colors btn-press"
             >
               {section.label}
               {isCollapsed ? (

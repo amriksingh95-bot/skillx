@@ -37,7 +37,7 @@ export default function Suspended() {
           </a>
           <button
             onClick={() => window.location.href = '/login'}
-            className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 btn-press"
           >
             <Home className="w-4 h-4" />
             Go to Login

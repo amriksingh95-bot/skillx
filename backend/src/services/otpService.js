@@ -39,14 +39,6 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
   } catch (err) {
   }
 
-  // Delete any existing unverified OTP for this mobile+purpose to prevent accumulation
-  try {
-    await prisma.oTPVerification.deleteMany({
-      where: { mobile, purpose, verified: false }
-    });
-  } catch (err) {
-  }
-
   // 1. Generate 6-digit cryptographically secure OTP
   const otp = crypto.randomInt(100000, 1000000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
@@ -54,14 +46,11 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
   // 2. Hash OTP before saving
   const hashedOtp = await bcrypt.hash(otp, 10);
 
-  // 3. Save to database
-  const verification = await prisma.oTPVerification.create({
-    data: {
-      mobile,
-      otp: hashedOtp,
-      purpose,
-      expiresAt
-    }
+  // 3. Upsert: overwrite any existing record for this mobile+purpose (verified or not)
+  const verification = await prisma.oTPVerification.upsert({
+    where: { mobile_purpose: { mobile, purpose } },
+    update: { otp: hashedOtp, expiresAt, verified: false, createdAt: new Date() },
+    create: { mobile, purpose, otp: hashedOtp, expiresAt }
   });
 
   // 4. Send email with ORIGINAL (unhashed) OTP
@@ -128,6 +117,14 @@ async function verifyOTP(mobile, otp, purpose) {
     err.code = 'OTP_LOCKED';
     err.retryAfter = secondsLeft;
     throw err;
+  } else if (attempt?.lockedUntil && attempt.lockedUntil <= new Date()) {
+    // Lock has expired — reset the attempt counter
+    await prisma.oTPAttempt.upsert({
+      where: { mobile_purpose: { mobile, purpose } },
+      update: { attemptCount: 0, lockedUntil: null },
+      create: { mobile, purpose, attemptCount: 0, lockedUntil: null }
+    });
+    attempt.attemptCount = 0;
   }
 
   // 4. Verify OTP using bcrypt
@@ -145,7 +142,7 @@ async function verifyOTP(mobile, otp, purpose) {
     const err = new Error(newCount >= 5 ? 'Too many failed attempts. Locked for 30 seconds.' : `Invalid OTP. ${5 - newCount} attempts remaining.`);
     err.status = 400;
     err.code = 'INVALID_OTP';
-    err.attemptsRemaining = 5 - newCount;
+    err.attemptsRemaining = Math.max(0, 5 - newCount);
     throw err;
   }
 

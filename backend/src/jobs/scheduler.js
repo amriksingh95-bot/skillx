@@ -3,7 +3,7 @@ const { runDailyReminders } = require('../services/subscriptionReminderService')
 const { getInactivitySummary } = require('../services/inactivityService');
 const { runReengagementCampaign } = require('../services/reengagementService');
 const { pauseStaleApprovedAds } = require('./staleApprovedAdsService');
-const { runAdActivationCycle } = require('./adActivationService');
+const { runAdExpiryCheck } = require('./adActivationService');
 const { createAuditLog } = require('../services/auditLogService');
 
 let reminderJob = null;
@@ -201,8 +201,8 @@ function startStaleAdsJob() {
 }
 
 /**
- * Start the ad activation cycle cron job.
- * Runs every 5 minutes — expires overdue live ads, activates next queued ad.
+ * Start the ad expiry check cron job.
+ * Runs every 5 minutes — expires overdue live ads.
  */
 function startAdActivationJob() {
   if (adActivationJob) {
@@ -217,13 +217,12 @@ function startAdActivationJob() {
     }
 
     isAdActivationRunning = true;
-    console.log(`[Scheduler] Starting ad activation cycle at ${new Date().toISOString()}`);
+    console.log(`[Scheduler] Starting ad expiry check at ${new Date().toISOString()}`);
 
     try {
-      const summary = await runAdActivationCycle();
-      console.log(`[Scheduler] Ad activation cycle complete:`, {
+      const summary = await runAdExpiryCheck();
+      console.log(`[Scheduler] Ad expiry check complete:`, {
         expired: summary.expired,
-        activated: summary.activated,
         failed: summary.failed
       });
 
@@ -231,7 +230,7 @@ function startAdActivationJob() {
         console.error('[Scheduler] Errors encountered:', summary.errors);
       }
     } catch (error) {
-      console.error('[Scheduler] Ad activation cycle failed:', error.message);
+      console.error('[Scheduler] Ad expiry check failed:', error.message);
     } finally {
       isAdActivationRunning = false;
     }
@@ -240,7 +239,7 @@ function startAdActivationJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Ad activation cycle job started (every 5 minutes)');
+  console.log('[Scheduler] Ad expiry check job started (every 5 minutes)');
 }
 
 /**
@@ -472,14 +471,14 @@ async function runAdActivationNow() {
   }
 
   isAdActivationRunning = true;
-  console.log(`[Scheduler] Manual ad activation run triggered at ${new Date().toISOString()}`);
+  console.log(`[Scheduler] Manual ad expiry check triggered at ${new Date().toISOString()}`);
 
   try {
-    const summary = await runAdActivationCycle();
-    console.log(`[Scheduler] Manual ad activation run complete:`, summary);
+    const summary = await runAdExpiryCheck();
+    console.log(`[Scheduler] Manual ad expiry check complete:`, summary);
     return summary;
   } catch (error) {
-    console.error('[Scheduler] Manual ad activation run failed:', error.message);
+    console.error('[Scheduler] Manual ad expiry check failed:', error.message);
     return { error: error.message };
   } finally {
     isAdActivationRunning = false;

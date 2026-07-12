@@ -224,7 +224,7 @@ async function processEarn(customerId, merchantId, purchaseAmount, remarks = nul
  * @param {number} pointsToRedeem
  * @param {string} [remarks]
  */
-async function processRedeem(customerId, merchantId, pointsToRedeem, remarks = null, invoiceAmount = null) {
+async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmount, remarks = null) {
   const { calculateRedemptionFee } = require('./subscriptionService');
 
   return prisma.$transaction(async (tx) => {
@@ -265,6 +265,21 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, remarks = n
     if (pointsToRedeem < settings.minRedeemPoints) {
       const err = new Error(`Minimum redemption limit is ${settings.minRedeemPoints} points.`);
       err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+
+    // Enforce 20% redemption cap at transaction level
+    const rupeesPerPoint = parseFloat(settings.rupeesPerPoint);
+    if (!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || parseFloat(invoiceAmount) <= 0) {
+      const err = new Error('Purchase amount is required for redemption.');
+      err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+    const maxDiscountAllowed = parseFloat(invoiceAmount) * 0.20;
+    const maxPointsAllowed = Math.floor(maxDiscountAllowed / rupeesPerPoint);
+    if (pointsToRedeem > maxPointsAllowed) {
+      const err = new Error(`Redemption exceeds 20% cap. Maximum allowed: ${maxPointsAllowed} points for Rs. ${invoiceAmount} invoice.`);
+      err.code = 'CAP_EXCEEDED';
       throw err;
     }
 

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { 
   Search, MapPin, Phone, Mail, Store, ShoppingCart, Navigation,
@@ -32,18 +32,18 @@ export default function FindPartners() {
 
   // Category filter list
   const categoryPills = [
-    { id: 'all', label: '🏪 All' },
-    { id: 'grocery', label: '🛒 Grocery' },
-    { id: 'cafe', label: '☕ Cafe & Restaurant' },
-    { id: 'beauty', label: '💆 Beauty & Salon' },
-    { id: 'doctor', label: '🏥 Doctor & Clinic' },
-    { id: 'pharmacy', label: '💊 Pharmacy' },
-    { id: 'fashion', label: '👗 Fashion & Clothing' },
-    { id: 'stationery', label: '📚 Stationery & Books' },
-    { id: 'gym', label: '🏋️ Gym & Fitness' },
-    { id: 'electronics', label: '🔧 Electronics & Repair' },
-    { id: 'hotel', label: '🏨 Hotel & Travel' },
-    { id: 'education', label: '🎓 Education' }
+    { id: 'all', label: '?? All' },
+    { id: 'grocery', label: '?? Grocery' },
+    { id: 'cafe', label: '? Cafe & Restaurant' },
+    { id: 'beauty', label: '?? Beauty & Salon' },
+    { id: 'doctor', label: '?? Doctor & Clinic' },
+    { id: 'pharmacy', label: '?? Pharmacy' },
+    { id: 'fashion', label: '?? Fashion & Clothing' },
+    { id: 'stationery', label: '?? Stationery & Books' },
+    { id: 'gym', label: '??? Gym & Fitness' },
+    { id: 'electronics', label: '?? Electronics & Repair' },
+    { id: 'hotel', label: '?? Hotel & Travel' },
+    { id: 'education', label: '?? Education' }
   ];
 
   // Extract unique cities from merchants
@@ -153,11 +153,11 @@ export default function FindPartners() {
       <div>
         <h1 className="text-2xl font-black text-slate-800 dark:text-white">Find Partners</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Discover SkillXT merchants near you — earn and redeem points at all listed outlets
+          Discover SkillXT merchants near you � earn and redeem points at all listed outlets
         </p>
       </div>
 
-      {/* SECTION 1 — SEARCH BAR */}
+      {/* SECTION 1 � SEARCH BAR */}
       <div className="relative">
         <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
           <Search className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function FindPartners() {
         />
       </div>
 
-      {/* SECTION 1.5 — CITY FILTER DROPDOWN */}
+      {/* SECTION 1.5 � CITY FILTER DROPDOWN */}
       {uniqueCities.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">City:</span>
@@ -188,7 +188,7 @@ export default function FindPartners() {
         </div>
       )}
 
-      {/* SECTION 2 — CATEGORY FILTER PILLS */}
+      {/* SECTION 2 � CATEGORY FILTER PILLS */}
       <div 
         className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none"
         style={{
@@ -207,7 +207,7 @@ export default function FindPartners() {
                 isActive
                   ? 'bg-primary text-white border-primary shadow-md shadow-primary/10'
                   : 'bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-              }`}
+              } btn-press`}
             >
               {pill.label}
             </button>
@@ -215,7 +215,7 @@ export default function FindPartners() {
         })}
       </div>
 
-      {/* SECTION 3 — RESULTS COUNT + SORT */}
+      {/* SECTION 3 � RESULTS COUNT + SORT */}
       <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-700/40 pt-4 flex-wrap gap-3">
         <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
           Showing {filteredMerchants.length} {filteredMerchants.length === 1 ? 'partner' : 'partners'}
@@ -235,7 +235,7 @@ export default function FindPartners() {
         </div>
       </div>
 
-      {/* SECTION 4 — MERCHANT CARDS GRID */}
+      {/* SECTION 4 � MERCHANT CARDS GRID */}
       {filteredMerchants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredMerchants.map((m) => {
@@ -328,7 +328,7 @@ export default function FindPartners() {
           })}
         </div>
       ) : (
-        /* SECTION 5 — EMPTY STATE */
+        /* SECTION 5 � EMPTY STATE */
         <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6">
           <div className="p-4 bg-slate-100 dark:bg-slate-800/40 text-slate-400 rounded-2xl mb-4">
             <Store className="w-8 h-8 text-slate-400" />

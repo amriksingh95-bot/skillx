@@ -214,18 +214,15 @@ async function redeem(req, res, next) {
     // Apply 20% redemption cap: points can cover at most 20% of the invoice value
     let finalPoints = pointsToRedeem;
     let capped = false;
-    let maxPointsAllowed = null;
-    if (purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0) {
-      const maxDiscountAllowed = parseFloat(purchaseAmount) * 0.20;
-      maxPointsAllowed = Math.floor(maxDiscountAllowed / rupeesPerPoint);
-      if (finalPoints > maxPointsAllowed) {
-        finalPoints = maxPointsAllowed;
-        capped = true;
-      }
+    const maxDiscountAllowed = parseFloat(purchaseAmount) * 0.20;
+    const maxPointsAllowed = Math.floor(maxDiscountAllowed / rupeesPerPoint);
+    if (finalPoints > maxPointsAllowed) {
+      finalPoints = maxPointsAllowed;
+      capped = true;
     }
 
     // Call transaction service
-    const transaction = await processRedeem(customer.id, merchantId, finalPoints, null, purchaseAmount);
+    const transaction = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
 
     // Log audit log
     await createAuditLog(
@@ -1088,6 +1085,90 @@ async function uploadPaymentScreenshot(req, res, next) {
   }
 }
 
+async function uploadRenewalScreenshot(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+    const { subscriptionId } = req.body;
+
+    if (!subscriptionId) {
+      const err = new Error('Subscription ID is required for renewal upload.');
+      err.status = 400;
+      err.code = 'VALIDATION_ERROR';
+      return next(err);
+    }
+
+    const merchant = await prisma.merchant.findUnique({ where: { id: merchantId } });
+
+    if (!merchant) {
+      const err = new Error('Merchant account not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    if (merchant.status !== 'active') {
+      const err = new Error('Renewal screenshot upload is only allowed for active merchants.');
+      err.status = 400;
+      err.code = 'INVALID_STATUS';
+      return next(err);
+    }
+
+    const subscription = await prisma.merchantSubscription.findUnique({
+      where: { id: subscriptionId }
+    });
+
+    if (!subscription || subscription.merchantId !== merchantId) {
+      const err = new Error('Subscription not found or does not belong to this merchant.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    if (!req.file) {
+      const err = new Error('Payment screenshot is required.');
+      err.status = 400;
+      err.code = 'VALIDATION_ERROR';
+      return next(err);
+    }
+
+    const updated = await prisma.merchant.update({
+      where: { id: merchantId },
+      data: {
+        paymentScreenshot: `/uploads/payment-screenshots/${req.file.filename}`,
+        status: 'payment_pending',
+        pendingRenewalSubscriptionId: subscriptionId
+      }
+    });
+
+    await sendWhatsAppAlert(
+      `Renewal Screenshot Received%0A` +
+      `Business: ${merchant.businessName}%0A` +
+      `Merchant Code: ${merchant.merchantCode}%0A` +
+      `Subscription ID: ${subscriptionId}%0A` +
+      `Action needed: Verify renewal screenshot and confirm payment`
+    );
+
+    await sendTelegramAlert(
+      `Renewal Screenshot Received%0A` +
+      `Business: ${merchant.businessName}%0A` +
+      `Merchant Code: ${merchant.merchantCode}%0A` +
+      `Subscription ID: ${subscriptionId}%0A` +
+      `Action needed: Verify renewal screenshot and confirm payment`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Renewal screenshot uploaded successfully.',
+      data: {
+        status: updated.status,
+        pendingRenewalSubscriptionId: updated.pendingRenewalSubscriptionId
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function updateMerchantProfile(req, res, next) {
   try {
     const merchantId = req.user.merchantId;
@@ -1185,6 +1266,135 @@ async function updateMerchantPassword(req, res, next) {
   }
 }
 
+/**
+ * Get points health report for the merchant: all-time issued, redeemed, redemption rate, and outstanding liability.
+ */
+async function getPointsHealth(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+    console.log('[points-health] merchantId:', merchantId, '| type:', typeof merchantId);
+
+    // Query 1: Total lifetime points issued and redeemed (Transaction table, simple & fast)
+    const totals = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END), 0)::int AS "pointsIssued",
+        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points ELSE 0 END), 0)::int AS "pointsRedeemed"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+        AND status = 'completed'
+        AND "reversedById" IS NULL
+    `;
+    console.log('[points-health] totals raw:', JSON.stringify(totals));
+    const pointsIssued = totals[0]?.pointsIssued || 0;
+    const pointsRedeemed = totals[0]?.pointsRedeemed || 0;
+
+    // Query 2: Non-expired points only (PointsLedger JOIN Transaction) for liability
+    const active = await prisma.$queryRaw`
+      SELECT
+        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedActive",
+        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedActive"
+      FROM "PointsLedger" pl
+      JOIN "Transaction" t ON t.id = pl."transactionId"
+      WHERE t."merchantId" = ${merchantId}
+        AND t.status = 'completed'
+        AND t."reversedById" IS NULL
+        AND (pl."expiresAt" IS NULL OR pl."expiresAt" > NOW())
+    `;
+    console.log('[points-health] active raw:', JSON.stringify(active));
+    const pointsIssuedActive = active[0]?.pointsIssuedActive || 0;
+    const pointsRedeemedActive = active[0]?.pointsRedeemedActive || 0;
+
+    // Compute redemption rate (guard divide-by-zero)
+    const redemptionRate = pointsIssued > 0
+      ? parseFloat(((pointsRedeemed / pointsIssued) * 100).toFixed(1))
+      : 0;
+
+    // Points liability = outstanding non-expired points
+    const pointsLiability = pointsIssuedActive - pointsRedeemedActive;
+
+    res.status(200).json({
+      success: true,
+      message: 'Points health report retrieved.',
+      data: {
+        pointsIssued,
+        pointsRedeemed,
+        redemptionRate,
+        pointsLiability
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get repeat customer report for the merchant (last 30 days).
+ */
+async function getRepeatCustomers(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get per-customer visit counts in the window
+    const customerVisits = await prisma.$queryRaw`
+      SELECT
+        "customerId",
+        COUNT(*)::int AS "visitCount",
+        MAX("createdAt") AS "lastVisit"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+        AND status = 'completed'
+        AND type = 'earn'
+        AND "createdAt" >= ${thirtyDaysAgo}
+      GROUP BY "customerId"
+    `;
+
+    const totalCustomers = customerVisits.length;
+    const repeatCustomers = customerVisits.filter(c => c.visitCount >= 2);
+    const oneTimeCustomers = customerVisits.filter(c => c.visitCount === 1);
+
+    const repeatRate = totalCustomers > 0
+      ? parseFloat(((repeatCustomers.length / totalCustomers) * 100).toFixed(1))
+      : 0;
+
+    // Get top 10 repeat customers with names
+    let topRepeatCustomers = [];
+    if (repeatCustomers.length > 0) {
+      const sorted = [...repeatCustomers].sort((a, b) => b.visitCount - a.visitCount).slice(0, 10);
+      const customerIds = sorted.map(c => c.customerId);
+
+      const names = await prisma.customer.findMany({
+        where: { id: { in: customerIds } },
+        select: { id: true, name: true }
+      });
+      const nameMap = new Map(names.map(n => [n.id, n.name]));
+
+      topRepeatCustomers = sorted.map(c => ({
+        name: nameMap.get(c.customerId) || 'Unknown',
+        visitCount: c.visitCount,
+        lastVisit: c.lastVisit
+      }));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Repeat customer report retrieved.',
+      data: {
+        summary: {
+          totalCustomers,
+          repeatCustomers: repeatCustomers.length,
+          oneTimeCustomers: oneTimeCustomers.length,
+          repeatRate
+        },
+        topRepeatCustomers
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   earn,
@@ -1203,7 +1413,10 @@ module.exports = {
   updateAd,
   deleteAd,
   getCustomerInsights,
+  getPointsHealth,
+  getRepeatCustomers,
   uploadPaymentScreenshot,
+  uploadRenewalScreenshot,
   upload,
   updateMerchantProfile,
   updateMerchantPassword

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
@@ -6,7 +6,7 @@ import Badge from '../../components/Badge';
 import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// ─── Predefined categories (must match your original dropdown list) ───────────
+// --- Predefined categories (must match your original dropdown list) -----------
 const predefinedCategories = ['grocery', 'medical', 'doctor', 'cafe', 'electronics', 'fashion', 'beauty', 'stationery', 'gym', 'hotel', 'education'];
 
 function generateRandomPassword() {
@@ -40,6 +40,11 @@ function generateRandomPassword() {
   return passwordArray.join('');
 }
 
+function getInitialTab() {
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  return (tab === 'pending' || tab === 'paymentPending') ? tab : 'all';
+}
+
 export default function AdminMerchants() {
   const [merchants, setMerchants] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -60,7 +65,7 @@ export default function AdminMerchants() {
   const [isDeactivating, setIsDeactivating] = useState(false);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [paymentPendingList, setPaymentPendingList] = useState([]);
   const [paymentPendingPagination, setPaymentPendingPagination] = useState(null);
 
@@ -155,15 +160,6 @@ export default function AdminMerchants() {
       fetchPendingPayments();
     }
   }, [activeTab, page, search]);
-
-  // Read initial tab from URL query params
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    if (tab === 'pending' || tab === 'paymentPending') {
-      setActiveTab(tab);
-    }
-  }, []);
 
   // Helper: reset category-related state cleanly
   const resetCategoryState = () => {
@@ -585,13 +581,13 @@ export default function AdminMerchants() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleApprove(row)}
-                className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition-colors flex items-center gap-1 btn-press"
               >
                 <Check className="w-3.5 h-3.5" /> Approve
               </button>
               <button
                 onClick={() => handleOpenReject(row)}
-                className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-500/20 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-500/20 transition-colors flex items-center gap-1 btn-press"
               >
                 <X className="w-3.5 h-3.5" /> Reject
               </button>
@@ -618,7 +614,7 @@ export default function AdminMerchants() {
           accessor: 'user',
           render: (row) => (
             <div>
-              <span className="text-slate-800 dark:text-white block">{row.user?.mobile ? `+91 ${row.user.mobile}` : '—'}</span>
+              <span className="text-slate-800 dark:text-white block">{row.user?.mobile ? `+91 ${row.user.mobile}` : '�'}</span>
             </div>
           )
         },
@@ -641,7 +637,7 @@ export default function AdminMerchants() {
                   toast.error(err.response?.data?.message || 'Failed to confirm payment.');
                 }
               }}
-              className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition-colors"
+              className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition-colors btn-press"
             >
               Confirm Payment
             </button>
@@ -708,21 +704,21 @@ export default function AdminMerchants() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleOpenDetail(row)}
-              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors"
+              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors btn-press"
               title="View Details"
             >
               <Eye className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleOpenEdit(row)}
-              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors"
+              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors btn-press"
               title="Edit Profile"
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleOpenReset(row)}
-              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors"
+              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors btn-press"
               title="Reset Password"
             >
               <Lock className="w-3.5 h-3.5" />
@@ -753,7 +749,7 @@ export default function AdminMerchants() {
         {activeTab === 'all' && (
           <button
             onClick={handleOpenAdd}
-            className="px-5 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            className="px-5 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 btn-press"
           >
             <Plus className="w-4 h-4" />
             Add Merchant
@@ -769,7 +765,7 @@ export default function AdminMerchants() {
             activeTab === 'all'
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          }`}
+          } btn-press`}
         >
           All Merchants
         </button>
@@ -779,7 +775,7 @@ export default function AdminMerchants() {
             activeTab === 'pending'
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          }`}
+          } btn-press`}
         >
           Pending Approval
         </button>
@@ -789,7 +785,7 @@ export default function AdminMerchants() {
             activeTab === 'paymentPending'
               ? 'border-primary text-primary'
               : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          }`}
+          } btn-press`}
         >
           Payment Pending
         </button>
@@ -798,7 +794,7 @@ export default function AdminMerchants() {
       {/* Context Banner */}
       {activeTab === 'pending' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl">
-          <span className="text-amber-500 text-lg leading-none mt-0.5">⏳</span>
+          <span className="text-amber-500 text-lg leading-none mt-0.5">?</span>
           <div>
             <p className="text-sm font-extrabold text-amber-700 dark:text-amber-400">These merchants have registered but are waiting for your approval.</p>
             <p className="text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">Review their details and click <span className="underline">Approve</span> to move them to payment, or <span className="underline">Reject</span> to decline their application. They cannot use the platform until approved.</p>
@@ -808,9 +804,9 @@ export default function AdminMerchants() {
 
       {activeTab === 'paymentPending' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
-          <span className="text-blue-500 text-lg leading-none mt-0.5">💳</span>
+          <span className="text-blue-500 text-lg leading-none mt-0.5">??</span>
           <div>
-            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ₹399/month subscription.</p>
+            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ?399/month subscription.</p>
             <p className="text-xs text-blue-600 dark:text-blue-500 font-semibold mt-0.5">Check your bank/UPI for their payment screenshot. Click <span className="underline">Confirm Payment</span> to activate their account. They get 1,000 bonus points on activation.</p>
           </div>
         </div>
@@ -818,10 +814,10 @@ export default function AdminMerchants() {
 
       {activeTab === 'all' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
-          <span className="text-slate-400 text-lg leading-none mt-0.5">🏪</span>
+          <span className="text-slate-400 text-lg leading-none mt-0.5">??</span>
           <div>
-            <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">Complete merchant directory — all statuses.</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending → approved → payment_pending → active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
+            <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">Complete merchant directory � all statuses.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending ? approved ? payment_pending ? active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
           </div>
         </div>
       )}
@@ -864,13 +860,13 @@ export default function AdminMerchants() {
                   <>
                     <button
                       onClick={() => handleSetStatus(selectedMerchant, 'suspend')}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/10 transition-colors"
+                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/10 transition-colors btn-press"
                     >
                       Suspend
                     </button>
                     <button
                       onClick={() => handleOpenDeactivateConfirm(selectedMerchant)}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors"
+                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors btn-press"
                     >
                       Deactivate
                     </button>
@@ -880,13 +876,13 @@ export default function AdminMerchants() {
                   <>
                     <button
                       onClick={() => handleSetStatus(selectedMerchant, 'reactivate')}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 transition-colors"
+                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 transition-colors btn-press"
                     >
                       Reactivate
                     </button>
                     <button
                       onClick={() => handleOpenDeactivateConfirm(selectedMerchant)}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors"
+                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors btn-press"
                     >
                       Deactivate
                     </button>
@@ -970,7 +966,7 @@ export default function AdminMerchants() {
                 ))}
               </select>
 
-              {/* ✅ NEW: Custom category box — only shows when Other is selected */}
+              {/* ? NEW: Custom category box � only shows when Other is selected */}
               {category === 'other' && (
                 <div className="mt-3">
                   <label className="block text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
@@ -980,7 +976,7 @@ export default function AdminMerchants() {
                     type="text"
                     required
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-blue-400 dark:border-blue-500 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="e.g. bakery, salon, hardware…"
+                    placeholder="e.g. bakery, salon, hardware�"
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
                   />
@@ -1022,7 +1018,7 @@ export default function AdminMerchants() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -1031,7 +1027,7 @@ export default function AdminMerchants() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 btn-press"
           >
             {isSubmitting ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
             Save Merchant
@@ -1119,7 +1115,7 @@ export default function AdminMerchants() {
                   {isCategoryModified && <span className="absolute top-2.5 right-6 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
                 </div>
 
-                {/* ✅ NEW: Custom category box for edit modal */}
+                {/* ? NEW: Custom category box for edit modal */}
                 {category === 'other' && (
                   <div className="mt-3">
                     <label className="block text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
@@ -1131,7 +1127,7 @@ export default function AdminMerchants() {
                         required
                         style={{ color: isCategoryModified ? '#facc15' : undefined }}
                         className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 ${isCategoryModified ? 'border-amber-500 bg-amber-50/20 dark:bg-amber-950/15 font-semibold' : 'border-blue-400 dark:border-blue-500 text-slate-800 dark:text-white'}`}
-                        placeholder="e.g. bakery, salon, hardware…"
+                        placeholder="e.g. bakery, salon, hardware�"
                         value={customCategory}
                         onChange={(e) => setCustomCategory(e.target.value)}
                       />
@@ -1186,7 +1182,7 @@ export default function AdminMerchants() {
             <button
               type="submit"
               disabled={isSubmitting || modifiedCount === 0}
-              className="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed btn-press"
             >
               {isSubmitting ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
               Update Merchant
@@ -1211,7 +1207,7 @@ export default function AdminMerchants() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
-              <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -1237,7 +1233,7 @@ export default function AdminMerchants() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
@@ -1248,7 +1244,7 @@ export default function AdminMerchants() {
           <button
             type="submit"
             disabled={isResetSubmitting || newPassword.length < 6 || newPassword !== confirmPassword}
-            className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed btn-press"
           >
             {isResetSubmitting ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
             Reset Password
@@ -1262,7 +1258,7 @@ export default function AdminMerchants() {
         onClose={() => !isDeactivating && setIsDeactivateConfirmOpen(false)} 
         title={
           <span className="flex items-center gap-2 text-rose-600 dark:text-rose-500 font-black">
-            <span>⚠️</span> Permanent Merchant Deactivation
+            <span>??</span> Permanent Merchant Deactivation
           </span>
         }
       >
@@ -1292,7 +1288,7 @@ export default function AdminMerchants() {
               type="button"
               disabled={isDeactivating}
               onClick={() => setIsDeactivateConfirmOpen(false)}
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-300 transition-colors"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-300 transition-colors btn-press"
             >
               Cancel
             </button>
@@ -1300,7 +1296,7 @@ export default function AdminMerchants() {
               type="button"
               disabled={isDeactivating}
               onClick={handleConfirmDeactivate}
-              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-md shadow-rose-500/10 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-md shadow-rose-500/10 transition-colors flex items-center gap-1.5 btn-press"
             >
               {isDeactivating ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />
@@ -1336,7 +1332,7 @@ export default function AdminMerchants() {
               type="button"
               disabled={isRejecting}
               onClick={() => setIsRejectOpen(false)}
-              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-300 transition-colors"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-300 transition-colors btn-press"
             >
               Cancel
             </button>
@@ -1344,7 +1340,7 @@ export default function AdminMerchants() {
               type="button"
               disabled={isRejecting}
               onClick={handleConfirmReject}
-              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-md shadow-rose-500/10 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold shadow-md shadow-rose-500/10 transition-colors flex items-center gap-1.5 btn-press"
             >
               {isRejecting ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import {
   CreditCard,
@@ -48,6 +48,7 @@ export default function MerchantSubscription() {
   const [loading, setLoading] = useState(true);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [merchantStatus, setMerchantStatus] = useState(null);
+  const [subscriptionUpiId, setSubscriptionUpiId] = useState('');
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -55,17 +56,19 @@ export default function MerchantSubscription() {
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isRenewOpen, setIsRenewOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [paymentRef, setPaymentRef] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [renewalScreenshotFile, setRenewalScreenshotFile] = useState(null);
+  const [isRenewalUploading, setIsRenewalUploading] = useState(false);
 
   const fetchSubscription = async () => {
     try {
       setLoading(true);
       const res = await api.get('/api/merchant/subscription');
-      setSubscription(res.data.data);
-      setPlans(res.data.data.availablePlans || []);
-      if (res.data.data.status) {
-        setMerchantStatus(res.data.data.status);
+      const d = res.data.data;
+      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
+      setPlans(d.availablePlans || []);
+      setSubscriptionUpiId(d.upiId || '');
+      if (d.status) {
+        setMerchantStatus(d.status);
       }
     } catch (err) {
       toast.error('Failed to load subscription status.');
@@ -105,53 +108,37 @@ export default function MerchantSubscription() {
 
   const handleOpenPurchase = (plan) => {
     setSelectedPlan(plan);
-    setPaymentRef('');
     setIsPurchaseOpen(true);
   };
 
   const handleOpenRenew = () => {
-    setPaymentRef('');
     setIsRenewOpen(true);
-  };
-
-  const handlePurchase = async (e) => {
-    e.preventDefault();
-    if (!selectedPlan) return;
-
-    setIsSubmitting(true);
-    try {
-      await api.post('/api/merchant/subscription/purchase', {
-        planId: selectedPlan.id,
-        paymentRef: paymentRef || undefined
-      });
-      toast.success('🚀 You\'re Live on SkillXT Rewards! Congratulations! Your merchant account is activated and 1,000 bonus points worth ₹100 have been credited to your wallet — our gift to kick-start your loyalty journey!', { duration: 6000 });
-      setIsPurchaseOpen(false);
-      setSelectedPlan(null);
-      await Promise.all([fetchSubscription(), fetchHistory()]);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to purchase subscription.');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleRenew = async (e) => {
     e.preventDefault();
-    if (!subscription?.subscription?.id) return;
+    if (!subscription?.id || !renewalScreenshotFile) return;
 
-    setIsSubmitting(true);
+    setIsRenewalUploading(true);
     try {
-      await api.post('/api/merchant/subscription/renew', {
-        subscriptionId: subscription.subscription.id,
-        paymentRef: paymentRef || undefined
+      const formData = new FormData();
+      formData.append('screenshot', renewalScreenshotFile);
+      formData.append('subscriptionId', subscription.id);
+
+      await api.post('/api/merchant/subscription/renewal/upload-screenshot', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      toast.success('🚀 You\'re Live on SkillXT Rewards! Congratulations! Your subscription is renewed and 1,000 bonus points worth ₹100 have been credited to your wallet — thank you for staying with SkillXT!', { duration: 6000 });
+
+      toast.success('Screenshot uploaded – admin will verify within 3 days');
       setIsRenewOpen(false);
+      setRenewalScreenshotFile(null);
       await Promise.all([fetchSubscription(), fetchHistory(), fetchMerchantStatus()]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to renew subscription.');
+      toast.error(err.response?.data?.message || 'Failed to upload renewal screenshot.');
     } finally {
-      setIsSubmitting(false);
+      setIsRenewalUploading(false);
     }
   };
 
@@ -234,17 +221,17 @@ export default function MerchantSubscription() {
                 </span>
               </div>
               <p className="text-lg font-black text-slate-800 dark:text-white mt-1">
-                {subscription?.subscription?.plan?.displayName || 'No Active Plan'}
+                {subscription?.plan?.displayName || 'No Active Plan'}
               </p>
-              {subscription?.subscription && (
+              {subscription && (
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    Started {formatDate(subscription.subscription.startDate)}
+                    Started {formatDate(subscription.startDate)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    Expires {formatDate(subscription.subscription.endDate)}
+                    Expires {formatDate(subscription.endDate)}
                   </span>
                   {subscription.daysRemaining !== null && (
                     <span className={`font-bold ${
@@ -258,14 +245,20 @@ export default function MerchantSubscription() {
             </div>
           </div>
           <div className="flex gap-2">
-            {currentStatus === 'active' && (
+            {currentStatus === 'active' && merchantStatus !== 'payment_pending' && (
               <button
                 onClick={handleOpenRenew}
-                className="px-5 py-2.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2"
+                className="px-5 py-2.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 btn-press"
               >
                 <RefreshCw className="w-4 h-4" />
                 Renew
               </button>
+            )}
+            {currentStatus === 'active' && merchantStatus === 'payment_pending' && (
+              <span className="px-5 py-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Renewal pending verification
+              </span>
             )}
           </div>
         </div>
@@ -314,10 +307,10 @@ export default function MerchantSubscription() {
           </p>
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
-            <span className="text-sm font-mono font-bold text-slate-800 dark:text-white">[YOUR_UPI_ID_HERE]</span>
+            <span className="text-sm font-mono font-bold text-slate-800 dark:text-white">{subscriptionUpiId || 'Not available'}</span>
             <button
-              onClick={() => navigator.clipboard.writeText('[YOUR_UPI_ID_HERE]')}
-              className="px-3 py-1.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+              onClick={() => navigator.clipboard.writeText(subscriptionUpiId)}
+              className="px-3 py-1.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all btn-press"
             >
               Copy
             </button>
@@ -342,7 +335,7 @@ export default function MerchantSubscription() {
           {/* GPay QR Payment Section */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 text-center">
             <h3 className="text-base font-semibold text-slate-700 mb-1">Scan & Pay ₹399</h3>
-            <p className="text-xs text-slate-500 mb-3">Use any UPI app — GPay, PhonePe, Paytm</p>
+            <p className="text-xs text-slate-500 mb-3">Use any UPI app – GPay, PhonePe, Paytm</p>
             <img
               src={gpayQR}
               alt="GPay QR Code"
@@ -352,7 +345,7 @@ export default function MerchantSubscription() {
               <p className="text-xs text-slate-500">UPI ID</p>
               <p className="text-sm font-bold text-slate-800 select-all">amriksingh95@okhdfcbank</p>
             </div>
-            <p className="text-xs text-amber-600 mt-3 font-medium">⚠️ After payment, upload screenshot below for admin verification</p>
+            <p className="text-xs text-amber-600 mt-3 font-medium">Note: After payment, upload screenshot below for admin verification</p>
           </div>
 
           <form onSubmit={handleScreenshotUpload} className="space-y-3">
@@ -380,7 +373,7 @@ export default function MerchantSubscription() {
             <button
               type="submit"
               disabled={!screenshotFile || isUploading}
-              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isUploading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
               Submit Payment Proof
@@ -411,7 +404,7 @@ export default function MerchantSubscription() {
         <h2 className="text-lg font-black text-slate-800 dark:text-white mb-4">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.filter(plan => plan.name === 'monthly').map((plan) => {
-            const isCurrentPlan = subscription?.subscription?.planId === plan.id && currentStatus === 'active';
+            const isCurrentPlan = subscription?.planId === plan.id && currentStatus === 'active';
             const pricePerDay = plan.durationDays > 0 ? (plan.price / plan.durationDays).toFixed(2) : '0.00';
 
             return (
@@ -467,7 +460,7 @@ export default function MerchantSubscription() {
                     isCurrentPlan
                       ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                       : 'bg-primary hover:bg-primary-dark text-white shadow-sm hover:shadow-md'
-                  }`}
+                  } btn-press`}
                 >
                   {isCurrentPlan ? 'Active' : (
                     <>
@@ -540,7 +533,7 @@ export default function MerchantSubscription() {
                           {formatDate(sub.endDate)}
                         </td>
                         <td className="px-4 py-3 text-xs text-slate-400">
-                          {sub.paymentRef || '—'}
+                          {sub.paymentRef || '-'}
                         </td>
                       </tr>
                     );
@@ -552,9 +545,9 @@ export default function MerchantSubscription() {
         )}
       </div>
 
-      {/* Purchase Modal */}
+      {/* Purchase Modal – informational only */}
       <Modal isOpen={isPurchaseOpen} onClose={() => { setIsPurchaseOpen(false); setSelectedPlan(null); }} title="Purchase Subscription">
-        <form onSubmit={handlePurchase} className="space-y-4">
+        <div className="space-y-4">
           {selectedPlan && (
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
@@ -599,49 +592,39 @@ export default function MerchantSubscription() {
                 <span className="text-sm font-bold text-emerald-600">₹399</span>
               </div>
             </div>
-            <p className="text-xs text-amber-600 font-medium">⚠️ After paying, close this and upload screenshot below</p>
+            <p className="text-xs text-amber-600 font-medium">Note: After paying, scroll down to upload your payment screenshot</p>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => { setIsPurchaseOpen(false); setSelectedPlan(null); }}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <CreditCard className="w-4 h-4" />}
-              Confirm Purchase
-            </button>
-          </div>
-        </form>
+          <button
+            type="button"
+            onClick={() => { setIsPurchaseOpen(false); setSelectedPlan(null); }}
+            className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+          >
+            Got it
+          </button>
+        </div>
       </Modal>
 
       {/* Renew Modal */}
-      <Modal isOpen={isRenewOpen} onClose={() => setIsRenewOpen(false)} title="Renew Subscription">
+      <Modal isOpen={isRenewOpen} onClose={() => { setIsRenewOpen(false); setRenewalScreenshotFile(null); }} title="Renew Subscription">
         <form onSubmit={handleRenew} className="space-y-4">
           {subscription?.subscription && (
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Current Plan:</span>
-                <span className="font-bold text-slate-800 dark:text-white">{subscription.subscription.plan?.displayName}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{subscription.plan?.displayName}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Current End Date:</span>
-                <span className="font-bold text-slate-800 dark:text-white">{formatDate(subscription.subscription.endDate)}</span>
+                <span className="font-bold text-slate-800 dark:text-white">{formatDate(subscription.endDate)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">New End Date:</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {subscription.subscription.plan?.durationDays
+                  {subscription.plan?.durationDays
                     ? formatDate(new Date(
-                        Math.max(new Date(), new Date(subscription.subscription.endDate)).getTime() +
-                        subscription.subscription.plan.durationDays * 86400000
+                        Math.max(new Date(), new Date(subscription.endDate)).getTime() +
+                        subscription.plan.durationDays * 86400000
                       ))
                     : 'N/A'}
                 </span>
@@ -649,34 +632,60 @@ export default function MerchantSubscription() {
             </div>
           )}
 
+          <div className="bg-white border border-slate-200 rounded-xl p-4 text-center space-y-3">
+            <p className="text-xs font-medium text-slate-500">Scan & pay using any UPI app</p>
+            <img
+              src={gpayQR}
+              alt="GPay QR Code"
+              className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
+            />
+            <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-500">Pay to</span>
+                <span className="text-sm font-bold text-slate-800">Amrik Singh</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-500">UPI ID</span>
+                <span className="text-sm font-bold text-slate-800 select-all cursor-text">amriksingh95@okhdfcbank</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-500">Amount</span>
+                <span className="text-sm font-bold text-emerald-600">₹399</span>
+              </div>
+            </div>
+            <p className="text-xs text-amber-600 font-medium">Note: After paying, upload your payment screenshot below</p>
+          </div>
+
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Payment Reference (Optional)
+              Upload Payment Screenshot
             </label>
             <input
-              type="text"
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
-              placeholder="e.g. UPI transaction ID"
-              value={paymentRef}
-              onChange={(e) => setPaymentRef(e.target.value)}
+              type="file"
+              accept="image/*"
+              onChange={(e) => setRenewalScreenshotFile(e.target.files[0])}
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
+            {renewalScreenshotFile && (
+              <p className="text-xs text-slate-500 mt-1">{renewalScreenshotFile.name}</p>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={() => setIsRenewOpen(false)}
-              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all"
+              onClick={() => { setIsRenewOpen(false); setRenewalScreenshotFile(null); }}
+              className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={!renewalScreenshotFile || isRenewalUploading}
+              className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
-              {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <RefreshCw className="w-4 h-4" />}
-              Confirm Renewal
+              {isRenewalUploading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Upload className="w-4 h-4" />}
+              Upload & Submit
             </button>
           </div>
         </form>
