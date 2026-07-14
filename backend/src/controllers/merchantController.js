@@ -1621,6 +1621,7 @@ async function getGrowthChurnReport(req, res, next) {
         WHERE "merchantId" = ${merchantId}
           AND status = 'completed'
           AND type = 'earn'
+          AND "createdAt" >= NOW() - INTERVAL '6 months'
         GROUP BY "customerId"
       ) sub
       GROUP BY DATE_TRUNC('month', first_visit)
@@ -1676,11 +1677,13 @@ async function getGrowthChurnReport(req, res, next) {
     ).length;
 
     // Churned: were active at start of month but now inactive/dormant
-    const churnedThisMonth = customerStatuses.filter(c =>
-      c.lastActivity &&
-      new Date(c.lastActivity) >= thirtyDaysBeforeStart &&
-      (c.status === 'inactive' || c.status === 'dormant')
-    ).length;
+    const churnedThisMonth = customerStatuses.filter(c => {
+      if (!c.lastActivity) return false;
+      const lastActivityDate = new Date(c.lastActivity);
+      const wasActiveAtMonthStart = lastActivityDate >= thirtyDaysBeforeStart && lastActivityDate < startOfThisMonth;
+      const isNowInactiveOrDormant = c.status === 'inactive' || c.status === 'dormant';
+      return wasActiveAtMonthStart && isNowInactiveOrDormant;
+    }).length;
 
     const netGrowth = newCustomersThisMonth - churnedThisMonth;
     const churnRatePct = activeAtStartOfMonth > 0
