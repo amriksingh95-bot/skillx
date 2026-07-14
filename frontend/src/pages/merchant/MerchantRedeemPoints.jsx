@@ -176,6 +176,10 @@ export default function MerchantRedeemPoints() {
     e.preventDefault();
     if (!customer) return;
 
+    if (!purchaseAmount || isNaN(purchaseAmount) || parseFloat(purchaseAmount) <= 0) {
+      return toast.error('Purchase amount is required.');
+    }
+
     const points = parseInt(pointsToRedeem);
     const minLimit = customer?.rewardSettings?.minRedeemPoints || 100;
 
@@ -200,7 +204,7 @@ export default function MerchantRedeemPoints() {
       const res = await api.post('/api/merchant/redeem', {
         customerId: customer.id,
         pointsToRedeem: points,
-        purchaseAmount: purchaseAmount && !isNaN(purchaseAmount) ? parseFloat(purchaseAmount) : undefined
+        purchaseAmount: parseFloat(purchaseAmount)
       });
       
       const { transaction, redemptionCap } = res.data.data;
@@ -373,10 +377,11 @@ export default function MerchantRedeemPoints() {
              <form onSubmit={handleRedeem} className="space-y-4 my-auto py-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-2">
-                  Purchase Amount (?)
+                  Purchase Amount *
                 </label>
                 <input
                   type="number"
+                  required
                   min={0.01}
                   step="any"
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all font-bold text-lg"
@@ -404,8 +409,9 @@ export default function MerchantRedeemPoints() {
                   required
                   min={1}
                   step="1"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all font-bold text-lg"
-                  placeholder="e.g. 100, 200, 500"
+                  disabled={!purchaseAmount || isNaN(purchaseAmount) || parseFloat(purchaseAmount) <= 0}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder={purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0 ? "e.g. 100, 200, 500" : "Enter purchase amount first"}
                   value={pointsToRedeem}
                   onChange={(e) => handlePointsChange(e.target.value)}
                 />
@@ -447,7 +453,7 @@ export default function MerchantRedeemPoints() {
             <button
               type="button"
               onClick={handleRedeem}
-              disabled={isLoading || !pointsToRedeem || customer.balance < (customer?.rewardSettings?.minRedeemPoints || 100)}
+              disabled={isLoading || !purchaseAmount || isNaN(purchaseAmount) || parseFloat(purchaseAmount) <= 0 || !pointsToRedeem || customer.balance < (customer?.rewardSettings?.minRedeemPoints || 100)}
               className="w-full py-3 bg-secondary hover:bg-secondary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-secondary/20 hover:shadow-lg transition-all focus:outline-none flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Gift className="w-4 h-4" />}
