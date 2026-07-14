@@ -50,6 +50,9 @@ export default function MerchantDashboard() {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
   const [transferStep, setTransferStep] = useState(1);
+
+  // Ecosystem Stats
+  const [ecosystemStats, setEcosystemStats] = useState(null);
   const [scannedCustomer, setScannedCustomer] = useState(null);
   const [pointsToTransfer, setPointsToTransfer] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
@@ -87,6 +90,15 @@ export default function MerchantDashboard() {
     }
   };
 
+  const fetchEcosystemStats = async () => {
+    try {
+      const res = await api.get('/api/merchant/ecosystem-stats');
+      setEcosystemStats(res.data.data);
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+    }
+  };
+
   const fetchSubscription = async () => {
     try {
       setSubscriptionLoading(true);
@@ -103,7 +115,7 @@ export default function MerchantDashboard() {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile()]);
+      await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats()]);
     } finally {
       setLoading(false);
       toast.success('Stats updated!');
@@ -113,7 +125,7 @@ export default function MerchantDashboard() {
   useEffect(() => {
     const initData = async () => {
       try {
-        await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile()]);
+        await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats()]);
       } finally {
         setLoading(false);
       }
@@ -536,8 +548,18 @@ export default function MerchantDashboard() {
           </div>
 
           <p className="text-[10.5px] text-slate-400 leading-relaxed mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
-            ?? <strong>Network Effect:</strong> Customers brought by the network shopped at your store but originally signed up via other merchants or sources. The larger the network grows, the more customers discover your brand!
+            🌐 <strong>Network Effect:</strong> Customers brought by the network shopped at your store but originally signed up via other merchants or sources. The larger the network grows, the more customers discover your brand!
           </p>
+
+          {ecosystemStats && ecosystemStats.totalCustomers > 5 && (
+            <p className="text-[10.5px] text-slate-400 mt-3">
+              <Users className="w-3 h-3 inline-block -mt-0.5" /> {ecosystemStats.activeCustomers.toLocaleString('en-IN')} Active Customers
+              {' · '}
+              <Users className="w-3 h-3 inline-block -mt-0.5" /> {ecosystemStats.activeMerchants.toLocaleString('en-IN')} Active Merchants
+              {' · '}
+              <ArrowUpRight className="w-3 h-3 inline-block -mt-0.5" /> {ecosystemStats.newCustomersLast30Days.toLocaleString('en-IN')} New This Month
+            </p>
+          )}
         </div>
       </div>
 

@@ -37,6 +37,10 @@ backend/auth-check.js
 backend/prisma/dev.db
 *.db
 
+# Debug / test scripts
+backend/debug-top-customers.js
+backend/test_brewbeans.js
+
 # Test coverage
 coverage/
 .nyc_output/

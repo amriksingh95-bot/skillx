@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { getCustomerBalance, processEarn, processRedeem, processTransfer } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const notificationService = require('../services/notificationService');
+const { classifyStatus } = require('../services/inactivityService');
 const { sendWhatsAppAlert, sendTelegramAlert } = require('../utils/whatsappNotify');
 
 /**
@@ -94,7 +95,8 @@ async function findActiveCustomer(identifier) {
     where: {
       OR: [
         { id: identifier },
-        { user: { mobile: identifier } }
+        { user: { mobile: identifier } },
+        { qrCode: identifier }
       ]
     },
     include: {
@@ -1601,6 +1603,176 @@ async function getTopCustomers(req, res, next) {
   }
 }
 
+/**
+ * Get customer growth & churn report (merchant-scoped).
+ */
+async function getGrowthChurnReport(req, res, next) {
+  try {
+    const merchantId = req.user.merchantId;
+
+    // 1. Monthly new customer cohort (last 6 months)
+    const monthlyCohortRaw = await prisma.$queryRaw`
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', first_visit), 'YYYY-MM') AS "month",
+        COUNT(*)::int AS "newCustomers"
+      FROM (
+        SELECT "customerId", MIN("createdAt") AS first_visit
+        FROM "Transaction"
+        WHERE "merchantId" = ${merchantId}
+          AND status = 'completed'
+          AND type = 'earn'
+        GROUP BY "customerId"
+      ) sub
+      GROUP BY DATE_TRUNC('month', first_visit)
+      ORDER BY "month" ASC
+    `;
+    const monthlyCohort = monthlyCohortRaw.map(r => ({ month: r.month, newCustomers: r.newCustomers }));
+
+    // 2. Per-customer last activity (merchant-scoped earn transactions)
+    const customerActivityRaw = await prisma.$queryRaw`
+      SELECT
+        "customerId",
+        MAX("createdAt") AS "lastActivity"
+      FROM "Transaction"
+      WHERE "merchantId" = ${merchantId}
+        AND type = 'earn'
+        AND status = 'completed'
+      GROUP BY "customerId"
+    `;
+
+    // Classify each customer using merchant-scoped days-since-last-activity
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const customerStatuses = customerActivityRaw.map(row => {
+      const daysSinceActivity = row.lastActivity
+        ? Math.floor((now - new Date(row.lastActivity)) / (1000 * 60 * 60 * 24))
+        : null;
+      return {
+        customerId: row.customerId,
+        lastActivity: row.lastActivity,
+        daysSinceActivity,
+        status: classifyStatus(daysSinceActivity)
+      };
+    });
+
+    // 3. Compute counts
+    const activeCount = customerStatuses.filter(c => c.status === 'active').length;
+    const atRiskCount = customerStatuses.filter(c => c.status === 'at_risk').length;
+    const inactiveCount = customerStatuses.filter(c => c.status === 'inactive').length;
+    const dormantCount = customerStatuses.filter(c => c.status === 'dormant').length;
+
+    // 4. Summary metrics
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const newCustomersThisMonth = monthlyCohort.find(c => c.month === currentMonthKey)?.newCustomers || 0;
+
+    // Active at start of month: customers whose last activity was >= 30 days before start of this month
+    const thirtyDaysBeforeStart = new Date(startOfThisMonth);
+    thirtyDaysBeforeStart.setDate(thirtyDaysBeforeStart.getDate() - 30);
+
+    const activeAtStartOfMonth = customerStatuses.filter(c =>
+      c.lastActivity && new Date(c.lastActivity) >= thirtyDaysBeforeStart
+    ).length;
+
+    // Churned: were active at start of month but now inactive/dormant
+    const churnedThisMonth = customerStatuses.filter(c =>
+      c.lastActivity &&
+      new Date(c.lastActivity) >= thirtyDaysBeforeStart &&
+      (c.status === 'inactive' || c.status === 'dormant')
+    ).length;
+
+    const netGrowth = newCustomersThisMonth - churnedThisMonth;
+    const churnRatePct = activeAtStartOfMonth > 0
+      ? parseFloat(((churnedThisMonth / activeAtStartOfMonth) * 100).toFixed(1))
+      : 0;
+
+    // 5. At-risk customers list (limit 20)
+    const atRiskCustomerIds = customerStatuses
+      .filter(c => c.status === 'at_risk')
+      .sort((a, b) => a.daysSinceActivity - b.daysSinceActivity)
+      .slice(0, 20)
+      .map(c => c.customerId);
+
+    let atRiskCustomers = [];
+    if (atRiskCustomerIds.length > 0) {
+      const customersMeta = await prisma.customer.findMany({
+        where: { id: { in: atRiskCustomerIds } },
+        select: {
+          id: true,
+          name: true,
+          user: { select: { mobile: true } }
+        }
+      });
+      const metaMap = new Map(customersMeta.map(c => [c.id, c]));
+      const activityMap = new Map(customerStatuses.map(c => [c.customerId, c]));
+
+      atRiskCustomers = atRiskCustomerIds.map(id => {
+        const meta = metaMap.get(id);
+        const activity = activityMap.get(id);
+        return {
+          name: meta?.name || 'Unknown',
+          mobile: meta?.user?.mobile || null,
+          lastPurchase: activity?.lastActivity || null
+        };
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          newCustomersThisMonth,
+          churnedThisMonth,
+          netGrowth,
+          churnRatePct
+        },
+        monthlyCohort,
+        statusBreakdown: {
+          active: activeCount,
+          atRisk: atRiskCount,
+          inactive: inactiveCount,
+          dormant: dormantCount
+        },
+        atRiskCustomers
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get ecosystem-wide stats (non-merchant-specific).
+ */
+async function getEcosystemStats(req, res, next) {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [totalCustomers, activeCustomers, activeMerchants, newCustomersLast30Days] = await Promise.all([
+      prisma.customer.count(),
+      prisma.customer.count({ where: { isActive: true } }),
+      prisma.merchant.count({ where: { isActive: true, status: 'active' } }),
+      prisma.$queryRaw`
+        SELECT COUNT(*)::int AS count FROM "Customer" WHERE "createdAt" >= ${thirtyDaysAgo}
+      `
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalCustomers,
+        activeCustomers,
+        activeMerchants,
+        newCustomersLast30Days: newCustomersLast30Days[0]?.count || 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   earn,
@@ -1627,5 +1799,7 @@ module.exports = {
   uploadRenewalScreenshot,
   upload,
   updateMerchantProfile,
-  updateMerchantPassword
+  updateMerchantPassword,
+  getEcosystemStats,
+  getGrowthChurnReport
 };

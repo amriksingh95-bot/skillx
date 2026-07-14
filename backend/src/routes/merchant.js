@@ -173,6 +173,7 @@ router.post(
 router.use(requireActiveMerchant);
 
 router.get('/dashboard', merchantController.getDashboard);
+router.get('/ecosystem-stats', merchantController.getEcosystemStats);
 router.get('/customer-insights', merchantController.getCustomerInsights);
 
 router.post(
@@ -223,6 +224,8 @@ router.get('/repeat-customers', merchantController.getRepeatCustomers);
 router.get('/roi-report', merchantController.getROIReport);
 
 router.get('/top-customers', merchantController.getTopCustomers);
+
+router.get('/growth-churn-report', merchantController.getGrowthChurnReport);
 
 router.get(
   '/customer/:identifier',

@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Startup Validation
-const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'PORT'];
+const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'PORT', 'FRONTEND_URL'];
 const missingVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingVars.length > 0) {
   console.error(`[Startup Error]: Missing critical environment variables: ${missingVars.join(', ')}`);

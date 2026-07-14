@@ -11,6 +11,7 @@ export default function MerchantReports() {
   const [repeatData, setRepeatData] = useState(null);
   const [roiData, setRoiData] = useState(null);
   const [topCustomersData, setTopCustomersData] = useState(null);
+  const [growthChurnData, setGrowthChurnData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchHealth = async () => {
@@ -49,10 +50,19 @@ export default function MerchantReports() {
     }
   };
 
+  const fetchGrowthChurn = async () => {
+    try {
+      const res = await api.get('/api/merchant/growth-churn-report');
+      setGrowthChurnData(res.data.data);
+    } catch (err) {
+      toast.error('Failed to load growth & churn report.');
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchHealth(), fetchRepeatCustomers(), fetchROI(), fetchTopCustomers()]);
+      await Promise.all([fetchHealth(), fetchRepeatCustomers(), fetchROI(), fetchTopCustomers(), fetchGrowthChurn()]);
       setLoading(false);
     };
     init();
@@ -60,7 +70,7 @@ export default function MerchantReports() {
 
   const handleRefresh = async () => {
     setLoading(true);
-    await Promise.all([fetchHealth(), fetchRepeatCustomers(), fetchROI(), fetchTopCustomers()]);
+    await Promise.all([fetchHealth(), fetchRepeatCustomers(), fetchROI(), fetchTopCustomers(), fetchGrowthChurn()]);
     setLoading(false);
     toast.success('Report updated!');
   };
@@ -520,6 +530,171 @@ export default function MerchantReports() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Customer Growth & Churn Report */}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Customer Growth & Churn Report</h2>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <StatCard
+            icon={UserCheck}
+            label="New Customers (This Month)"
+            value={(growthChurnData?.summary.newCustomersThisMonth || 0).toLocaleString('en-IN')}
+            color="success"
+          />
+          <StatCard
+            icon={UserX}
+            label="Churned Customers (This Month)"
+            value={(growthChurnData?.summary.churnedThisMonth || 0).toLocaleString('en-IN')}
+            color="danger"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Net Growth"
+            value={(growthChurnData?.summary.netGrowth || 0).toLocaleString('en-IN')}
+            color="primary"
+          />
+          <StatCard
+            icon={Coins}
+            label="Churn Rate %"
+            value={`${growthChurnData?.summary.churnRatePct ?? 0}%`}
+            color="warning"
+          />
+        </div>
+
+        {/* Charts Row */}
+        {growthChurnData && growthChurnData.monthlyCohort.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            {/* Bar Chart: Monthly New Customer Trend */}
+            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Monthly New Customers (Last 6 Months)</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={growthChurnData.monthlyCohort} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" allowDecimals={false} />
+                    <Tooltip
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                      formatter={(value) => [value, 'New Customers']}
+                    />
+                    <Bar dataKey="newCustomers" fill="#6366f1" radius={[6, 6, 0, 0]} barSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Pie Chart: Status Breakdown */}
+            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Customer Status Breakdown</h3>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Active', value: growthChurnData.statusBreakdown.active },
+                        { name: 'At Risk', value: growthChurnData.statusBreakdown.atRisk },
+                        { name: 'Inactive', value: growthChurnData.statusBreakdown.inactive },
+                        { name: 'Dormant', value: growthChurnData.statusBreakdown.dormant }
+                      ].filter(d => d.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {[
+                        { name: 'Active', fill: '#22c55e' },
+                        { name: 'At Risk', fill: '#f59e0b' },
+                        { name: 'Inactive', fill: '#ef4444' },
+                        { name: 'Dormant', fill: '#64748b' }
+                      ]
+                        .filter((_, i) => {
+                          const vals = [
+                            growthChurnData.statusBreakdown.active,
+                            growthChurnData.statusBreakdown.atRisk,
+                            growthChurnData.statusBreakdown.inactive,
+                            growthChurnData.statusBreakdown.dormant
+                          ];
+                          return vals[i] > 0;
+                        })
+                        .map((entry, i) => (
+                          <Cell key={i} fill={entry.fill} />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                      formatter={(value, name) => [value, name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap gap-3 mt-2 justify-center">
+                {[
+                  { name: 'Active', fill: '#22c55e', value: growthChurnData.statusBreakdown.active },
+                  { name: 'At Risk', fill: '#f59e0b', value: growthChurnData.statusBreakdown.atRisk },
+                  { name: 'Inactive', fill: '#ef4444', value: growthChurnData.statusBreakdown.inactive },
+                  { name: 'Dormant', fill: '#64748b', value: growthChurnData.statusBreakdown.dormant }
+                ].filter(d => d.value > 0).map((d) => (
+                  <div key={d.name} className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.fill }} />
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{d.name} ({d.value})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* At-Risk Customers Table */}
+        {growthChurnData && growthChurnData.atRiskCustomers.length > 0 && (
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 dark:border-dark-border">
+              <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">At-Risk Customers</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
+                    <th className="px-5 py-3">Customer</th>
+                    <th className="px-5 py-3">Mobile</th>
+                    <th className="px-5 py-3">Last Purchase</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
+                  {growthChurnData.atRiskCustomers.map((customer, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-5 py-3">
+                        <span className="text-sm font-medium text-slate-800 dark:text-white">{customer.name}</span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">{customer.mobile || '—'}</span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          {customer.lastPurchase
+                            ? new Date(customer.lastPurchase).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {growthChurnData && growthChurnData.atRiskCustomers.length === 0 && (
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-8 text-center shadow-sm">
+            <UserCheck className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">No at-risk customers at this time.</p>
           </div>
         )}
       </div>
