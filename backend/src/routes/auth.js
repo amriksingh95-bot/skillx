@@ -118,9 +118,11 @@ router.post(
   '/merchant-signup',
   [
     body('businessName').trim().notEmpty().withMessage('Business name is required.'),
+    body('ownerName').trim().notEmpty().withMessage('Owner name is required.'),
     validateMobile,
     validateEmail,
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.'),
+    body('otp').notEmpty().withMessage('OTP verification is required.'),
     body('category').optional().trim(),
     body('address').optional().trim(),
     body('city').optional().trim()

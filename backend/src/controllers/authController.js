@@ -508,8 +508,9 @@ async function refreshToken(req, res, next) {
  * Request an OTP.
  */
 async function requestOTP(req, res, next) {
-  const { mobile, email } = req.body;
+  const { mobile, email, purpose } = req.body;
   const hasEmail = email && email.trim().length > 0;
+  const otpPurpose = purpose || 'register';
 
   try {
     // Check for duplicate mobile BEFORE sending OTP
@@ -536,7 +537,7 @@ async function requestOTP(req, res, next) {
       }
     }
 
-    const { otp } = await generateAndSendOTP(mobile, hasEmail ? email : null, 'register');
+    const { otp } = await generateAndSendOTP(mobile, hasEmail ? email : null, otpPurpose);
 
     res.status(200).json({
       success: true,
@@ -554,10 +555,11 @@ async function requestOTP(req, res, next) {
  * Verify OTP.
  */
 async function verifyOTPHandler(req, res, next) {
-  const { mobile, otp } = req.body;
+  const { mobile, otp, purpose } = req.body;
+  const otpPurpose = purpose || 'register';
 
   try {
-    const isVerified = await verifyOTP(mobile, otp, 'register');
+    const isVerified = await verifyOTP(mobile, otp, otpPurpose);
     if (!isVerified) {
       const err = new Error('Invalid or expired OTP.');
       err.status = 400;
@@ -855,6 +857,28 @@ async function registerMerchantSelf(req, res, next) {
       err.code = 'VALIDATION_ERROR';
       return next(err);
     }
+
+    // Verify OTP was validated for this mobile
+    const verifiedRecord = await prisma.oTPVerification.findFirst({
+      where: {
+        mobile,
+        purpose: 'register_merchant',
+        verified: true,
+        expiresAt: { gt: new Date() }
+      }
+    });
+
+    if (!verifiedRecord) {
+      const err = new Error('OTP verification is required.');
+      err.status = 400;
+      err.code = 'INVALID_OTP';
+      return next(err);
+    }
+
+    // Delete the verified OTP record so it cannot be reused
+    await prisma.oTPVerification.delete({
+      where: { id: verifiedRecord.id }
+    });
 
     const existingUser = await prisma.user.findFirst({ where: { mobile } });
     if (existingUser) {

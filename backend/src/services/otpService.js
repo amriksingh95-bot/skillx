@@ -3,7 +3,7 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcrypt');
 const { sendOTPEmail } = require('./emailService');
 
-const VALID_PURPOSES = ['register', 'reset', 'change_mobile'];
+const VALID_PURPOSES = ['register', 'register_merchant', 'reset', 'change_mobile'];
 
 /**
  * Sends SMS via mock gateway (replaceable with Twilio/MSG91)
