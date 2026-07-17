@@ -9,6 +9,7 @@ const { upload } = require('../controllers/merchantController');
 const topUpController = require('../controllers/topUpController');
 const adPaymentController = require('../controllers/adPaymentController');
 const prisma = require('../lib/prisma');
+const { getMyReferrals, getLeaderboard, getNearbyBusinessesToInvite, getMerchantNotifications, markNotificationRead, getMonthlyCapStatus } = require('../services/merchantReferralService');
 
 const router = express.Router();
 
@@ -151,8 +152,6 @@ router.post(
 // Screenshot upload for payment proof (allowed before active status)
 router.post(
   '/subscription/upload-screenshot',
-  authenticate,
-  authorize('merchant'),
   upload.single('screenshot'),
   merchantController.uploadPaymentScreenshot
 );
@@ -164,13 +163,127 @@ router.post(
     body('subscriptionId').isUUID().withMessage('Invalid subscription ID.')
   ],
   validate,
-  authenticate,
-  authorize('merchant'),
   upload.single('screenshot'),
   merchantController.uploadRenewalScreenshot
 );
 
 router.use(requireActiveMerchant);
+
+// ── Referral Routes ──────────────────────────────────────────
+
+// GET /api/merchant/referral/my-code — Get my referral code
+router.get('/referral/my-code', async (req, res, next) => {
+  try {
+    const merchantId = req.user.merchantId;
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: merchantId },
+      select: { merchantReferralCode: true, businessName: true }
+    });
+
+    if (!merchant) {
+      return res.status(404).json({ success: false, message: 'Merchant not found.' });
+    }
+
+    const capStatus = await getMonthlyCapStatus(merchantId);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        referralCode: merchant.merchantReferralCode,
+        businessName: merchant.businessName,
+        monthlyCap: capStatus
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/merchant/referral/my-referrals — List my referrals
+router.get('/referral/my-referrals', async (req, res, next) => {
+  try {
+    const merchantId = req.user.merchantId;
+    const referrals = await getMyReferrals(merchantId);
+
+    res.status(200).json({
+      success: true,
+      data: referrals
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/merchant/referral/leaderboard — Referral leaderboard
+router.get('/referral/leaderboard', async (req, res, next) => {
+  try {
+    const leaderboard = await getLeaderboard();
+
+    res.status(200).json({
+      success: true,
+      data: leaderboard
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/merchant/referral/nearby-businesses — Suggest businesses to invite
+router.get('/referral/nearby-businesses', async (req, res, next) => {
+  try {
+    const merchantId = req.user.merchantId;
+    const businesses = await getNearbyBusinessesToInvite(merchantId);
+
+    res.status(200).json({
+      success: true,
+      data: businesses
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/merchant/referral/notifications — Get in-app notifications
+router.get('/referral/notifications', async (req, res, next) => {
+  try {
+    const merchantId = req.user.merchantId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const result = await getMerchantNotifications(merchantId, page, limit);
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/merchant/referral/notifications/:id/read — Mark notification as read
+router.patch(
+  '/referral/notifications/:id/read',
+  [
+    param('id').isUUID().withMessage('Invalid notification ID.')
+  ],
+  validate,
+  async (req, res, next) => {
+    try {
+      const merchantId = req.user.merchantId;
+      const notificationId = req.params.id;
+
+      await markNotificationRead(notificationId, merchantId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Notification marked as read.'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.get('/dashboard', merchantController.getDashboard);
 router.get('/ecosystem-stats', merchantController.getEcosystemStats);

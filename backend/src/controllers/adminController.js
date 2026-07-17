@@ -5,6 +5,11 @@ const { v4: uuidv4 } = require('uuid');
 const { getCustomerBalance, processReversal } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const { GRACE_PERIOD_DAYS } = require('../services/subscriptionService');
+const { processReferralOnFirstPayment, processReferralOnRenewal } = require('../services/merchantReferralService');
+
+// ── In-memory cache for AdminDashboard (shared, single-entry) ──
+const DASHBOARD_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let dashboardCache = { data: null, timestamp: 0 };
 
 /**
  * Helper to format date to YYYY-MM-DD
@@ -17,168 +22,24 @@ function formatDate(date) {
  * Admin Dashboard statistics and chart data.
  */
 async function getDashboard(req, res, next) {
+  // ── Cache check ──
+  const now = Date.now();
+  if (dashboardCache.data && (now - dashboardCache.timestamp) < DASHBOARD_CACHE_TTL_MS) {
+    return res.status(200).json(dashboardCache.data);
+  }
+
   try {
-    // 1. Core Card Metrics
-    const totalCustomers = await prisma.customer.count();
-    const activeCustomers = await prisma.customer.count({ where: { isActive: true } });
-    const totalMerchants = await prisma.merchant.count();
-    const activeMerchants = await prisma.merchant.count({ where: { isActive: true } });
-    const totalTransactions = await prisma.transaction.count();
-
-    // Sum points issued and redeemed via SQL aggregation (avoids loading all ledger rows)
-    const ledgerAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssued",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemed"
-      FROM "PointsLedger" pl
-      JOIN "Transaction" t ON t.id = pl."transactionId"
-      WHERE t.type != 'reversal'
-    `;
-    const pointsIssued = Number(ledgerAgg[0]?.pointsIssued || 0);
-    const pointsRedeemed = Number(ledgerAgg[0]?.pointsRedeemed || 0);
-
-    const outstandingPoints = pointsIssued - pointsRedeemed;
-
-    // Get current reward settings for liability conversion
-    const settings = await prisma.rewardSettings.findFirst({
-      orderBy: { updatedAt: 'desc' }
-    });
-    const rupeesPerPoint = settings ? parseFloat(settings.rupeesPerPoint) : 0.10;
-    const liability = outstandingPoints * rupeesPerPoint;
-
-    // Platform Fee Revenue Aggregation
     const now = new Date();
     const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-    const feeRevenueAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL THEN t."platformFee" ELSE 0 END), 0)::numeric AS "totalFeeRevenue",
-        COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL AND t."createdAt" >= ${firstDayThisMonth} THEN t."platformFee" ELSE 0 END), 0)::numeric AS "feeRevenueThisMonth",
-        COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL AND t."createdAt" >= ${firstDayLastMonth} AND t."createdAt" <= ${lastDayLastMonth} THEN t."platformFee" ELSE 0 END), 0)::numeric AS "feeRevenueLastMonth"
-      FROM "Transaction" t
-    `;
-    const totalFeeRevenue = parseFloat(feeRevenueAgg[0]?.totalFeeRevenue || 0);
-    const feeRevenueThisMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueThisMonth || 0);
-    const feeRevenueLastMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueLastMonth || 0);
-
-    // Top-Up Revenue Aggregation
-    const topUpRevenueAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalTopUpRevenue",
-        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueThisMonth",
-        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueLastMonth"
-      FROM "PointsTopUp"
-    `;
-    const totalTopUpRevenue = parseFloat(topUpRevenueAgg[0]?.totalTopUpRevenue || 0);
-    const topUpRevenueThisMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueThisMonth || 0);
-    const topUpRevenueLastMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueLastMonth || 0);
-
-    // Ad Payment Revenue Aggregation
-    const adPaymentRevenueAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalAdPaymentRevenue",
-        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueThisMonth",
-        COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueLastMonth"
-      FROM "AdPayment"
-    `;
-    const totalAdPaymentRevenue = parseFloat(adPaymentRevenueAgg[0]?.totalAdPaymentRevenue || 0);
-    const adPaymentRevenueThisMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueThisMonth || 0);
-    const adPaymentRevenueLastMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueLastMonth || 0);
-
-    // Transactions Processed — this month / last month
-    const txAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayThisMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsThisMonth",
-        COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsLastMonth"
-      FROM "Transaction"
-      WHERE status = 'completed'
-    `;
-    const transactionsThisMonth = Number(txAgg[0]?.transactionsThisMonth || 0);
-    const transactionsLastMonth = Number(txAgg[0]?.transactionsLastMonth || 0);
-
-    // Points Issued / Redeemed — this month / last month
-    const pointsMonthAgg = await prisma.$queryRaw`
-      SELECT
-        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedThisMonth",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedLastMonth",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedThisMonth",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedLastMonth"
-      FROM "PointsLedger" pl
-      JOIN "Transaction" t ON t.id = pl."transactionId"
-      WHERE t.type != 'reversal'
-    `;
-    const pointsIssuedThisMonth = Number(pointsMonthAgg[0]?.pointsIssuedThisMonth || 0);
-    const pointsIssuedLastMonth = Number(pointsMonthAgg[0]?.pointsIssuedLastMonth || 0);
-    const pointsRedeemedThisMonth = Number(pointsMonthAgg[0]?.pointsRedeemedThisMonth || 0);
-    const pointsRedeemedLastMonth = Number(pointsMonthAgg[0]?.pointsRedeemedLastMonth || 0);
-
-    // 2. Chart 1: Points Issued vs Redeemed over last 30 days (SQL aggregation)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
-
-    const recentLedgerRows = await prisma.$queryRaw`
-      SELECT
-        TO_CHAR(DATE_TRUNC('day', pl."createdAt"), 'YYYY-MM-DD') AS "date",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 THEN pl."pointsChange" ELSE 0 END), 0)::int AS "issued",
-        COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "redeemed"
-      FROM "PointsLedger" pl
-      JOIN "Transaction" t ON t.id = pl."transactionId"
-      WHERE pl."createdAt" >= ${thirtyDaysAgo} AND t.status = 'completed'
-      GROUP BY DATE_TRUNC('day', pl."createdAt")
-      ORDER BY DATE_TRUNC('day', pl."createdAt") ASC
-    `;
-
-    // Pre-populate last 30 days with zeros, then overlay actual data
-    const dailyPoints = {};
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      dailyPoints[formatDate(d)] = { issued: 0, redeemed: 0 };
-    }
-    recentLedgerRows.forEach(row => {
-      if (dailyPoints[row.date]) {
-        dailyPoints[row.date].issued = Number(row.issued);
-        dailyPoints[row.date].redeemed = Number(row.redeemed);
-      }
-    });
-
-    const chartPointsIssuedVsRedeemed = Object.keys(dailyPoints).map(date => ({
-      date,
-      issued: dailyPoints[date].issued,
-      redeemed: dailyPoints[date].redeemed
-    }));
-
-    // 3. Chart 2: Top 7 Merchants by transactions count (single JOIN query, no N+1)
-    const topMerchantsData = await prisma.$queryRaw`
-      SELECT m."businessName" AS name, COUNT(t.id)::int AS transactions
-      FROM "Transaction" t
-      JOIN "Merchant" m ON m.id = t."merchantId"
-      GROUP BY m."businessName"
-      ORDER BY transactions DESC
-      LIMIT 7
-    `;
-
-    // 4. Chart 3: Customer Growth (Cumulative) — SQL aggregation
-    const growthRows = await prisma.$queryRaw`
-      SELECT TO_CHAR(DATE_TRUNC('day', "createdAt"), 'YYYY-MM-DD') AS "date", COUNT(*)::int AS "count"
-      FROM "Customer"
-      GROUP BY DATE_TRUNC('day', "createdAt")
-      ORDER BY DATE_TRUNC('day', "createdAt") ASC
-    `;
-
-    const chartCustomerGrowth = [];
-    let cumulativeCount = 0;
-    growthRows.forEach(row => {
-      cumulativeCount += Number(row.count);
-      chartCustomerGrowth.push({ date: row.date, count: cumulativeCount });
-    });
-
-    if (chartCustomerGrowth.length === 0) {
-      chartCustomerGrowth.push({ date: formatDate(new Date()), count: 0 });
-    }
+    const upcomingMonth1 = new Date().getMonth() + 1;
+    const upcomingDate2 = new Date();
+    upcomingDate2.setDate(upcomingDate2.getDate() + 7);
+    const upcomingMonth2 = upcomingDate2.getMonth() + 1;
 
     // Helper for countdown
     function getDaysUntil(dateVal) {
@@ -195,136 +56,257 @@ async function getDashboard(req, res, next) {
       return Math.round(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // 1. Total customers by city
-    const customersByCityGroup = await prisma.customer.groupBy({
-      by: ['city'],
-      _count: { id: true },
-      where: { city: { not: null } }
+    // ── Hop 1: All independent queries in parallel (11 queries) ──
+    const [
+      // Counts
+      totalCustomers,
+      activeCustomers,
+      totalMerchants,
+      activeMerchants,
+      optInCount,
+      // Aggregations
+      ledgerAgg,
+      txAgg,
+      feeRevenueAgg,
+      topUpRevenueAgg,
+      adPaymentRevenueAgg,
+      // Settings (no dependency on counts/aggs)
+      settings
+    ] = await Promise.all([
+      prisma.customer.count(),
+      prisma.customer.count({ where: { isActive: true } }),
+      prisma.merchant.count(),
+      prisma.merchant.count({ where: { isActive: true } }),
+      prisma.customer.count({ where: { notificationOptIn: true } }),
+      // Merged ledgerAgg: all-time + this/last month points in one query
+      prisma.$queryRaw`
+        SELECT
+          COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssued",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemed",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedThisMonth",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN pl."pointsChange" ELSE 0 END), 0)::int AS "pointsIssuedLastMonth",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayThisMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedThisMonth",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 AND t.status = 'completed' AND pl."createdAt" >= ${firstDayLastMonth} AND pl."createdAt" <= ${lastDayLastMonth} THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "pointsRedeemedLastMonth"
+        FROM "PointsLedger" pl
+        JOIN "Transaction" t ON t.id = pl."transactionId"
+        WHERE t.type != 'reversal'
+      `,
+      // Merged txAgg: total + this/last month transaction counts in one query
+      prisma.$queryRaw`
+        SELECT
+          COUNT(*)::int AS "totalTransactions",
+          COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayThisMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsThisMonth",
+          COALESCE(SUM(CASE WHEN "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN 1 ELSE 0 END), 0)::int AS "transactionsLastMonth"
+        FROM "Transaction"
+        WHERE status = 'completed'
+      `,
+      prisma.$queryRaw`
+        SELECT
+          COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL THEN t."platformFee" ELSE 0 END), 0)::numeric AS "totalFeeRevenue",
+          COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL AND t."createdAt" >= ${firstDayThisMonth} THEN t."platformFee" ELSE 0 END), 0)::numeric AS "feeRevenueThisMonth",
+          COALESCE(SUM(CASE WHEN t.type = 'redeem' AND t.status = 'completed' AND t."reversedById" IS NULL AND t."createdAt" >= ${firstDayLastMonth} AND t."createdAt" <= ${lastDayLastMonth} THEN t."platformFee" ELSE 0 END), 0)::numeric AS "feeRevenueLastMonth"
+        FROM "Transaction" t
+      `,
+      prisma.$queryRaw`
+        SELECT
+          COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalTopUpRevenue",
+          COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueThisMonth",
+          COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "topUpRevenueLastMonth"
+        FROM "PointsTopUp"
+      `,
+      prisma.$queryRaw`
+        SELECT
+          COALESCE(SUM(CASE WHEN status = 'confirmed' THEN "amountPaid" ELSE 0 END), 0)::numeric AS "totalAdPaymentRevenue",
+          COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayThisMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueThisMonth",
+          COALESCE(SUM(CASE WHEN status = 'confirmed' AND "createdAt" >= ${firstDayLastMonth} AND "createdAt" <= ${lastDayLastMonth} THEN "amountPaid" ELSE 0 END), 0)::numeric AS "adPaymentRevenueLastMonth"
+        FROM "AdPayment"
+      `,
+      prisma.rewardSettings.findFirst({ orderBy: { updatedAt: 'desc' } })
+    ]);
+
+    // Extract merged results
+    const pointsIssued = Number(ledgerAgg[0]?.pointsIssued || 0);
+    const pointsRedeemed = Number(ledgerAgg[0]?.pointsRedeemed || 0);
+    const pointsIssuedThisMonth = Number(ledgerAgg[0]?.pointsIssuedThisMonth || 0);
+    const pointsIssuedLastMonth = Number(ledgerAgg[0]?.pointsIssuedLastMonth || 0);
+    const pointsRedeemedThisMonth = Number(ledgerAgg[0]?.pointsRedeemedThisMonth || 0);
+    const pointsRedeemedLastMonth = Number(ledgerAgg[0]?.pointsRedeemedLastMonth || 0);
+
+    const totalTransactions = Number(txAgg[0]?.totalTransactions || 0);
+    const transactionsThisMonth = Number(txAgg[0]?.transactionsThisMonth || 0);
+    const transactionsLastMonth = Number(txAgg[0]?.transactionsLastMonth || 0);
+
+    const totalFeeRevenue = parseFloat(feeRevenueAgg[0]?.totalFeeRevenue || 0);
+    const feeRevenueThisMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueThisMonth || 0);
+    const feeRevenueLastMonth = parseFloat(feeRevenueAgg[0]?.feeRevenueLastMonth || 0);
+
+    const totalTopUpRevenue = parseFloat(topUpRevenueAgg[0]?.totalTopUpRevenue || 0);
+    const topUpRevenueThisMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueThisMonth || 0);
+    const topUpRevenueLastMonth = parseFloat(topUpRevenueAgg[0]?.topUpRevenueLastMonth || 0);
+
+    const totalAdPaymentRevenue = parseFloat(adPaymentRevenueAgg[0]?.totalAdPaymentRevenue || 0);
+    const adPaymentRevenueThisMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueThisMonth || 0);
+    const adPaymentRevenueLastMonth = parseFloat(adPaymentRevenueAgg[0]?.adPaymentRevenueLastMonth || 0);
+
+    // Settings (from Hop 1)
+    const rupeesPerPoint = settings ? parseFloat(settings.rupeesPerPoint) : 0.10;
+    const outstandingPoints = pointsIssued - pointsRedeemed;
+    const liability = outstandingPoints * rupeesPerPoint;
+
+    // ── Hop 2: Charts + Customer intelligence (9 parallel queries) ──
+    const [
+      // Charts
+      recentLedgerRows,
+      topMerchantsData,
+      growthRows,
+      // Customer intelligence
+      customersByCityGroup,
+      genderGroup,
+      ageGroupRows,
+      commGroup,
+      topCategoriesRows,
+      allCustomersForAlerts
+    ] = await Promise.all([
+      prisma.$queryRaw`
+        SELECT
+          TO_CHAR(DATE_TRUNC('day', pl."createdAt"), 'YYYY-MM-DD') AS "date",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" > 0 THEN pl."pointsChange" ELSE 0 END), 0)::int AS "issued",
+          COALESCE(SUM(CASE WHEN pl."pointsChange" < 0 THEN ABS(pl."pointsChange") ELSE 0 END), 0)::int AS "redeemed"
+        FROM "PointsLedger" pl
+        JOIN "Transaction" t ON t.id = pl."transactionId"
+        WHERE pl."createdAt" >= ${thirtyDaysAgo} AND t.status = 'completed'
+        GROUP BY DATE_TRUNC('day', pl."createdAt")
+        ORDER BY DATE_TRUNC('day', pl."createdAt") ASC
+      `,
+      prisma.$queryRaw`
+        SELECT m."businessName" AS name, COUNT(t.id)::int AS transactions
+        FROM "Transaction" t
+        JOIN "Merchant" m ON m.id = t."merchantId"
+        GROUP BY m."businessName"
+        ORDER BY transactions DESC
+        LIMIT 7
+      `,
+      prisma.$queryRaw`
+        SELECT TO_CHAR(DATE_TRUNC('day', "createdAt"), 'YYYY-MM-DD') AS "date", COUNT(*)::int AS "count"
+        FROM "Customer"
+        GROUP BY DATE_TRUNC('day', "createdAt")
+        ORDER BY DATE_TRUNC('day', "createdAt") ASC
+      `,
+      prisma.customer.groupBy({
+        by: ['city'],
+        _count: { id: true },
+        where: { city: { not: null } }
+      }),
+      prisma.customer.groupBy({
+        by: ['gender'],
+        _count: { id: true },
+        where: { gender: { not: null } }
+      }),
+      prisma.$queryRaw`
+        SELECT
+          CASE
+            WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 18 AND 25 THEN '18-25'
+            WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 26 AND 35 THEN '26-35'
+            WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 36 AND 45 THEN '36-45'
+            WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) >= 46 THEN '45+'
+          END AS "group",
+          COUNT(*)::int AS "count"
+        FROM "Customer"
+        WHERE "dateOfBirth" IS NOT NULL
+          AND EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) >= 18
+        GROUP BY "group"
+      `,
+      prisma.customer.groupBy({
+        by: ['communicationPref'],
+        _count: { id: true }
+      }),
+      prisma.$queryRaw`
+        SELECT category, COUNT(*)::int AS count
+        FROM "Customer",
+        jsonb_array_elements_text(
+          CASE 
+            WHEN "favouriteCategories" IS NOT NULL AND "favouriteCategories" LIKE '[%' THEN "favouriteCategories"::jsonb
+            ELSE '[]'::jsonb
+          END
+        ) AS category
+        GROUP BY category
+        ORDER BY count DESC
+        LIMIT 5
+      `,
+      prisma.$queryRaw`
+        SELECT id, name, "dateOfBirth", "anniversaryDate"
+        FROM "Customer"
+        WHERE 
+          ("dateOfBirth" IS NOT NULL AND EXTRACT(MONTH FROM "dateOfBirth") IN (${upcomingMonth1}, ${upcomingMonth2}))
+          OR
+          ("anniversaryDate" IS NOT NULL AND EXTRACT(MONTH FROM "anniversaryDate") IN (${upcomingMonth1}, ${upcomingMonth2}))
+      `
+    ]);
+
+    // Pre-populate last 30 days with zeros, then overlay actual data
+    const dailyPoints = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dailyPoints[formatDate(d)] = { issued: 0, redeemed: 0 };
+    }
+    recentLedgerRows.forEach(row => {
+      if (dailyPoints[row.date]) {
+        dailyPoints[row.date].issued = Number(row.issued);
+        dailyPoints[row.date].redeemed = Number(row.redeemed);
+      }
     });
-    const totalCustomersByCity = customersByCityGroup.map(g => ({
-      city: g.city,
-      count: g._count.id
+    const chartPointsIssuedVsRedeemed = Object.keys(dailyPoints).map(date => ({
+      date,
+      issued: dailyPoints[date].issued,
+      redeemed: dailyPoints[date].redeemed
     }));
 
-    // 2. Gender distribution
-    const genderGroup = await prisma.customer.groupBy({
-      by: ['gender'],
-      _count: { id: true },
-      where: { gender: { not: null } }
+    const chartCustomerGrowth = [];
+    let cumulativeCount = 0;
+    growthRows.forEach(row => {
+      cumulativeCount += Number(row.count);
+      chartCustomerGrowth.push({ date: row.date, count: cumulativeCount });
     });
-    const genderDistribution = genderGroup.map(g => ({
-      gender: g.gender,
-      count: g._count.id
-    }));
+    if (chartCustomerGrowth.length === 0) {
+      chartCustomerGrowth.push({ date: formatDate(new Date()), count: 0 });
+    }
 
-    // 3. Age group distribution (SQL aggregation)
-    const ageGroupRows = await prisma.$queryRaw`
-      SELECT
-        CASE
-          WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 18 AND 25 THEN '18-25'
-          WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 26 AND 35 THEN '26-35'
-          WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) BETWEEN 36 AND 45 THEN '36-45'
-          WHEN EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) >= 46 THEN '45+'
-        END AS "group",
-        COUNT(*)::int AS "count"
-      FROM "Customer"
-      WHERE "dateOfBirth" IS NOT NULL
-        AND EXTRACT(YEAR FROM AGE(NOW(), "dateOfBirth")) >= 18
-      GROUP BY "group"
-    `;
+    const totalCustomersByCity = customersByCityGroup.map(g => ({ city: g.city, count: g._count.id }));
+    const genderDistribution = genderGroup.map(g => ({ gender: g.gender, count: g._count.id }));
+    const communicationPrefBreakdown = commGroup.map(g => ({ preference: g.communicationPref || 'email', count: g._count.id }));
+    const topCategories = topCategoriesRows.map(r => ({ category: r.category, count: r.count }));
+    const notificationOptInRate = totalCustomers > 0 ? parseFloat(((optInCount / totalCustomers) * 100).toFixed(1)) : 100;
+
     const ageGroupMap = { '18-25': 0, '26-35': 0, '36-45': 0, '45+': 0 };
     ageGroupRows.forEach(r => { if (ageGroupMap[r.group] !== undefined) ageGroupMap[r.group] = Number(r.count); });
     const ageGroupDistribution = Object.keys(ageGroupMap).map(group => ({ group, count: ageGroupMap[group] }));
 
-    // 4. Communication preference breakdown
-    const commGroup = await prisma.customer.groupBy({
-      by: ['communicationPref'],
-      _count: { id: true }
-    });
-    const communicationPrefBreakdown = commGroup.map(g => ({
-      preference: g.communicationPref || 'email',
-      count: g._count.id
-    }));
-
-    // 5. Notification opt-in rate
-    const totalCustCount = await prisma.customer.count();
-    const optInCount = await prisma.customer.count({
-      where: { notificationOptIn: true }
-    });
-    const notificationOptInRate = totalCustCount > 0 ? parseFloat(((optInCount / totalCustCount) * 100).toFixed(1)) : 100;
-
-    // 6. Top 5 categories
-    const topCategoriesRows = await prisma.$queryRaw`
-      SELECT category, COUNT(*)::int AS count
-      FROM "Customer",
-      jsonb_array_elements_text(
-        CASE 
-          WHEN "favouriteCategories" IS NOT NULL AND "favouriteCategories" LIKE '[%' THEN "favouriteCategories"::jsonb
-          ELSE '[]'::jsonb
-        END
-      ) AS category
-      GROUP BY category
-      ORDER BY count DESC
-      LIMIT 5
-    `;
-    const topCategories = topCategoriesRows.map(r => ({ category: r.category, count: r.count }));
-
-    // 7. Birthday and Anniversary Alerts in next 7 days
-    const upcomingMonth1 = new Date().getMonth() + 1;
-    const upcomingDate2 = new Date();
-    upcomingDate2.setDate(upcomingDate2.getDate() + 7);
-    const upcomingMonth2 = upcomingDate2.getMonth() + 1;
-
-    const allCustomersForAlerts = await prisma.$queryRaw`
-      SELECT id, name, "dateOfBirth", "anniversaryDate"
-      FROM "Customer"
-      WHERE 
-        ("dateOfBirth" IS NOT NULL AND EXTRACT(MONTH FROM "dateOfBirth") IN (${upcomingMonth1}, ${upcomingMonth2}))
-        OR
-        ("anniversaryDate" IS NOT NULL AND EXTRACT(MONTH FROM "anniversaryDate") IN (${upcomingMonth1}, ${upcomingMonth2}))
-    `;
     const birthdayAlerts = [];
     const anniversaryAlerts = [];
     allCustomersForAlerts.forEach(c => {
       if (c.dateOfBirth) {
         const days = getDaysUntil(c.dateOfBirth);
         if (days >= 0 && days <= 7) {
-          birthdayAlerts.push({
-            id: c.id,
-            name: c.name,
-            dateOfBirth: c.dateOfBirth,
-            daysLeft: days
-          });
+          birthdayAlerts.push({ id: c.id, name: c.name, dateOfBirth: c.dateOfBirth, daysLeft: days });
         }
       }
       if (c.anniversaryDate) {
         const days = getDaysUntil(c.anniversaryDate);
         if (days >= 0 && days <= 7) {
-          anniversaryAlerts.push({
-            id: c.id,
-            name: c.name,
-            anniversaryDate: c.anniversaryDate,
-            daysLeft: days
-          });
+          anniversaryAlerts.push({ id: c.id, name: c.name, anniversaryDate: c.anniversaryDate, daysLeft: days });
         }
       }
     });
     birthdayAlerts.sort((a, b) => a.daysLeft - b.daysLeft);
     anniversaryAlerts.sort((a, b) => a.daysLeft - b.daysLeft);
 
-    // 8. Revenue Decline Alerts (MoM comparison)
+    // ── Decline Alerts (computed from already-fetched data) ──
     const feeRevenueChange = feeRevenueLastMonth > 0
       ? ((feeRevenueThisMonth - feeRevenueLastMonth) / feeRevenueLastMonth) * 100
       : 0;
-    
-    const thisMonthTxCount = await prisma.transaction.count({
-      where: { status: 'completed', createdAt: { gte: firstDayThisMonth } }
-    });
-    const lastMonthTxCount = await prisma.transaction.count({
-      where: { status: 'completed', createdAt: { gte: firstDayLastMonth, lte: lastDayLastMonth } }
-    });
-    const txVolumeChange = lastMonthTxCount > 0
-      ? ((thisMonthTxCount - lastMonthTxCount) / lastMonthTxCount) * 100
+    const txVolumeChange = transactionsLastMonth > 0
+      ? ((transactionsThisMonth - transactionsLastMonth) / transactionsLastMonth) * 100
       : 0;
 
     const declineAlerts = [];
@@ -333,8 +315,8 @@ async function getDashboard(req, res, next) {
         type: 'transaction_volume',
         severity: txVolumeChange < -25 ? 'critical' : 'warning',
         message: `Transaction volume declined ${Math.abs(txVolumeChange).toFixed(1)}% vs last month`,
-        thisMonth: thisMonthTxCount,
-        lastMonth: lastMonthTxCount,
+        thisMonth: transactionsThisMonth,
+        lastMonth: transactionsLastMonth,
         change: parseFloat(txVolumeChange.toFixed(1))
       });
     }
@@ -349,7 +331,7 @@ async function getDashboard(req, res, next) {
       });
     }
 
-    res.status(200).json({
+    const responsePayload = {
       success: true,
       message: 'Dashboard metrics successfully loaded.',
       data: {
@@ -395,7 +377,11 @@ async function getDashboard(req, res, next) {
         },
         declineAlerts
       }
-    });
+    };
+
+    // Store in cache and send
+    dashboardCache = { data: responsePayload, timestamp: Date.now() };
+    res.status(200).json(responsePayload);
   } catch (error) {
     next(error);
   }
@@ -476,6 +462,23 @@ async function getMerchants(req, res, next) {
           totalPages: Math.ceil(total / limit)
         }
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Get count of pending merchants.
+ */
+async function getPendingMerchantCount(req, res, next) {
+  try {
+    const count = await prisma.merchant.count({ where: { status: 'pending' } });
+
+    res.status(200).json({
+      success: true,
+      message: 'Pending merchant count retrieved successfully.',
+      data: { count }
     });
   } catch (error) {
     next(error);
@@ -854,8 +857,7 @@ async function getCustomers(req, res, next) {
     const whereCondition = search ? {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
-        { user: { mobile: { contains: search, mode: 'insensitive' } } },
-        { id: { contains: search, mode: 'insensitive' } }
+        { user: { mobile: { contains: search, mode: 'insensitive' } } }
       ]
     } : {};
 
@@ -2462,17 +2464,13 @@ async function getCustomerInactivityReport(req, res, next) {
  */
 async function getTrends(req, res, next) {
   try {
-    const { getTransactionTrends, getUserTrends, getRevenueTrends } = require('../services/trendService');
-    const [transactions, users, revenue] = await Promise.all([
-      getTransactionTrends(),
-      getUserTrends(),
-      getRevenueTrends()
-    ]);
+    const { getTrendsData } = require('../services/trendService');
+    const data = await getTrendsData();
 
     res.status(200).json({
       success: true,
       message: 'Trends retrieved successfully.',
-      data: { transactions, users, revenue }
+      data
     });
   } catch (error) {
     next(error);
@@ -2679,6 +2677,14 @@ async function confirmMerchantPayment(req, res, next) {
       welcomeBonus: isFirstActivation
     }, req.ip);
 
+    if (isFirstActivation) {
+      try {
+        await processReferralOnFirstPayment(merchantId);
+      } catch (referralErr) {
+        console.error('[Referral] Error processing referral on first payment:', referralErr.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: 'Payment confirmed. Merchant activated.',
@@ -2802,16 +2808,22 @@ async function confirmRenewalPayment(req, res, next) {
         include: { plan: true }
       });
 
+      // Tapered renewal bonus: renewals 1-3 get 1000 pts, renewal 4+ gets 500 pts
+      const subscriptionCount = await tx.merchantSubscription.count({
+        where: { merchantId }
+      });
+      const renewalBonus = subscriptionCount <= 4 ? 1000 : 500;
+
       const updatedMerchant = await tx.merchant.update({
         where: { id: merchantId },
         data: {
           status: 'active',
           pendingRenewalSubscriptionId: null,
-          pointsBalance: { increment: 1000 }
+          pointsBalance: { increment: renewalBonus }
         }
       });
 
-      return { subscription, updatedMerchant };
+      return { subscription, updatedMerchant, renewalBonus, subscriptionCount };
     });
 
     await createAuditLog(
@@ -2823,19 +2835,27 @@ async function confirmRenewalPayment(req, res, next) {
         businessName: merchant.businessName,
         subscriptionId: merchant.pendingRenewalSubscriptionId,
         newEndDate: result.subscription.endDate,
-        pointsCredited: 1000,
+        subscriptionCount: result.subscriptionCount,
+        pointsCredited: result.renewalBonus,
         newPointsBalance: result.updatedMerchant.pointsBalance
       },
       req.ip
     );
 
+    try {
+      await processReferralOnRenewal(merchantId);
+    } catch (referralErr) {
+      console.error('[Referral] Error processing referral on renewal:', referralErr.message);
+    }
+
     res.status(200).json({
       success: true,
-      message: 'Renewal confirmed. Subscription extended and 1,000 bonus points credited.',
+      message: `Renewal confirmed. Subscription extended and ${result.renewalBonus.toLocaleString()} bonus points credited.`,
       data: {
         merchantId,
         subscriptionId: result.subscription.id,
         newEndDate: result.subscription.endDate,
+        renewalBonus: result.renewalBonus,
         pointsBalance: result.updatedMerchant.pointsBalance
       }
     });
@@ -2978,6 +2998,25 @@ async function getChatbotAnalytics(req, res, next) {
   }
 }
 
+/**
+ * GET /api/admin/merchant-referrals
+ * View all referral pairs, status, reward history.
+ */
+async function getMerchantReferrals(req, res, next) {
+  try {
+    const { getAdminReferralOverview } = require('../services/merchantReferralService');
+    const referrals = await getAdminReferralOverview();
+
+    res.status(200).json({
+      success: true,
+      message: 'Merchant referrals retrieved successfully.',
+      data: referrals
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   getMerchants,
@@ -3018,13 +3057,15 @@ module.exports = {
   approveMerchant,
   rejectMerchant,
   getPendingPayments,
+  getPendingMerchantCount,
   confirmMerchantPayment,
   rejectMerchantPayment,
   confirmRenewalPayment,
   rejectRenewalPayment,
   getChatbotAnalytics,
   getPointsLiabilityTrend,
-  getMerchantHealth
+  getMerchantHealth,
+  getMerchantReferrals
 };
 
 /**

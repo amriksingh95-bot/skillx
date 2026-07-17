@@ -51,12 +51,21 @@ model Merchant {
   pendingRenewalSubscriptionId String?
   alternativePhone  String?
   merchantCode      String?       @unique
+  merchantReferralCode String?    @unique
+  referredByMerchantId String?
   advertisements  Advertisement[]
   auditLogs       AuditLog[]
   user            User            @relation(fields: [userId], references: [id])
   transactions    Transaction[]
   subscriptions   MerchantSubscription[]
   topUps           PointsTopUp[]
+
+  @@index([isActive])
+  @@index([status])
+  @@index([isActive, status])
+  @@index([createdAt])
+  @@index([referredByMerchantId])
+  @@index([merchantReferralCode])
 }
 
 model Customer {
@@ -91,6 +100,11 @@ model Customer {
   user                 User           @relation(fields: [userId], references: [id])
   ledgerEntries        PointsLedger[]
   transactions         Transaction[]
+
+  @@index([isActive])
+  @@index([referredBy])
+  @@index([createdAt])
+  @@index([notificationOptIn])
 }
 
 model Transaction {
@@ -117,6 +131,10 @@ model Transaction {
   @@index([createdAt])
   @@index([status])
   @@index([type])
+  @@index([customerId, status])
+  @@index([merchantId, status, createdAt])
+  @@index([status, createdAt, customerId])
+  @@index([status, createdAt, merchantId])
 }
 
 model PointsLedger {
@@ -133,6 +151,8 @@ model PointsLedger {
   @@index([customerId])
   @@index([transactionId])
   @@index([createdAt])
+  @@index([customerId, createdAt])
+  @@index([expiresAt])
 }
 
 model RewardSettings {
@@ -265,6 +285,9 @@ model AdPayment {
   confirmedAt     DateTime?
   createdAt       DateTime  @default(now())
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
+
+  @@index([advertisementId])
+  @@index([status])
 }
 
 model MilestoneBonus {
@@ -339,6 +362,7 @@ model MerchantSubscription {
   @@index([merchantId])
   @@index([status])
   @@index([endDate])
+  @@index([merchantId, status])
 }
 
 model ChatLog {
@@ -376,5 +400,35 @@ model PointsTopUp {
 
   @@index([merchantId])
   @@index([status])
+  @@index([createdAt])
+}
+
+model MerchantReferral {
+  id                  String   @id @default(uuid())
+  referrerMerchantId  String
+  referredMerchantId  String
+  status              String   @default("pending")
+  holdUntilDate       DateTime
+  instantRewardPaid   Boolean  @default(false)
+  monthsTrickled      Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([referrerMerchantId])
+  @@index([referredMerchantId])
+  @@index([status])
+  @@index([referrerMerchantId, status])
+}
+
+model MerchantNotification {
+  id         String   @id @default(uuid())
+  merchantId String
+  message    String
+  type       String   @default("referral")
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([merchantId])
+  @@index([merchantId, isRead])
   @@index([createdAt])
 }

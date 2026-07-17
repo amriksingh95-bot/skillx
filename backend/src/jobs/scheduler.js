@@ -5,6 +5,7 @@ const { runReengagementCampaign } = require('../services/reengagementService');
 const { pauseStaleApprovedAds } = require('./staleApprovedAdsService');
 const { runAdExpiryCheck } = require('./adActivationService');
 const { createAuditLog } = require('../services/auditLogService');
+const { releaseHeldRewards } = require('../services/merchantReferralService');
 
 let reminderJob = null;
 let isReminderRunning = false;
@@ -18,6 +19,8 @@ let adActivationJob = null;
 let isAdActivationRunning = false;
 let stalePendingPaymentsJob = null;
 let isStalePendingPaymentsRunning = false;
+let referralRewardJob = null;
+let isReferralRewardRunning = false;
 
 /**
  * Start the daily subscription reminder cron job.
@@ -288,6 +291,44 @@ function startStalePendingPaymentsJob() {
 }
 
 /**
+ * Start the referral reward release cron job.
+ * Runs every 30 minutes to release held referral rewards past the 15-day hold.
+ */
+function startReferralRewardJob() {
+  if (referralRewardJob) {
+    console.log('[Scheduler] Referral reward job already running');
+    return;
+  }
+
+  referralRewardJob = cron.schedule('*/30 * * * *', async () => {
+    if (isReferralRewardRunning) {
+      console.log('[Scheduler] Previous referral reward run still in progress, skipping');
+      return;
+    }
+
+    isReferralRewardRunning = true;
+    console.log(`[Scheduler] Starting referral reward release at ${new Date().toISOString()}`);
+
+    try {
+      const summary = await releaseHeldRewards();
+      console.log(`[Scheduler] Referral reward release complete:`, {
+        processed: summary.processed,
+        credited: summary.results.filter(r => r.credited).length
+      });
+    } catch (error) {
+      console.error('[Scheduler] Referral reward release failed:', error.message);
+    } finally {
+      isReferralRewardRunning = false;
+    }
+  }, {
+    scheduled: true,
+    timezone: 'UTC'
+  });
+
+  console.log('[Scheduler] Referral reward release job started (every 30 minutes)');
+}
+
+/**
  * Start all scheduler jobs.
  */
 function startScheduler() {
@@ -297,6 +338,7 @@ function startScheduler() {
   startStaleAdsJob();
   startAdActivationJob();
   startStalePendingPaymentsJob();
+  startReferralRewardJob();
 }
 
 /**
@@ -332,6 +374,11 @@ function stopScheduler() {
     stalePendingPaymentsJob.stop();
     stalePendingPaymentsJob = null;
     console.log('[Scheduler] Stale pending payments reminder job stopped');
+  }
+  if (referralRewardJob) {
+    referralRewardJob.stop();
+    referralRewardJob = null;
+    console.log('[Scheduler] Referral reward release job stopped');
   }
 }
 
@@ -509,6 +556,29 @@ async function runStalePendingPaymentsNow() {
   }
 }
 
+/**
+ * Run referral reward release immediately (for manual trigger or testing).
+ */
+async function runReferralRewardNow() {
+  if (isReferralRewardRunning) {
+    return { error: 'Previous run still in progress' };
+  }
+
+  isReferralRewardRunning = true;
+  console.log(`[Scheduler] Manual referral reward release triggered at ${new Date().toISOString()}`);
+
+  try {
+    const summary = await releaseHeldRewards();
+    console.log(`[Scheduler] Manual referral reward release complete:`, summary);
+    return summary;
+  } catch (error) {
+    console.error('[Scheduler] Manual referral reward release failed:', error.message);
+    return { error: error.message };
+  } finally {
+    isReferralRewardRunning = false;
+  }
+}
+
 module.exports = {
   startScheduler,
   stopScheduler,
@@ -518,5 +588,6 @@ module.exports = {
   runStaleAdsNow,
   runAdActivationNow,
   runStalePendingPaymentsNow,
+  runReferralRewardNow,
   getStatus
 };

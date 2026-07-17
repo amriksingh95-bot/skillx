@@ -19,6 +19,8 @@ const categories = ['grocery', 'medical', 'doctor', 'cafe', 'electronics', 'fash
 
 router.get('/merchants', adminController.getMerchants);
 
+router.get('/merchants/pending-count', adminController.getPendingMerchantCount);
+
 router.get(
   '/merchants/pending-payments',
   adminController.getPendingPayments
@@ -383,6 +385,8 @@ router.get(
 );
 
 router.get('/chatbot-analytics', adminController.getChatbotAnalytics);
+
+router.get('/merchant-referrals', adminController.getMerchantReferrals);
 
 router.get('/topup/pending', adminTopUpController.getPendingTopUps);
 

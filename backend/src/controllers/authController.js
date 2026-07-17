@@ -59,17 +59,16 @@ async function register(req, res, next) {
 
     // Check if referral code is provided and valid
     let referredByCustomerId = null;
+    let referralWarning = null;
     if (referralCode) {
       const referrer = await prisma.customer.findFirst({
         where: { referralCode: { equals: referralCode.trim(), mode: 'insensitive' } }
       });
       if (!referrer) {
-        const err = new Error('Invalid referral code.');
-        err.status = 400;
-        err.code = 'INVALID_REFERRAL_CODE';
-        return next(err);
+        referralWarning = 'Referral code not recognized. Your account was created, but no referral bonus was applied.';
+      } else {
+        referredByCustomerId = referrer.id;
       }
-      referredByCustomerId = referrer.id;
     }
 
     // Check if merchantCode is provided and valid
@@ -240,7 +239,8 @@ async function register(req, res, next) {
         userId: result.user.id,
         customerId: result.customer.id,
         name: result.customer.name,
-        mobile: result.user.mobile
+        mobile: result.user.mobile,
+        ...(referralWarning ? { referralWarning } : {})
       }
     });
   } catch (error) {
@@ -296,9 +296,9 @@ async function login(req, res, next) {
       return next(err);
     }
 
-    // Generate JWT Access Token (24 hours expiry)
+    // Generate JWT Access Token (15 minutes expiry)
     const accessToken = jwt.sign(
-      { userId: user.id, role: user.role },
+      { userId: user.id, role: user.role, merchantId: user.merchant?.id || null, customerId: user.customer?.id || null },
       JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -406,7 +406,7 @@ async function refreshToken(req, res, next) {
     // Find all non-revoked tokens for the user and compare hashes
     const candidateTokens = await prisma.refreshToken.findMany({
       where: { isRevoked: false },
-      include: { user: true }
+      include: { user: { include: { merchant: true, customer: true } } }
     });
 
     let matchedRecord = null;
@@ -486,7 +486,7 @@ async function refreshToken(req, res, next) {
 
     // Generate new Access Token (15 minutes expiry)
     const accessToken = jwt.sign(
-      { userId: matchedRecord.user.id, role: matchedRecord.user.role },
+      { userId: matchedRecord.user.id, role: matchedRecord.user.role, merchantId: matchedRecord.user.merchant?.id || null, customerId: matchedRecord.user.customer?.id || null },
       JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -544,7 +544,9 @@ async function requestOTP(req, res, next) {
       message: hasEmail
         ? 'OTP sent to your email address.'
         : 'OTP sent to your mobile number.',
-      data: {}
+      data: {
+        otp: otp // TEMP-REMOVE-BEFORE-DEPLOY: exposes OTP in API response for pre-launch testing only
+      }
     });
   } catch (error) {
     next(error);
@@ -803,7 +805,7 @@ async function registerMerchant(req, res, next) {
 
     // Auto-login: generate tokens so the merchant can start using immediately
     const token = jwt.sign(
-      { userId: result.user.id, role: 'merchant', merchantId: result.id },
+      { userId: result.user.id, role: 'merchant', merchantId: result.id, customerId: null },
       JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -847,7 +849,7 @@ async function registerMerchant(req, res, next) {
  * Public merchant self-signup.
  */
 async function registerMerchantSelf(req, res, next) {
-  const { businessName, ownerName, mobile, email, password, category, address, city, latitude, longitude } = req.body;
+  const { businessName, ownerName, mobile, email, password, category, address, city, latitude, longitude, referredByMerchantCode } = req.body;
   const ipAddress = req.ip;
 
   try {
@@ -900,6 +902,20 @@ async function registerMerchantSelf(req, res, next) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    let referrerMerchantId = null;
+    if (referredByMerchantCode) {
+      const referrer = await prisma.merchant.findUnique({
+        where: { merchantReferralCode: referredByMerchantCode }
+      });
+      if (!referrer) {
+        const err = new Error('Invalid referral code.');
+        err.status = 400;
+        err.code = 'INVALID_REFERRAL_CODE';
+        return next(err);
+      }
+      referrerMerchantId = referrer.id;
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -924,6 +940,19 @@ async function registerMerchantSelf(req, res, next) {
         attempts++;
       }
 
+      let merchantReferralCodeGenerated = '';
+      let referralUnique = false;
+      let referralAttempts = 0;
+      while (!referralUnique && referralAttempts < 10) {
+        const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+        merchantReferralCodeGenerated = `REF${suffix}`;
+        const existingRef = await tx.merchant.findUnique({ where: { merchantReferralCode: merchantReferralCodeGenerated } });
+        if (!existingRef) {
+          referralUnique = true;
+        }
+        referralAttempts++;
+      }
+
       const merchant = await tx.merchant.create({
         data: {
           userId: user.id,
@@ -936,6 +965,8 @@ async function registerMerchantSelf(req, res, next) {
           latitude: latitude ? parseFloat(latitude) : undefined,
           longitude: longitude ? parseFloat(longitude) : undefined,
           merchantCode: merchantCodeGenerated,
+          merchantReferralCode: merchantReferralCodeGenerated,
+          referredByMerchantId: referrerMerchantId,
           status: 'pending',
           pointsBalance: 0,
           paymentScreenshot: null
