@@ -1021,7 +1021,7 @@ To explain how administrators configure global reward settings for the platform.
 ## Key Topics
 - GET /api/admin/reward-settings retrieves current settings
 - PUT /api/admin/reward-settings updates all settings
-- pointsPerRupee: Earning rate (default 0.01, 100 Rs = 1 point)
+- pointsPerRupee: Earning rate (default 0.10, ₹10 = 1 point)
 - rupeesPerPoint: Redemption rate (default 0.10, 100 points = 10 Rs)
 - minRedeemPoints: Minimum points to redeem (default 100)
 - pointsExpiryDays: Points validity period (default 365, max 3650)
@@ -2378,7 +2378,7 @@ To explain how customers earn points through purchases at SkillXT partner mercha
 ## Key Topics
 
 ### 1. Points Earning Formula
-- **Default Rate**: ₹100 spent = 1 point (pointsPerRupee = 0.01)
+- **Default Rate**: ₹10 spent = 1 point (pointsPerRupee = 0.10)
 - **Calculation Method**: Points = floor(purchaseAmount × pointsPerRupee)
 - **Configurable Rate**: pointsPerRupee is stored in RewardSettings and can be updated by admin (API validation enforces min 0.0001)
 - **Rounding Behavior**: floor() applied — fractional points are truncated, never rounded up
@@ -6331,7 +6331,7 @@ To provide a comprehensive understanding of the SkillXT rules engine that govern
 - **Rule Testing**: Validating rules before production deployment
 
 ### 2. Points Earning Rules
-- **Earn Rate Configuration**: Points per rupee spent (default: ₹100 = 1 point)
+- **Earn Rate Configuration**: Points per rupee spent (default: ₹10 = 1 point)
 - **Minimum Purchase**: Minimum transaction amount for point earning
 - **Maximum Points Cap**: Limits on points per transaction or per day
 - **Category Multipliers**: Bonus points for specific merchant categories
@@ -6459,7 +6459,7 @@ To configure and manage the rules governing how customers earn points through pu
 ## Key Topics
 
 ### 1. Basic Earning Configuration
-- **Base Earn Rate**: Points awarded per rupee spent (default: ₹100 = 1 point)
+- **Base Earn Rate**: Points awarded per rupee spent (default: ₹10 = 1 point)
 - **Minimum Purchase Threshold**: Minimum transaction value for earning points
 - **Maximum Points per Transaction**: Cap on points for single transactions
 - **Daily/Monthly Caps**: Limits on total points that can be earned
@@ -9978,7 +9978,7 @@ To optimize the merchant experience of issuing points to customers, ensuring acc
 - **Verification Failures**: Handling verification issues
 
 ### 4. Points Calculation
-- **Earn Rate**: Points per rupee spent (default: ₹100 = 1 point)
+- **Earn Rate**: Points per rupee spent (default: ₹10 = 1 point)
 - **Promotional Rates**: Special earning rates for campaigns
 - **Category Multipliers**: Bonus points for specific categories
 - **Customer Tier**: Different rates for loyalty tiers
@@ -12041,7 +12041,7 @@ To provide practical examples of points earning calculations, helping all stakeh
 ## Key Topics
 
 ### 1. Basic Earning Calculation
-- **Standard Rate**: ₹100 spent = 1 point
+- **Standard Rate**: ₹10 spent = 1 point
 - **Formula**: Points = Purchase Amount / ₹100
 - **Rounding**: How fractional points are handled
 - **Minimum Threshold**: Minimum purchase for earning
@@ -12096,7 +12096,7 @@ To provide practical examples of points earning calculations, helping all stakeh
 - **Below Minimum**: No points earned
 - **Exactly at Minimum**: Points earned on full amount
 - **Above Minimum**: Points earned on full amount
-- **Example 16**: ₹100 purchase = 1 point (exactly at minimum)
+- **Example 16**: ₹10 purchase = 1 point (exactly at minimum)
 - **Example 17**: ₹50 purchase = 0 points (below minimum)
 - **Example 18**: ₹250 purchase = 2.5 → 3 points (above minimum)
 

@@ -12,7 +12,7 @@ To explain how administrators configure global reward settings for the platform.
 ## Key Topics
 - GET /api/admin/reward-settings retrieves current settings
 - PUT /api/admin/reward-settings updates all settings
-- pointsPerRupee: Earning rate (default 0.01, 100 Rs = 1 point)
+- pointsPerRupee: Earning rate (default 0.10, ₹10 = 1 point)
 - rupeesPerPoint: Redemption rate (default 0.10, 100 points = 10 Rs)
 - minRedeemPoints: Minimum points to redeem (default 100)
 - pointsExpiryDays: Points validity period (default 365, max 3650)

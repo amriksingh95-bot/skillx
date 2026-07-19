@@ -12,7 +12,7 @@ To explain how customers earn points through purchases at SkillXT partner mercha
 ## Key Topics
 
 ### 1. Points Earning Formula
-- **Default Rate**: ₹100 spent = 1 point (pointsPerRupee = 0.01)
+- **Default Rate**: ₹10 spent = 1 point (pointsPerRupee = 0.10)
 - **Calculation Method**: Points = floor(purchaseAmount × pointsPerRupee)
 - **Configurable Rate**: pointsPerRupee is stored in RewardSettings and can be updated by admin (API validation enforces min 0.0001)
 - **Rounding Behavior**: floor() applied — fractional points are truncated, never rounded up
