@@ -904,6 +904,12 @@ export default function AdminMerchants() {
                   {new Date(selectedMerchant.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
+              <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Points Balance</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-white block mt-1">
+                  {(selectedMerchant.pointsBalance || 0).toLocaleString('en-IN')} pts
+                </span>
+              </div>
             </div>
           </div>
         )}
