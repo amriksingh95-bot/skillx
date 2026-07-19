@@ -343,7 +343,7 @@ export default function MerchantSubscription() {
             />
             <div className="mt-3 bg-slate-50 rounded-lg px-4 py-2 inline-block">
               <p className="text-xs text-slate-500">UPI ID</p>
-              <p className="text-sm font-bold text-slate-800 select-all">amriksingh95@okhdfcbank</p>
+              <p className="text-sm font-bold text-slate-800 select-all">{subscriptionUpiId}</p>
             </div>
             <p className="text-xs text-amber-600 mt-3 font-medium">Note: After payment, upload screenshot below for admin verification</p>
           </div>
@@ -585,7 +585,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">UPI ID</span>
-                <span className="text-sm font-bold text-slate-800 select-all cursor-text">amriksingh95@okhdfcbank</span>
+                <span className="text-sm font-bold text-slate-800 select-all cursor-text">{subscriptionUpiId}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Amount</span>
@@ -646,7 +646,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">UPI ID</span>
-                <span className="text-sm font-bold text-slate-800 select-all cursor-text">amriksingh95@okhdfcbank</span>
+                <span className="text-sm font-bold text-slate-800 select-all cursor-text">{subscriptionUpiId}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Amount</span>
