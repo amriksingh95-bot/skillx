@@ -21,8 +21,6 @@ async function testLocation() {
     });
 
     const result = await response.json();
-    console.log('Status:', response.status);
-    console.log('Response:', JSON.stringify(result, null, 2));
   } catch (error) {
     console.error('Error:', error.message);
   }
