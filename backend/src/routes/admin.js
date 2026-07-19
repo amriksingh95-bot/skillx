@@ -21,6 +21,8 @@ router.get('/merchants', adminController.getMerchants);
 
 router.get('/merchants/pending-count', adminController.getPendingMerchantCount);
 
+router.get('/advertisements/pending-count', adminController.getPendingAdCount);
+
 router.get(
   '/merchants/pending-payments',
   adminController.getPendingPayments
@@ -114,11 +116,6 @@ router.patch(
   ],
   validate,
   adminController.rejectMerchant
-);
-
-router.get(
-  '/merchants/pending-payments',
-  adminController.getPendingPayments
 );
 
 router.patch(

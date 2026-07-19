@@ -537,16 +537,13 @@ async function requestOTP(req, res, next) {
       }
     }
 
-    const { otp } = await generateAndSendOTP(mobile, hasEmail ? email : null, otpPurpose);
+    await generateAndSendOTP(mobile, hasEmail ? email : null, otpPurpose);
 
     res.status(200).json({
       success: true,
       message: hasEmail
         ? 'OTP sent to your email address.'
-        : 'OTP sent to your mobile number.',
-      data: {
-        otp: otp // TEMP-REMOVE-BEFORE-DEPLOY: exposes OTP in API response for pre-launch testing only
-      }
+        : 'OTP sent to your mobile number.'
     });
   } catch (error) {
     next(error);
@@ -709,143 +706,6 @@ async function getPublicStats(req, res, next) {
 }
 
 /**
- * Public merchant registration (self-signup).
- */
-async function registerMerchant(req, res, next) {
-  const { mobile, email, businessName, ownerName, category, password } = req.body;
-  const ipAddress = req.ip;
-
-  try {
-    if (!password) {
-      const err = new Error('Password is required.');
-      err.status = 400;
-      err.code = 'VALIDATION_ERROR';
-      return next(err);
-    }
-
-    // Check for duplicate mobile
-    const existingUser = await prisma.user.findFirst({
-      where: { mobile }
-    });
-    if (existingUser) {
-      const err = new Error('Mobile number already registered.');
-      err.status = 400;
-      err.code = 'DUPLICATE_MOBILE';
-      return next(err);
-    }
-
-    // Check for duplicate email if provided
-    if (email) {
-      const existingEmail = await prisma.user.findFirst({
-        where: { email }
-      });
-      if (existingEmail) {
-        const err = new Error('Email already registered.');
-        err.status = 400;
-        err.code = 'DUPLICATE_EMAIL';
-        return next(err);
-      }
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const result = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email: email || null,
-          mobile,
-          password: passwordHash,
-          role: 'merchant'
-        }
-      });
-
-      // Generate unique merchant code
-      const namePart = (businessName || '').replace(/[^a-zA-Z]/g, '').padEnd(4, 'X').substring(0, 4).toUpperCase();
-      let merchantCodeGenerated = '';
-      let isUnique = false;
-      let attempts = 0;
-      while (!isUnique && attempts < 10) {
-        const digitsPart = Math.floor(1000 + Math.random() * 9000).toString();
-        merchantCodeGenerated = `SKXT${namePart}${digitsPart}`;
-        const existing = await tx.merchant.findUnique({
-          where: { merchantCode: merchantCodeGenerated }
-        });
-        if (!existing) {
-          isUnique = true;
-        }
-        attempts++;
-      }
-
-      const merchant = await tx.merchant.create({
-        data: {
-          userId: user.id,
-          businessName,
-          ownerName,
-          email: email || null,
-          category,
-          merchantCode: merchantCodeGenerated,
-          status: 'active'
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              mobile: true,
-              role: true,
-              isActive: true,
-              createdAt: true
-            }
-          }
-        }
-      });
-
-      return merchant;
-    });
-
-    // Auto-login: generate tokens so the merchant can start using immediately
-    const token = jwt.sign(
-      { userId: result.user.id, role: 'merchant', merchantId: result.id, customerId: null },
-      JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    const refreshTokenString = uuidv4() + uuidv4();
-    const hashedToken = await bcrypt.hash(refreshTokenString, 10);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    await prisma.refreshToken.create({
-      data: {
-        userId: result.user.id,
-        token: hashedToken,
-        expiresAt
-      }
-    });
-
-    await createAuditLog(result.user.id, 'MERCHANT_SELF_REGISTERED', 'Merchant', result.id, { businessName }, ipAddress);
-
-    res.status(201).json({
-      success: true,
-      message: 'Merchant account created successfully.',
-      data: {
-        accessToken: token,
-        refreshToken: refreshTokenString,
-        user: {
-          id: result.user.id,
-          profileId: result.id,
-          email: result.user.email,
-          mobile: result.user.mobile,
-          role: result.user.role,
-          name: result.ownerName
-        }
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-/**
  * Public merchant self-signup.
  */
 async function registerMerchantSelf(req, res, next) {
@@ -905,12 +765,19 @@ async function registerMerchantSelf(req, res, next) {
     let referrerMerchantId = null;
     if (referredByMerchantCode) {
       const referrer = await prisma.merchant.findUnique({
-        where: { merchantReferralCode: referredByMerchantCode }
+        where: { merchantReferralCode: referredByMerchantCode },
+        include: { user: { select: { mobile: true } } }
       });
       if (!referrer) {
         const err = new Error('Invalid referral code.');
         err.status = 400;
         err.code = 'INVALID_REFERRAL_CODE';
+        return next(err);
+      }
+      if (referrer.user.mobile === mobile) {
+        const err = new Error('You cannot use your own referral code.');
+        err.status = 400;
+        err.code = 'SELF_REFERRAL_NOT_ALLOWED';
         return next(err);
       }
       referrerMerchantId = referrer.id;
@@ -1024,7 +891,6 @@ async function registerMerchantSelf(req, res, next) {
 
 module.exports = {
   register,
-  registerMerchant,
   registerMerchantSelf,
   login,
   logout,

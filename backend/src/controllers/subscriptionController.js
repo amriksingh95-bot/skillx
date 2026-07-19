@@ -225,13 +225,18 @@ async function createMerchantSubscription(req, res, next) {
       'MERCHANT_SUBSCRIPTION_CREATED',
       'MerchantSubscription',
       subscription.id,
-      { merchantId, planId },
+      {
+        merchantId,
+        planId,
+        subscriptionCount: subscription.subscriptionCount,
+        pointsCredited: subscription.renewalBonus
+      },
       ipAddress
     );
 
     res.status(201).json({
       success: true,
-      message: 'Subscription created for merchant successfully.',
+      message: `Subscription created. ${subscription.renewalBonus.toLocaleString()} bonus points credited.`,
       data: subscription
     });
   } catch (error) {

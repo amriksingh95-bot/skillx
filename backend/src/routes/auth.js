@@ -101,20 +101,6 @@ router.post(
 );
 
 router.post(
-  '/register-merchant',
-  [
-    validateMobile,
-    validateEmail,
-    body('businessName').trim().notEmpty().withMessage('Business name is required.'),
-    body('ownerName').trim().notEmpty().withMessage('Owner name is required.'),
-    body('category').trim().notEmpty().withMessage('Category is required.'),
-    validatePassword
-  ],
-  handleValidationErrors,
-  authController.registerMerchant
-);
-
-router.post(
   '/merchant-signup',
   [
     body('businessName').trim().notEmpty().withMessage('Business name is required.'),

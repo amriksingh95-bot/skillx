@@ -121,6 +121,20 @@ async function releaseHeldRewards() {
         where: { id: referral.id },
         data: { instantRewardPaid: true, status: 'completed' }
       });
+
+      const referredMerchant = await tx.merchant.findUnique({
+        where: { id: referral.referredMerchantId },
+        select: { businessName: true }
+      });
+
+      await tx.merchantNotification.create({
+        data: {
+          merchantId: referral.referrerMerchantId,
+          message: `You earned ${INITIAL_REWARD_POINTS} points for referring ${referredMerchant?.businessName || 'a merchant'}!`,
+          type: 'referral',
+          isRead: false
+        }
+      });
     });
 
     results.push({
@@ -245,112 +259,33 @@ async function getLeaderboard() {
 async function getNearbyBusinessesToInvite(merchantId) {
   const merchant = await prisma.merchant.findUnique({
     where: { id: merchantId },
-    select: { id: true, category: true, city: true, latitude: true, longitude: true }
+    select: { id: true, category: true }
   });
 
   if (!merchant) {
     return [];
   }
 
-  const referredMerchantIds = await prisma.merchantReferral.findMany({
-    where: { referrerMerchantId: merchantId },
-    select: { referredMerchantId: true }
-  });
-
-  const alreadyReferredIds = referredMerchantIds.map(r => r.referredMerchantId);
-  alreadyReferredIds.push(merchantId);
-
-  const sameCategory = merchant.category || '';
-
-  const whereClause = {
-    id: { notIn: alreadyReferredIds },
-    status: 'active',
-    isActive: true,
-    category: { not: sameCategory }
+  const CATEGORY_LABELS = {
+    grocery: 'Grocery',
+    cafe: 'Cafe',
+    beauty: 'Salon',
+    gym: 'Gym',
+    fashion: 'Boutique',
+    pharmacy: 'Pharmacy',
+    medical: 'Pharmacy',
+    doctor: 'Clinic',
+    stationery: 'Stationery',
+    electronics: 'Electronics',
+    hotel: 'Hotel',
+    education: 'Education'
   };
 
-  if (merchant.city) {
-    whereClause.city = merchant.city;
-  }
+  const ownCategory = (merchant.category || '').toLowerCase();
 
-  let nearby = await prisma.merchant.findMany({
-    where: whereClause,
-    select: {
-      id: true,
-      businessName: true,
-      ownerName: true,
-      category: true,
-      city: true,
-      address: true,
-      latitude: true,
-      longitude: true,
-      merchantReferralCode: true
-    },
-    take: 20
-  });
-
-  if (nearby.length < 5) {
-    const fallbackWhere = {
-      id: { notIn: alreadyReferredIds },
-      status: 'active',
-      isActive: true
-    };
-
-    if (merchant.city) {
-      fallbackWhere.city = merchant.city;
-    }
-
-    nearby = await prisma.merchant.findMany({
-      where: fallbackWhere,
-      select: {
-        id: true,
-        businessName: true,
-        ownerName: true,
-        category: true,
-        city: true,
-        address: true,
-        latitude: true,
-        longitude: true,
-        merchantReferralCode: true
-      },
-      take: 20
-    });
-  }
-
-  if (nearby.length < 5 && merchant.latitude && merchant.longitude) {
-    const allActive = await prisma.merchant.findMany({
-      where: {
-        id: { notIn: alreadyReferredIds },
-        status: 'active',
-        isActive: true,
-        latitude: { not: null },
-        longitude: { not: null }
-      },
-      select: {
-        id: true,
-        businessName: true,
-        ownerName: true,
-        category: true,
-        city: true,
-        address: true,
-        latitude: true,
-        longitude: true,
-        merchantReferralCode: true
-      }
-    });
-
-    const withDistance = allActive.map(m => {
-      const dx = (m.latitude - merchant.latitude) * 111;
-      const dy = (m.longitude - merchant.longitude) * 111;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      return { ...m, distance };
-    });
-
-    withDistance.sort((a, b) => a.distance - b.distance);
-    nearby = withDistance.slice(0, 20).map(({ distance, ...m }) => m);
-  }
-
-  return nearby;
+  return REFERRAL_CATEGORIES
+    .filter(cat => cat !== ownCategory)
+    .map(cat => ({ category: cat, label: CATEGORY_LABELS[cat] || cat }));
 }
 
 async function getMyReferrals(merchantId) {

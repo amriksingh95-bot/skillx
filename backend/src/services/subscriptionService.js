@@ -3,6 +3,19 @@ const prisma = require('../lib/prisma');
 const GRACE_PERIOD_DAYS = 15;
 
 /**
+ * Return activation/renewal bonus points for a given position.
+ *   0 = first activation → 1500
+ *   1 = renewal 1       → 500
+ *   2 = renewal 2       → 500
+ *   3+                  → 0
+ */
+function getBonusForPosition(position) {
+  if (position <= 0) return 1500;
+  if (position <= 2) return 500;
+  return 0;
+}
+
+/**
  * Get all active subscription plans.
  * @returns {Promise<Array>}
  */
@@ -186,6 +199,12 @@ async function createMerchantSubscriptionRecord(merchantId, plan, paymentRef = n
       data: { status: 'cancelled' }
     });
 
+    // Tapered renewal bonus: count is taken before insert, so equals position directly
+    const subscriptionCount = await tx.merchantSubscription.count({
+      where: { merchantId }
+    });
+    const renewalBonus = getBonusForPosition(subscriptionCount);
+
     // Create new subscription
     const subscription = await tx.merchantSubscription.create({
       data: {
@@ -203,11 +222,11 @@ async function createMerchantSubscriptionRecord(merchantId, plan, paymentRef = n
     await tx.merchant.update({
       where: { id: merchantId },
       data: {
-        pointsBalance: { increment: 1000 }
+        pointsBalance: { increment: renewalBonus }
       }
     });
 
-    return subscription;
+    return { ...subscription, renewalBonus, subscriptionCount };
   });
 }
 
@@ -310,6 +329,7 @@ function calculateRedemptionFee(pointsToRedeem, settings) {
 
 module.exports = {
   GRACE_PERIOD_DAYS,
+  getBonusForPosition,
   getActivePlans,
   getPlanById,
   createPlan,

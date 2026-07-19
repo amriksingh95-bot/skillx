@@ -59,42 +59,12 @@ async function authenticate(req, res, next) {
       return next(err);
     }
 
-    // Query active status and load related entity IDs
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        merchant: true,
-        customer: true
-      }
-    });
-
-    if (!user) {
-      const err = new Error('User not found.');
-      err.status = 401;
-      err.code = 'UNAUTHORIZED';
-      return next(err);
-    }
-
-    if (!user.isActive) {
-      const isDeactivated = user.merchant?.status === 'deactivated';
-      const errMsg = isDeactivated
-        ? 'Your account has been permanently deactivated. Please contact support.'
-        : 'Your account has been suspended. Please contact support.';
-      const errCode = isDeactivated ? 'ACCOUNT_DEACTIVATED' : 'ACCOUNT_SUSPENDED';
-
-      const err = new Error(errMsg);
-      err.status = 403;
-      err.code = errCode;
-      return next(err);
-    }
-
+    // Build req.user directly from decoded JWT payload (no DB lookup)
     req.user = {
-      id: user.id,
-      email: user.email,
-      mobile: user.mobile,
-      role: user.role,
-      merchantId: user.merchant?.id || null,
-      customerId: user.customer?.id || null
+      id: decoded.userId,
+      role: decoded.role,
+      merchantId: decoded.merchantId || null,
+      customerId: decoded.customerId || null
     };
 
     next();

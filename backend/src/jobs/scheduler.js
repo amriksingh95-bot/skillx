@@ -7,6 +7,11 @@ const { runAdExpiryCheck } = require('./adActivationService');
 const { createAuditLog } = require('../services/auditLogService');
 const { releaseHeldRewards } = require('../services/merchantReferralService');
 
+// Verbose logging helper — only logs when SCHEDULER_VERBOSE_LOGS=true
+const verboseLog = (...args) => {
+  if (process.env.SCHEDULER_VERBOSE_LOGS === 'true') verboseLog(...args);
+};
+
 let reminderJob = null;
 let isReminderRunning = false;
 let inactivityJob = null;
@@ -28,22 +33,22 @@ let isReferralRewardRunning = false;
  */
 function startReminderJob() {
   if (reminderJob) {
-    console.log('[Scheduler] Reminder job already running');
+    verboseLog('[Scheduler] Reminder job already running');
     return;
   }
 
   reminderJob = cron.schedule('0 9 * * *', async () => {
     if (isReminderRunning) {
-      console.log('[Scheduler] Previous reminder run still in progress, skipping');
+      verboseLog('[Scheduler] Previous reminder run still in progress, skipping');
       return;
     }
 
     isReminderRunning = true;
-    console.log(`[Scheduler] Starting daily subscription reminders at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting daily subscription reminders at ${new Date().toISOString()}`);
 
     try {
       const summary = await runDailyReminders();
-      console.log(`[Scheduler] Reminder run complete:`, {
+      verboseLog(`[Scheduler] Reminder run complete:`, {
         total: summary.total,
         sent: summary.sent,
         skipped: summary.skipped,
@@ -63,7 +68,7 @@ function startReminderJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Subscription reminder job started (daily at 09:00 UTC)');
+  verboseLog('[Scheduler] Subscription reminder job started (daily at 09:00 UTC)');
 }
 
 /**
@@ -72,22 +77,22 @@ function startReminderJob() {
  */
 function startInactivityJob() {
   if (inactivityJob) {
-    console.log('[Scheduler] Inactivity job already running');
+    verboseLog('[Scheduler] Inactivity job already running');
     return;
   }
 
   inactivityJob = cron.schedule('0 10 * * *', async () => {
     if (isInactivityRunning) {
-      console.log('[Scheduler] Previous inactivity run still in progress, skipping');
+      verboseLog('[Scheduler] Previous inactivity run still in progress, skipping');
       return;
     }
 
     isInactivityRunning = true;
-    console.log(`[Scheduler] Starting daily inactivity summary at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting daily inactivity summary at ${new Date().toISOString()}`);
 
     try {
       const summary = await getInactivitySummary();
-      console.log(`[Scheduler] Inactivity summary:`, {
+      verboseLog(`[Scheduler] Inactivity summary:`, {
         merchants: summary.merchants,
         customers: summary.customers
       });
@@ -114,7 +119,7 @@ function startInactivityJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Inactivity summary job started (daily at 10:00 UTC)');
+  verboseLog('[Scheduler] Inactivity summary job started (daily at 10:00 UTC)');
 }
 
 /**
@@ -123,25 +128,25 @@ function startInactivityJob() {
  */
 function startReengagementJob() {
   if (reengagementJob) {
-    console.log('[Scheduler] Re-engagement job already running');
+    verboseLog('[Scheduler] Re-engagement job already running');
     return;
   }
 
   reengagementJob = cron.schedule('0 11 * * *', async () => {
     if (isReengagementRunning) {
-      console.log('[Scheduler] Previous re-engagement run still in progress, skipping');
+      verboseLog('[Scheduler] Previous re-engagement run still in progress, skipping');
       return;
     }
 
     isReengagementRunning = true;
-    console.log(`[Scheduler] Starting daily re-engagement campaign at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting daily re-engagement campaign at ${new Date().toISOString()}`);
 
     try {
       const summary = await runReengagementCampaign();
       if (summary.skipped) {
-        console.log(`[Scheduler] Re-engagement skipped: ${summary.reason}`);
+        verboseLog(`[Scheduler] Re-engagement skipped: ${summary.reason}`);
       } else {
-        console.log(`[Scheduler] Re-engagement complete:`, {
+        verboseLog(`[Scheduler] Re-engagement complete:`, {
           dormant: summary.dormant,
           neverRedeemed: summary.neverRedeemed,
           highBalance: summary.highBalance
@@ -157,7 +162,7 @@ function startReengagementJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Re-engagement campaign job started (daily at 11:00 UTC)');
+  verboseLog('[Scheduler] Re-engagement campaign job started (daily at 11:00 UTC)');
 }
 
 /**
@@ -166,22 +171,22 @@ function startReengagementJob() {
  */
 function startStaleAdsJob() {
   if (staleAdsJob) {
-    console.log('[Scheduler] Stale ads job already running');
+    verboseLog('[Scheduler] Stale ads job already running');
     return;
   }
 
   staleAdsJob = cron.schedule('0 12 * * *', async () => {
     if (isStaleAdsRunning) {
-      console.log('[Scheduler] Previous stale ads run still in progress, skipping');
+      verboseLog('[Scheduler] Previous stale ads run still in progress, skipping');
       return;
     }
 
     isStaleAdsRunning = true;
-    console.log(`[Scheduler] Starting stale approved ads check at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting stale approved ads check at ${new Date().toISOString()}`);
 
     try {
       const summary = await pauseStaleApprovedAds();
-      console.log(`[Scheduler] Stale ads check complete:`, {
+      verboseLog(`[Scheduler] Stale ads check complete:`, {
         total: summary.total,
         paused: summary.paused,
         failed: summary.failed
@@ -200,7 +205,7 @@ function startStaleAdsJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Stale approved ads auto-pause job started (daily at 12:00 UTC)');
+  verboseLog('[Scheduler] Stale approved ads auto-pause job started (daily at 12:00 UTC)');
 }
 
 /**
@@ -209,22 +214,22 @@ function startStaleAdsJob() {
  */
 function startAdActivationJob() {
   if (adActivationJob) {
-    console.log('[Scheduler] Ad activation job already running');
+    verboseLog('[Scheduler] Ad activation job already running');
     return;
   }
 
   adActivationJob = cron.schedule('*/5 * * * *', async () => {
     if (isAdActivationRunning) {
-      console.log('[Scheduler] Previous ad activation run still in progress, skipping');
+      verboseLog('[Scheduler] Previous ad activation run still in progress, skipping');
       return;
     }
 
     isAdActivationRunning = true;
-    console.log(`[Scheduler] Starting ad expiry check at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting ad expiry check at ${new Date().toISOString()}`);
 
     try {
       const summary = await runAdExpiryCheck();
-      console.log(`[Scheduler] Ad expiry check complete:`, {
+      verboseLog(`[Scheduler] Ad expiry check complete:`, {
         expired: summary.expired,
         failed: summary.failed
       });
@@ -242,7 +247,7 @@ function startAdActivationJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Ad expiry check job started (every 5 minutes)');
+  verboseLog('[Scheduler] Ad expiry check job started (every 5 minutes)');
 }
 
 /**
@@ -251,23 +256,23 @@ function startAdActivationJob() {
  */
 function startStalePendingPaymentsJob() {
   if (stalePendingPaymentsJob) {
-    console.log('[Scheduler] Stale pending payments job already running');
+    verboseLog('[Scheduler] Stale pending payments job already running');
     return;
   }
 
   stalePendingPaymentsJob = cron.schedule('0 14 * * *', async () => {
     if (isStalePendingPaymentsRunning) {
-      console.log('[Scheduler] Previous stale pending payments run still in progress, skipping');
+      verboseLog('[Scheduler] Previous stale pending payments run still in progress, skipping');
       return;
     }
 
     isStalePendingPaymentsRunning = true;
-    console.log(`[Scheduler] Starting stale pending payments check at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting stale pending payments check at ${new Date().toISOString()}`);
 
     try {
       const { remindStalePendingPayments } = require('./stalePendingPaymentsService');
       const summary = await remindStalePendingPayments();
-      console.log(`[Scheduler] Stale pending payments check complete:`, {
+      verboseLog(`[Scheduler] Stale pending payments check complete:`, {
         total: summary.total,
         remindersSent: summary.remindersSent,
         skipped: summary.skipped,
@@ -287,7 +292,7 @@ function startStalePendingPaymentsJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Stale pending payments reminder job started (daily at 14:00 UTC)');
+  verboseLog('[Scheduler] Stale pending payments reminder job started (daily at 14:00 UTC)');
 }
 
 /**
@@ -296,22 +301,22 @@ function startStalePendingPaymentsJob() {
  */
 function startReferralRewardJob() {
   if (referralRewardJob) {
-    console.log('[Scheduler] Referral reward job already running');
+    verboseLog('[Scheduler] Referral reward job already running');
     return;
   }
 
   referralRewardJob = cron.schedule('*/30 * * * *', async () => {
     if (isReferralRewardRunning) {
-      console.log('[Scheduler] Previous referral reward run still in progress, skipping');
+      verboseLog('[Scheduler] Previous referral reward run still in progress, skipping');
       return;
     }
 
     isReferralRewardRunning = true;
-    console.log(`[Scheduler] Starting referral reward release at ${new Date().toISOString()}`);
+    verboseLog(`[Scheduler] Starting referral reward release at ${new Date().toISOString()}`);
 
     try {
       const summary = await releaseHeldRewards();
-      console.log(`[Scheduler] Referral reward release complete:`, {
+      verboseLog(`[Scheduler] Referral reward release complete:`, {
         processed: summary.processed,
         credited: summary.results.filter(r => r.credited).length
       });
@@ -325,7 +330,7 @@ function startReferralRewardJob() {
     timezone: 'UTC'
   });
 
-  console.log('[Scheduler] Referral reward release job started (every 30 minutes)');
+  verboseLog('[Scheduler] Referral reward release job started (every 30 minutes)');
 }
 
 /**
@@ -348,37 +353,37 @@ function stopScheduler() {
   if (reminderJob) {
     reminderJob.stop();
     reminderJob = null;
-    console.log('[Scheduler] Subscription reminder job stopped');
+    verboseLog('[Scheduler] Subscription reminder job stopped');
   }
   if (inactivityJob) {
     inactivityJob.stop();
     inactivityJob = null;
-    console.log('[Scheduler] Inactivity summary job stopped');
+    verboseLog('[Scheduler] Inactivity summary job stopped');
   }
   if (reengagementJob) {
     reengagementJob.stop();
     reengagementJob = null;
-    console.log('[Scheduler] Re-engagement campaign job stopped');
+    verboseLog('[Scheduler] Re-engagement campaign job stopped');
   }
   if (staleAdsJob) {
     staleAdsJob.stop();
     staleAdsJob = null;
-    console.log('[Scheduler] Stale ads auto-pause job stopped');
+    verboseLog('[Scheduler] Stale ads auto-pause job stopped');
   }
   if (adActivationJob) {
     adActivationJob.stop();
     adActivationJob = null;
-    console.log('[Scheduler] Ad activation cycle job stopped');
+    verboseLog('[Scheduler] Ad activation cycle job stopped');
   }
   if (stalePendingPaymentsJob) {
     stalePendingPaymentsJob.stop();
     stalePendingPaymentsJob = null;
-    console.log('[Scheduler] Stale pending payments reminder job stopped');
+    verboseLog('[Scheduler] Stale pending payments reminder job stopped');
   }
   if (referralRewardJob) {
     referralRewardJob.stop();
     referralRewardJob = null;
-    console.log('[Scheduler] Referral reward release job stopped');
+    verboseLog('[Scheduler] Referral reward release job stopped');
   }
 }
 
@@ -391,11 +396,11 @@ async function runNow() {
   }
 
   isReminderRunning = true;
-  console.log(`[Scheduler] Manual reminder run triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual reminder run triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await runDailyReminders();
-    console.log(`[Scheduler] Manual run complete:`, {
+    verboseLog(`[Scheduler] Manual run complete:`, {
       total: summary.total,
       sent: summary.sent,
       skipped: summary.skipped,
@@ -419,11 +424,11 @@ async function runInactivityNow() {
   }
 
   isInactivityRunning = true;
-  console.log(`[Scheduler] Manual inactivity run triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual inactivity run triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await getInactivitySummary();
-    console.log(`[Scheduler] Inactivity run complete:`, summary);
+    verboseLog(`[Scheduler] Inactivity run complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Inactivity run failed:', error.message);
@@ -442,11 +447,11 @@ async function runReengagementNow() {
   }
 
   isReengagementRunning = true;
-  console.log(`[Scheduler] Manual re-engagement run triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual re-engagement run triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await runReengagementCampaign();
-    console.log(`[Scheduler] Re-engagement run complete:`, summary);
+    verboseLog(`[Scheduler] Re-engagement run complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Re-engagement run failed:', error.message);
@@ -495,11 +500,11 @@ async function runStaleAdsNow() {
   }
 
   isStaleAdsRunning = true;
-  console.log(`[Scheduler] Manual stale ads run triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual stale ads run triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await pauseStaleApprovedAds();
-    console.log(`[Scheduler] Manual stale ads run complete:`, summary);
+    verboseLog(`[Scheduler] Manual stale ads run complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Manual stale ads run failed:', error.message);
@@ -518,11 +523,11 @@ async function runAdActivationNow() {
   }
 
   isAdActivationRunning = true;
-  console.log(`[Scheduler] Manual ad expiry check triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual ad expiry check triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await runAdExpiryCheck();
-    console.log(`[Scheduler] Manual ad expiry check complete:`, summary);
+    verboseLog(`[Scheduler] Manual ad expiry check complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Manual ad expiry check failed:', error.message);
@@ -541,12 +546,12 @@ async function runStalePendingPaymentsNow() {
   }
 
   isStalePendingPaymentsRunning = true;
-  console.log(`[Scheduler] Manual stale pending payments run triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual stale pending payments run triggered at ${new Date().toISOString()}`);
 
   try {
     const { remindStalePendingPayments } = require('./stalePendingPaymentsService');
     const summary = await remindStalePendingPayments();
-    console.log(`[Scheduler] Manual stale pending payments run complete:`, summary);
+    verboseLog(`[Scheduler] Manual stale pending payments run complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Manual stale pending payments run failed:', error.message);
@@ -565,11 +570,11 @@ async function runReferralRewardNow() {
   }
 
   isReferralRewardRunning = true;
-  console.log(`[Scheduler] Manual referral reward release triggered at ${new Date().toISOString()}`);
+  verboseLog(`[Scheduler] Manual referral reward release triggered at ${new Date().toISOString()}`);
 
   try {
     const summary = await releaseHeldRewards();
-    console.log(`[Scheduler] Manual referral reward release complete:`, summary);
+    verboseLog(`[Scheduler] Manual referral reward release complete:`, summary);
     return summary;
   } catch (error) {
     console.error('[Scheduler] Manual referral reward release failed:', error.message);

@@ -4,7 +4,7 @@ const ExcelJS = require('exceljs');
 const { v4: uuidv4 } = require('uuid');
 const { getCustomerBalance, processReversal } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
-const { GRACE_PERIOD_DAYS } = require('../services/subscriptionService');
+const { GRACE_PERIOD_DAYS, getBonusForPosition } = require('../services/subscriptionService');
 const { processReferralOnFirstPayment, processReferralOnRenewal } = require('../services/merchantReferralService');
 
 // ── In-memory cache for AdminDashboard (shared, single-entry) ──
@@ -485,6 +485,20 @@ async function getPendingMerchantCount(req, res, next) {
   }
 }
 
+async function getPendingAdCount(req, res, next) {
+  try {
+    const count = await prisma.advertisement.count({ where: { status: 'pending' } });
+
+    res.status(200).json({
+      success: true,
+      message: 'Pending ad count retrieved successfully.',
+      data: { count }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 /**
  * Create a new Merchant.
  */
@@ -539,6 +553,20 @@ async function createMerchant(req, res, next) {
         attempts++;
       }
 
+      // Generate unique referral code
+      let merchantReferralCodeGenerated = '';
+      let referralUnique = false;
+      let referralAttempts = 0;
+      while (!referralUnique && referralAttempts < 10) {
+        const suffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+        merchantReferralCodeGenerated = `REF${suffix}`;
+        const existingRef = await tx.merchant.findUnique({ where: { merchantReferralCode: merchantReferralCodeGenerated } });
+        if (!existingRef) {
+          referralUnique = true;
+        }
+        referralAttempts++;
+      }
+
       const merchant = await tx.merchant.create({
         data: {
           userId: user.id,
@@ -547,7 +575,8 @@ async function createMerchant(req, res, next) {
           email: email || null,
           address: address || null,
           category,
-          merchantCode: merchantCodeGenerated
+          merchantCode: merchantCodeGenerated,
+          merchantReferralCode: merchantReferralCodeGenerated
         },
         include: {
           user: {
@@ -2663,7 +2692,7 @@ async function confirmMerchantPayment(req, res, next) {
 
     if (isFirstActivation) {
       updateData.pointsBalance = {
-        increment: 1000
+        increment: getBonusForPosition(0)
       };
     }
 
@@ -2808,11 +2837,11 @@ async function confirmRenewalPayment(req, res, next) {
         include: { plan: true }
       });
 
-      // Tapered renewal bonus: renewals 1-3 get 1000 pts, renewal 4+ gets 500 pts
+      // Tapered renewal bonus: position derived from subscriptionCount (taken after current row exists)
       const subscriptionCount = await tx.merchantSubscription.count({
         where: { merchantId }
       });
-      const renewalBonus = subscriptionCount <= 4 ? 1000 : 500;
+      const renewalBonus = getBonusForPosition(subscriptionCount - 1);
 
       const updatedMerchant = await tx.merchant.update({
         where: { id: merchantId },
@@ -3058,6 +3087,7 @@ module.exports = {
   rejectMerchant,
   getPendingPayments,
   getPendingMerchantCount,
+  getPendingAdCount,
   confirmMerchantPayment,
   rejectMerchantPayment,
   confirmRenewalPayment,
