@@ -5,12 +5,15 @@ import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
 
+let isLoggingOut = false;
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Clear auth states locally
   const handleLogoutLocal = () => {
@@ -179,15 +182,21 @@ export function AuthProvider({ children }) {
 
   // Logout handler
   const logout = async () => {
+    if (isLoggingOut) return;
+    isLoggingOut = true;
+    setLoggingOut(true);
+
     const storedRefreshToken = localStorage.getItem('refreshToken');
+    handleLogoutLocal();
+    toast.success('Logged out successfully.');
+
     try {
       if (storedRefreshToken) {
-        await api.post('/api/auth/logout', { refreshToken: storedRefreshToken });
+        api.post('/api/auth/logout', { refreshToken: storedRefreshToken }).catch(() => {});
       }
-    } catch (error) {
     } finally {
-      handleLogoutLocal();
-      toast.success('Logged out successfully.');
+      isLoggingOut = false;
+      setLoggingOut(false);
     }
   };
 
@@ -197,6 +206,7 @@ export function AuthProvider({ children }) {
         user,
         accessToken,
         loading,
+        loggingOut,
         login,
         logout,
         isAuthenticated: !!user

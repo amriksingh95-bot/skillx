@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import Badge from './Badge';
 
 export default function Navbar({ onMenuToggle }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loggingOut } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
 
   if (!user) return null;
@@ -55,7 +55,8 @@ export default function Navbar({ onMenuToggle }) {
         {/* Logout */}
         <button
           onClick={logout}
-          className="p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30"
+          disabled={loggingOut}
+          className="p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30 disabled:opacity-50 disabled:pointer-events-none"
           title="Sign Out"
         >
           <LogOut className="w-4 h-4" />
