@@ -71,6 +71,7 @@ const merchantLinks = [
   { path: '/merchant/redeem-points', label: 'Redeem Points', icon: Gift },
   { path: '/merchant/transactions', label: 'Transactions', icon: History },
   { path: '/merchant/reports', label: 'Reports', icon: BarChart3 },
+  { path: '/merchant/referrals', label: 'Refer & Earn', icon: Award },
   { path: '/merchant/subscription', label: 'Subscription', icon: CreditCard },
   { path: '/merchant/topup', label: 'Top Up Points', icon: Wallet },
   { path: '/merchant/promote', label: 'Promote Business', icon: Megaphone },
@@ -94,6 +95,22 @@ export default function Sidebar({ isOpen, onClose }) {
       ...prev,
       [label]: !prev[label],
     }));
+  };
+
+  const isLinkActive = (path) => {
+    const [basePath, searchStr] = path.split('?');
+    if (location.pathname !== basePath) return false;
+    
+    if (searchStr) {
+      const searchParams = new URLSearchParams(searchStr);
+      const currentParams = new URLSearchParams(location.search);
+      for (const [key, val] of searchParams.entries()) {
+        if (currentParams.get(key) !== val) return false;
+      }
+      return true;
+    }
+    
+    return !location.search;
   };
 
   const renderNavLink = (link) => {
@@ -129,13 +146,14 @@ export default function Sidebar({ isOpen, onClose }) {
           key={link.path}
           to={link.path}
           onClick={onClose}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-              isActive
+          className={() => {
+            const active = isLinkActive(link.path);
+            return `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              active
                 ? 'bg-primary text-white shadow-sm shadow-primary/20'
                 : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-            }`
-          }
+            }`;
+          }}
         >
           <link.icon className="w-[18px] h-[18px] shrink-0" />
           <span className="truncate">{link.label}</span>
@@ -148,13 +166,14 @@ export default function Sidebar({ isOpen, onClose }) {
         key={link.path}
         to={link.path}
         onClick={onClose}
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-            isActive
+        className={() => {
+          const active = isLinkActive(link.path);
+          return `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+            active
               ? 'bg-primary text-white shadow-sm shadow-primary/20'
               : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-          }`
-        }
+          }`;
+        }}
       >
         <link.icon className="w-[18px] h-[18px] shrink-0" />
         <span className="truncate">{link.label}</span>

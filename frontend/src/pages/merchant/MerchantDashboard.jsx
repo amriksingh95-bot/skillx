@@ -21,7 +21,8 @@ import {
   MessageSquare,
   X,
   Copy,
-  CreditCard
+  CreditCard,
+  Bell
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import Badge from '../../components/Badge';
@@ -58,6 +59,8 @@ export default function MerchantDashboard() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(true);
   const [mockQr, setMockQr] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -99,6 +102,24 @@ export default function MerchantDashboard() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/api/merchant/referral/notifications?limit=5');
+      setNotifications(res.data.data?.notifications || []);
+    } catch (err) {
+      // Silent fail — notifications are non-critical
+    }
+  };
+
+  const markNotificationRead = async (id) => {
+    try {
+      await api.patch(`/api/merchant/referral/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      // Silent fail
+    }
+  };
+
   const fetchSubscription = async () => {
     try {
       setSubscriptionLoading(true);
@@ -115,7 +136,7 @@ export default function MerchantDashboard() {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats()]);
+      await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats(), fetchNotifications()]);
     } finally {
       setLoading(false);
       toast.success('Stats updated!');
@@ -125,7 +146,7 @@ export default function MerchantDashboard() {
   useEffect(() => {
     const initData = async () => {
       try {
-        await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats()]);
+        await Promise.allSettled([fetchDashboardData(), fetchCustomerInsights(), fetchSubscription(), fetchMerchantProfile(), fetchEcosystemStats(), fetchNotifications()]);
       } finally {
         setLoading(false);
       }
@@ -282,13 +303,77 @@ export default function MerchantDashboard() {
             Track customer transactions and manage point allocations.
           </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center btn-press relative"
+            >
+              <Bell className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {notifications.filter(n => !n.isRead).length}
+                </span>
+              )}
+            </button>
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100 dark:border-dark-border flex items-center justify-between">
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">Notifications</p>
+                  <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 btn-press">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-6 text-center">
+                      <Bell className="w-6 h-6 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                      <p className="text-xs text-slate-400">No notifications yet</p>
+                    </div>
+                  ) : (
+                    notifications.map(n => (
+                      <div
+                        key={n.id}
+                        onClick={() => !n.isRead && markNotificationRead(n.id)}
+                        className={`px-4 py-3 border-b border-slate-50 dark:border-dark-border cursor-pointer transition-colors ${
+                          n.isRead ? 'bg-white dark:bg-dark-card' : 'bg-emerald-50/50 dark:bg-emerald-950/10'
+                        } hover:bg-slate-50 dark:hover:bg-slate-800/50`}
+                      >
+                        <div className="flex items-start gap-2">
+                          {!n.isRead && <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 shrink-0" />}
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {n.message}
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          {new Date(n.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="px-4 py-2 border-t border-slate-100 dark:border-dark-border">
+                    <button
+                      onClick={() => { setShowNotifications(false); navigate('/merchant/referrals'); }}
+                      className="w-full text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline btn-press"
+                    >
+                      View all notifications
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Subscription Status Banner */}
@@ -360,7 +445,7 @@ export default function MerchantDashboard() {
         </div>
       )}
 
-      {/* Expiring Soon Banner � dismissible, 3-day window */}
+      {/* Expiring Soon Banner — dismissible, 3-day window */}
       {!subscriptionLoading && subscription?.status === 'active' && subscription?.endDate && !dismissedExpiryBanner && (() => {
         const daysLeft = Math.ceil((new Date(subscription.endDate) - new Date()) / (1000 * 60 * 60 * 24));
         if (daysLeft > 3) return null;
@@ -538,18 +623,14 @@ export default function MerchantDashboard() {
 
               <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm text-center">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Customers Brought to You by the Network
+                  Repeat Customers
                 </span>
                 <span className="text-3xl font-extrabold text-[#00bcd4] mt-2 block">
-                  {insightsLoading ? '...' : (insights?.fromNetwork ?? insights?.repeatCustomers ?? 0)}
+                  {insightsLoading ? '...' : (insights?.repeatCustomers ?? 0)}
                 </span>
               </div>
             </div>
           </div>
-
-          <p className="text-[10.5px] text-slate-400 leading-relaxed mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
-            🌐 <strong>Network Effect:</strong> Customers brought by the network shopped at your store but originally signed up via other merchants or sources. The larger the network grows, the more customers discover your brand!
-          </p>
 
           {ecosystemStats && ecosystemStats.totalCustomers > 5 && (
             <p className="text-[10.5px] text-slate-400 mt-3">

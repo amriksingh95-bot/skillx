@@ -20,6 +20,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [merchantCode, setMerchantCode] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
   const [attemptsRemaining, setAttemptsRemaining] = useState(null);
@@ -192,6 +193,13 @@ export default function Register() {
         merchantCode: merchantCode || null
       });
       toast.success(response.data.message || 'Account created successfully! Welcome to SkillXT.');
+      if (response.data.data?.referralWarning) {
+        toast(response.data.data.referralWarning, {
+          icon: '\u26A0\uFE0F',
+          duration: 6000,
+          style: { background: '#FFF7ED', color: '#9A3412', border: '1px solid #FDBA74' }
+        });
+      }
       try {
         const loggedUser = await login(mobile, password);
         if (loggedUser?.role === 'customer') {
@@ -342,6 +350,7 @@ export default function Register() {
                   {attemptsRemaining === 0 ? 'Verification locked.' : `${attemptsRemaining} ${attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining`}
                 </p>
               )}
+
             </div>
 
             <div className="flex gap-3">

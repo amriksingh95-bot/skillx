@@ -27,7 +27,7 @@ To explain how customers earn bonus points by referring new users to SkillXT, in
 ### 3. Registration and Validation Flow
 - **Entry Point**: New customer submits registration with an optional `referralCode` field via POST /api/auth/register.
 - **OTP Requirement**: Registration still requires verified OTP regardless of referral code presence.
-- **Referral Code Validation**: The backend looks up the referrer by code (case-insensitive exact match). If not found, registration proceeds without bonus — no error is thrown.
+- **Referral Code Validation**: The backend looks up the referrer by code (case-insensitive exact match). If not found, registration proceeds without bonus — no error is thrown. A `referralWarning` field is included in the registration response so the frontend can inform the customer their code was not recognized.
 - **Monthly Cap Check**: Before awarding points, the system counts how many customers the referrer has already referred in the current calendar month. If the count is 10 or more, no bonus is awarded.
 - **Active Merchant Requirement**: The system selects the first active merchant (`merchant.isActive = true`) to serve as the merchantId on bonus transactions. If no active merchant exists, no bonus is awarded.
 - **Atomic Transaction**: Referral bonuses are created inside the same Prisma $transaction that creates the User and Customer records.

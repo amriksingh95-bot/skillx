@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -6,47 +6,49 @@ import { MerchantSubscriptionProvider } from './context/MerchantSubscriptionCont
 import Layout from './components/Layout';
 import RoleGuard from './components/RoleGuard';
 import ErrorBoundary from './components/ErrorBoundary';
+import LoadingSpinner from './components/LoadingSpinner';
 import FloatingChatbot from './components/FloatingChatbot';
 
-// Auth Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
-import MerchantSignup from './pages/auth/MerchantSignup';
-import ForgotPassword from './pages/ForgotPassword';
-import Suspended from './pages/Suspended';
+// Auth Pages — lazy-loaded
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const MerchantSignup = React.lazy(() => import('./pages/auth/MerchantSignup'));
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
+const Suspended = React.lazy(() => import('./pages/Suspended'));
 
-// Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminMerchants from './pages/admin/AdminMerchants';
-import AdminCustomers from './pages/admin/AdminCustomers';
-import AdminTransactions from './pages/admin/AdminTransactions';
-import AdminReports from './pages/admin/AdminReports';
-import AdminRewardSettings from './pages/admin/AdminRewardSettings';
-import AdminAuditLogs from './pages/admin/AdminAuditLogs';
-import AdminComplaints from './pages/admin/AdminComplaints';
-import AdvertisementsPage from './pages/admin/AdvertisementsPage';
-import AdminSubscriptionPlans from './pages/admin/AdminSubscriptionPlans';
-import AdminMerchantSubscriptions from './pages/admin/AdminMerchantSubscriptions';
-import AdminInactivityMonitor from './pages/admin/AdminInactivityMonitor';
-import ChatbotAnalytics from './pages/admin/ChatbotAnalytics';
-import TopUpRequests from './pages/admin/TopUpRequests';
-import AdPayments from './pages/admin/AdPayments';
+// Admin Pages — lazy-loaded
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminMerchants = React.lazy(() => import('./pages/admin/AdminMerchants'));
+const AdminCustomers = React.lazy(() => import('./pages/admin/AdminCustomers'));
+const AdminTransactions = React.lazy(() => import('./pages/admin/AdminTransactions'));
+const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
+const AdminRewardSettings = React.lazy(() => import('./pages/admin/AdminRewardSettings'));
+const AdminAuditLogs = React.lazy(() => import('./pages/admin/AdminAuditLogs'));
+const AdminComplaints = React.lazy(() => import('./pages/admin/AdminComplaints'));
+const AdvertisementsPage = React.lazy(() => import('./pages/admin/AdvertisementsPage'));
+const AdminSubscriptionPlans = React.lazy(() => import('./pages/admin/AdminSubscriptionPlans'));
+const AdminMerchantSubscriptions = React.lazy(() => import('./pages/admin/AdminMerchantSubscriptions'));
+const AdminInactivityMonitor = React.lazy(() => import('./pages/admin/AdminInactivityMonitor'));
+const ChatbotAnalytics = React.lazy(() => import('./pages/admin/ChatbotAnalytics'));
+const TopUpRequests = React.lazy(() => import('./pages/admin/TopUpRequests'));
+const AdPayments = React.lazy(() => import('./pages/admin/AdPayments'));
 
-// Merchant Pages
-import MerchantDashboard from './pages/merchant/MerchantDashboard';
-import MerchantAddPoints from './pages/merchant/MerchantAddPoints';
-import MerchantRedeemPoints from './pages/merchant/MerchantRedeemPoints';
-import MerchantTransactions from './pages/merchant/MerchantTransactions';
-import MerchantSubscription from './pages/merchant/MerchantSubscription';
-import MerchantReports from './pages/merchant/MerchantReports';
-import TopUp from './pages/merchant/TopUp';
-import MerchantProfile from './pages/merchant/MerchantProfile';
-import MerchantPromote from './pages/merchant/MerchantPromote';
+// Merchant Pages — lazy-loaded
+const MerchantDashboard = React.lazy(() => import('./pages/merchant/MerchantDashboard'));
+const MerchantAddPoints = React.lazy(() => import('./pages/merchant/MerchantAddPoints'));
+const MerchantRedeemPoints = React.lazy(() => import('./pages/merchant/MerchantRedeemPoints'));
+const MerchantTransactions = React.lazy(() => import('./pages/merchant/MerchantTransactions'));
+const MerchantSubscription = React.lazy(() => import('./pages/merchant/MerchantSubscription'));
+const MerchantReports = React.lazy(() => import('./pages/merchant/MerchantReports'));
+const TopUp = React.lazy(() => import('./pages/merchant/TopUp'));
+const MerchantProfile = React.lazy(() => import('./pages/merchant/MerchantProfile'));
+const MerchantPromote = React.lazy(() => import('./pages/merchant/MerchantPromote'));
+const MerchantReferral = React.lazy(() => import('./pages/merchant/MerchantReferral'));
 
-// Customer Pages
-import CustomerDashboard from './pages/customer/CustomerDashboard';
-import FindPartners from './pages/customer/FindPartners';
-import CustomerProfile from './pages/customer/CustomerProfile';
+// Customer Pages — lazy-loaded
+const CustomerDashboard = React.lazy(() => import('./pages/customer/CustomerDashboard'));
+const FindPartners = React.lazy(() => import('./pages/customer/FindPartners'));
+const CustomerProfile = React.lazy(() => import('./pages/customer/CustomerProfile'));
 
 
 // Helper to redirect to dashboard depending on role after log-in
@@ -65,6 +67,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
         <Router>
+          <Suspense fallback={<LoadingSpinner fullPage />}>
           <Routes>
 {/* Public Auth Routes */}
 <Route path="/login" element={<Login />} />
@@ -258,6 +261,14 @@ export default function App() {
                 }
               />
               <Route
+                path="merchant/referrals"
+                element={
+                  <RoleGuard allowedRoles={['merchant']}>
+                    <MerchantReferral />
+                  </RoleGuard>
+                }
+              />
+              <Route
                 path="merchant/topup"
                 element={
                   <RoleGuard allowedRoles={['merchant']}>
@@ -305,6 +316,7 @@ export default function App() {
             {/* Catch-all 404 -> Redirects to root */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
           <FloatingChatbot />
           </Router>
         </AuthProvider>

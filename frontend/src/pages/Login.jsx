@@ -54,17 +54,6 @@ export default function Login() {
   const [showMerchantPassword, setShowMerchantPassword] = useState(false);
   const [isMerchantLoading, setMerchantLoading] = useState(false);
 
-  // Merchant signup states
-  const [merchantSignupMode, setMerchantSignupMode] = useState(false);
-  const [signupMobile, setSignupMobile] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupBusinessName, setSignupBusinessName] = useState('');
-  const [signupOwnerName, setSignupOwnerName] = useState('');
-  const [signupCategory, setSignupCategory] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [isSignupLoading, setSignupLoading] = useState(false);
-
   // Form states for Admin
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -139,41 +128,6 @@ export default function Login() {
       toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
     } finally {
       setAdminLoading(false);
-    }
-  };
-
-  const MERCHANT_CATEGORIES = [
-    'Grocery', 'Cafe', 'Fashion', 'Electronics', 'Restaurant',
-    'Pharmacy', 'Gym', 'Salon', 'Hotel', 'Other'
-  ];
-
-  const handleMerchantSignup = async (e) => {
-    e.preventDefault();
-    if (!signupMobile || !signupBusinessName || !signupOwnerName || !signupCategory || !signupPassword) {
-      return toast.error('Please fill in all required fields.');
-    }
-    setSignupLoading(true);
-    try {
-      await api.post('/api/auth/register-merchant', {
-        mobile: signupMobile,
-        email: signupEmail || undefined,
-        businessName: signupBusinessName,
-        ownerName: signupOwnerName,
-        category: signupCategory,
-        password: signupPassword
-      });
-      toast.success('Merchant account created! Logging you in...');
-      const loggedUser = await login(signupMobile, signupPassword);
-      if (loggedUser.role !== 'merchant') {
-        toast.error('Something went wrong. Please login manually.');
-        return;
-      }
-      navigate('/merchant/dashboard', { replace: true });
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Registration failed. Please try again.';
-      toast.error(msg);
-    } finally {
-      setSignupLoading(false);
     }
   };
 
@@ -292,7 +246,6 @@ export default function Login() {
             <div
               onClick={() => {
                 setSelectedRole('merchant');
-                setMerchantSignupMode(false);
                 setActiveScreen('form');
               }}
               className="bg-[#1a2035] border border-slate-800 rounded-2xl p-5 shadow-xl cursor-pointer hover:shadow-cyan-500/10 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] flex items-start gap-4 cyan-glow"
@@ -368,7 +321,6 @@ export default function Login() {
       <button
         onClick={() => {
           setSelectedRole(null);
-          setMerchantSignupMode(false);
           setActiveScreen('select');
         }}
         className="absolute top-6 left-6 p-2.5 text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-xl transition-all flex items-center justify-center z-20 btn-press"
@@ -499,7 +451,7 @@ export default function Login() {
             </p>
           )}
 
-          {selectedRole === 'merchant' && !merchantSignupMode && (
+          {selectedRole === 'merchant' && (
             <div className="bg-[#1a2035] border border-slate-800 rounded-3xl p-6 shadow-xl green-glow transition-all duration-300">
               <form onSubmit={handleMerchantSubmit} className="space-y-4" autoComplete="off">
                 
@@ -574,13 +526,12 @@ export default function Login() {
 
                 {/* Footer Strip */}
                 <div className="flex items-center justify-between pt-4 border-t border-slate-800/60 mt-4">
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); setMerchantSignupMode(true); }}
+                  <Link
+                    to="/merchant-signup"
                     className="text-xs font-extrabold text-[#16a34a] hover:text-emerald-500 hover:underline"
                   >
                     Create merchant account
-                  </a>
+                  </Link>
                   <button
                     type="submit"
                     disabled={isMerchantLoading}
@@ -588,173 +539,6 @@ export default function Login() {
                   >
                     {isMerchantLoading && <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" />}
                     Sign In As Merchant
-                  </button>
-                </div>
-
-              </form>
-            </div>
-          )}
-
-          {selectedRole === 'merchant' && merchantSignupMode && (
-            <div className="bg-[#1a2035] border border-slate-800 rounded-3xl p-6 shadow-xl green-glow transition-all duration-300">
-              <form onSubmit={handleMerchantSignup} className="space-y-3">
-                
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 shrink-0">
-                    <Store className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-white">Merchant Sign Up</h3>
-                    <p className="text-xs text-slate-400">Create your merchant account and start earning</p>
-                  </div>
-                </div>
-
-                {/* Mobile */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Mobile Number *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Smartphone className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold"
-                      placeholder="9000000001"
-                      value={signupMobile}
-                      onChange={(e) => setSignupMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    />
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Email (optional)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Mail className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <input
-                      type="email"
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold"
-                      placeholder="merchant@domain.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Business Name */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Business Name *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Store className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold"
-                      placeholder="e.g. Fresh Mart"
-                      value={signupBusinessName}
-                      onChange={(e) => setSignupBusinessName(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Owner Name */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Owner Name *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <User className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold"
-                      placeholder="e.g. Rahul Sharma"
-                      value={signupOwnerName}
-                      onChange={(e) => setSignupOwnerName(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Business Category *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Wallet className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <select
-                      required
-                      className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold appearance-none"
-                      value={signupCategory}
-                      onChange={(e) => setSignupCategory(e.target.value)}
-                    >
-                      <option value="">Select category</option>
-                      {MERCHANT_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat.toLowerCase()}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Password *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                      <Lock className="w-4 h-4 text-slate-400" />
-                    </span>
-                    <input
-                      type={showSignupPassword ? 'text' : 'password'}
-                      required
-                      className="w-full pl-10 pr-10 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold"
-                      placeholder="Min 8 chars, upper, lower, number, symbol"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSignupPassword(!showSignupPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 btn-press"
-                    >
-                      {showSignupPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Footer Strip */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-800/60 mt-3">
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); setMerchantSignupMode(false); }}
-                    className="text-xs font-extrabold text-slate-400 hover:text-slate-300 hover:underline flex items-center gap-1"
-                  >
-                    <ArrowLeft className="w-3 h-3" /> Back to login
-                  </a>
-                  <button
-                    type="submit"
-                    disabled={isSignupLoading}
-                    className="px-5 py-2.5 bg-[#16a34a] hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-emerald-500/10 flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isSignupLoading && <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" />}
-                    Create Account
                   </button>
                 </div>
 

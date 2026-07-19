@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Store, User, Smartphone, Lock, CheckCircle, ArrowLeft, Eye, EyeOff, Navigation2, ShieldCheck } from 'lucide-react';
+import { Store, User, Smartphone, Lock, CheckCircle, ArrowLeft, Eye, EyeOff, Navigation2, ShieldCheck, Gift } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import SkillXTLogo from '../../components/SkillXTLogo';
@@ -27,6 +27,8 @@ export default function MerchantSignup() {
   const [locationError, setLocationError] = useState('');
   const [errors, setErrors] = useState({});
   const [successData, setSuccessData] = useState(null);
+  const [referredByMerchantCode, setReferredByMerchantCode] = useState('');
+  const [hasReferralFromUrl, setHasReferralFromUrl] = useState(false);
 
   // OTP state
   const [otp, setOtp] = useState('');
@@ -43,6 +45,15 @@ export default function MerchantSignup() {
     }, 1000);
     return () => clearInterval(interval);
   }, [lockoutTimer]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mcode = params.get('mcode');
+    if (mcode) {
+      setReferredByMerchantCode(mcode.toUpperCase());
+      setHasReferralFromUrl(true);
+    }
+  }, []);
 
   const validate = () => {
     const newErrors = {};
@@ -265,7 +276,8 @@ export default function MerchantSignup() {
         city: formData.city,
         address: formData.address || undefined,
         latitude: formData.latitude || undefined,
-        longitude: formData.longitude || undefined
+        longitude: formData.longitude || undefined,
+        referredByMerchantCode: referredByMerchantCode || undefined
       });
 
       setSuccessData({
@@ -582,6 +594,29 @@ export default function MerchantSignup() {
                   onChange={handleChange}
                 />
               </div>
+            </div>
+
+            {/* Referral Code (optional) */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Referral Code (optional)
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                  <Gift className="w-4 h-4 text-slate-400" />
+                </span>
+                <input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold uppercase"
+                  placeholder="Enter referral code"
+                  value={referredByMerchantCode}
+                  onChange={(e) => setReferredByMerchantCode(e.target.value.toUpperCase())}
+                  readOnly={hasReferralFromUrl}
+                />
+              </div>
+              {hasReferralFromUrl && (
+                <p className="text-xs text-emerald-400 mt-1">Referral code applied from link</p>
+              )}
             </div>
 
             {/* Send OTP Button */}
