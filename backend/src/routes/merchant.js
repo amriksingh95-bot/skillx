@@ -159,11 +159,11 @@ router.post(
 // Screenshot upload for subscription renewal payment proof
 router.post(
   '/subscription/renewal/upload-screenshot',
+  upload.single('screenshot'),
   [
     body('subscriptionId').isUUID().withMessage('Invalid subscription ID.')
   ],
   validate,
-  upload.single('screenshot'),
   merchantController.uploadRenewalScreenshot
 );
 
