@@ -375,7 +375,7 @@ async function lookupCustomer(req, res, next) {
           rupeesPerPoint: parseFloat(settings.rupeesPerPoint),
           minRedeemPoints: settings.minRedeemPoints
         } : {
-          pointsPerRupee: 0.01,
+          pointsPerRupee: 0.10,
           rupeesPerPoint: 0.10,
           minRedeemPoints: 100
         }
@@ -387,7 +387,7 @@ async function lookupCustomer(req, res, next) {
 }
 
 /**
- * Scan customer QR code and return profile + balance.
+ * Scan customer QR code and return customer details with reward settings.
  */
 async function scanCustomerQR(req, res, next) {
   const { qrCode } = req.body;
@@ -463,7 +463,7 @@ async function scanCustomerQR(req, res, next) {
           rupeesPerPoint: parseFloat(settings.rupeesPerPoint),
           minRedeemPoints: settings.minRedeemPoints
         } : {
-          pointsPerRupee: 0.01,
+          pointsPerRupee: 0.10,
           rupeesPerPoint: 0.10,
           minRedeemPoints: 100
         }

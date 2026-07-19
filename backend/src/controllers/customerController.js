@@ -118,7 +118,7 @@ async function getProfile(req, res, next) {
           minRedeemPoints: rewardSettings.minRedeemPoints,
           pointsExpiryDays: rewardSettings.pointsExpiryDays
         } : {
-          pointsPerRupee: 0.01,
+          pointsPerRupee: 0.10,
           rupeesPerPoint: 0.10,
           minRedeemPoints: 100,
           pointsExpiryDays: 365

@@ -114,7 +114,7 @@ export default function MerchantAddPoints() {
       setEstimatedPoints(0);
       return;
     }
-    const pointsPerRupee = customer?.rewardSettings?.pointsPerRupee ?? 0.01;
+    const pointsPerRupee = customer?.rewardSettings?.pointsPerRupee ?? 0.10;
     const points = Math.floor(parseFloat(purchaseAmount) * pointsPerRupee);
     setEstimatedPoints(points);
   }, [purchaseAmount, customer?.rewardSettings?.pointsPerRupee]);

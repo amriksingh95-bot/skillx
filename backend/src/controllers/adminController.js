@@ -2089,7 +2089,7 @@ async function getRewardSettings(req, res, next) {
         pointsExpiryDays: settings.pointsExpiryDays,
         redemptionFeePercent: parseFloat(settings.redemptionFeePercent)
       } : {
-        pointsPerRupee: 0.01,
+        pointsPerRupee: 0.10,
         rupeesPerPoint: 0.10,
         minRedeemPoints: 100,
         pointsExpiryDays: 365,

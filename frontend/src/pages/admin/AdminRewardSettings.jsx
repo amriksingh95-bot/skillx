@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import Modal from '../../components/Modal';
 
 export default function AdminRewardSettings() {
-  const [pointsPerRupee, setPointsPerRupee] = useState('0.01');
+  const [pointsPerRupee, setPointsPerRupee] = useState('0.10');
   const [rupeesPerPoint, setRupeesPerPoint] = useState('0.10');
   const [minRedeemPoints, setMinRedeemPoints] = useState('100');
   const [pointsExpiryDays, setPointsExpiryDays] = useState('365');
@@ -13,7 +13,7 @@ export default function AdminRewardSettings() {
 
   // Currently saved settings in DB
   const [savedSettings, setSavedSettings] = useState({
-    pointsPerRupee: 0.01,
+    pointsPerRupee: 0.10,
     rupeesPerPoint: 0.10,
     minRedeemPoints: 100,
     pointsExpiryDays: 365,

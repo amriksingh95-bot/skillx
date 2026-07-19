@@ -25,7 +25,7 @@ async function main() {
   console.log('Seeding RewardSettings...');
   await prisma.rewardSettings.create({
     data: {
-      pointsPerRupee: 0.01,  // Rs. 100 = 1 point
+      pointsPerRupee: 0.10,  // Rs. 10 = 1 point
       rupeesPerPoint: 0.10,  // 100 points = Rs. 10
       minRedeemPoints: 100,
       pointsExpiryDays: 365,  // Points expire after 1 year
