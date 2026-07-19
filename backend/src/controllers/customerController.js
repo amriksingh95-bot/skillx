@@ -15,18 +15,49 @@ async function getProfile(req, res, next) {
   const customerId = req.user.customerId;
 
   try {
-    const customer = await prisma.customer.findUnique({
-      where: { id: customerId },
-      include: {
-        user: {
-          select: {
-            email: true,
-            mobile: true,
-            createdAt: true
+    // Combine customer.findUnique (Hop 1) with all customerId-only Hop 2 tasks
+    // into a single parallel batch. Only the referrer lookup depends on the result.
+    const [customer, pointsSummary, totalVisits, referredCount, referralAggregate, rewardSettings] = await Promise.all([
+      prisma.customer.findUnique({
+        where: { id: customerId },
+        include: {
+          user: {
+            select: {
+              email: true,
+              mobile: true,
+              createdAt: true
+            }
           }
         }
-      }
-    });
+      }),
+
+      getPointsSummary(customerId),
+
+      prisma.transaction.count({
+        where: {
+          customerId,
+          status: 'completed'
+        }
+      }),
+
+      prisma.customer.count({
+        where: { referredBy: customerId }
+      }),
+
+      // Use aggregate instead of findMany + JS reduce
+      prisma.transaction.aggregate({
+        where: {
+          customerId,
+          status: 'completed',
+          remarks: { contains: 'Referral' }
+        },
+        _sum: { points: true }
+      }),
+
+      prisma.rewardSettings.findFirst({
+        orderBy: { updatedAt: 'desc' }
+      })
+    ]);
 
     if (!customer) {
       const err = new Error('Customer profile not found.');
@@ -35,46 +66,18 @@ async function getProfile(req, res, next) {
       return next(err);
     }
 
-    // Get comprehensive points summary (includes expiry info)
-    const pointsSummary = await getPointsSummary(customerId);
-    const { activeBalance: balance, lifetimeEarned, lifetimeRedeemed } = pointsSummary;
-
-    const totalVisits = await prisma.transaction.count({
-      where: {
-        customerId,
-        status: 'completed'
-      }
-    });
-
-    let referredByName = null;
+    // Referrer lookup — only if customer has a referrer, runs after the parallel batch
+    let referrer = null;
     if (customer.referredBy) {
-      const referrer = await prisma.customer.findUnique({
+      referrer = await prisma.customer.findUnique({
         where: { id: customer.referredBy },
         select: { name: true }
       });
-      if (referrer) {
-        referredByName = referrer.name;
-      }
     }
 
-    const referredCount = await prisma.customer.count({
-      where: { referredBy: customerId }
-    });
-
-    const referralTransactions = await prisma.transaction.findMany({
-      where: {
-        customerId,
-        status: 'completed',
-        remarks: { contains: 'Referral' }
-      },
-      select: { points: true }
-    });
-    const referredPoints = referralTransactions.reduce((sum, tx) => sum + tx.points, 0);
-
-    // Get global reward settings for rate display
-    const rewardSettings = await prisma.rewardSettings.findFirst({
-      orderBy: { updatedAt: 'desc' }
-    });
+    const { activeBalance: balance, lifetimeEarned, lifetimeRedeemed } = pointsSummary;
+    const referredByName = referrer ? referrer.name : null;
+    const referredPoints = referralAggregate._sum.points || 0;
 
     res.status(200).json({
       success: true,

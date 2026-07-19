@@ -1,9 +1,17 @@
 const prisma = require('../lib/prisma');
 
+function calcChange(current, previous) {
+  if (!previous || previous === 0) return { change: 0, direction: 'flat' };
+  const diff = ((current - previous) / previous) * 100;
+  return { change: parseFloat(diff.toFixed(1)), direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat' };
+}
+
 /**
- * Get transaction volume trends (WoW and MoM).
+ * Get all trend data (transactions, users, revenue) in 2 queries.
+ * Query 1: Transaction aggregates for all date ranges via CASE WHEN.
+ * Query 2: MerchantSubscription aggregates for thisMonth/lastMonth via CASE WHEN.
  */
-async function getTransactionTrends() {
+async function getTrendsData() {
   const now = new Date();
 
   const thisWeekStart = new Date(now);
@@ -12,7 +20,6 @@ async function getTransactionTrends() {
 
   const lastWeekStart = new Date(thisWeekStart);
   lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-
   const lastWeekEnd = new Date(thisWeekStart);
   lastWeekEnd.setMilliseconds(-1);
 
@@ -20,219 +27,127 @@ async function getTransactionTrends() {
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
-  const [thisWeek, lastWeek, thisMonth, lastMonth] = await Promise.all([
+  const [txRows, subRows] = await Promise.all([
     prisma.$queryRaw`
       SELECT
-        COUNT(*)::int AS "transactionCount",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END), 0)::numeric AS "volume",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END), 0)::int AS "pointsIssued",
-        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points ELSE 0 END), 0)::int AS "pointsRedeemed",
-        COUNT(DISTINCT "customerId")::int AS "uniqueCustomers",
-        COUNT(DISTINCT "merchantId")::int AS "uniqueMerchants"
+        COUNT(*)::int AS "txCount",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisWeekStart} THEN 1 ELSE 0 END), 0)::int AS "thisWeekCount",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisWeekStart} THEN CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END ELSE 0 END), 0)::numeric AS "thisWeekVolume",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisWeekStart} THEN CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END ELSE 0 END), 0)::int AS "thisWeekPointsIssued",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisWeekStart} THEN CASE WHEN type = 'redeem' THEN points ELSE 0 END ELSE 0 END), 0)::int AS "thisWeekPointsRedeemed",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${thisWeekStart} THEN "customerId" END)::int AS "thisWeekCustomers",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${thisWeekStart} THEN "merchantId" END)::int AS "thisWeekMerchants",
+
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN 1 ELSE 0 END), 0)::int AS "lastWeekCount",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END ELSE 0 END), 0)::numeric AS "lastWeekVolume",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END ELSE 0 END), 0)::int AS "lastWeekPointsIssued",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN CASE WHEN type = 'redeem' THEN points ELSE 0 END ELSE 0 END), 0)::int AS "lastWeekPointsRedeemed",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN "customerId" END)::int AS "lastWeekCustomers",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd} THEN "merchantId" END)::int AS "lastWeekMerchants",
+
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisMonthStart} THEN 1 ELSE 0 END), 0)::int AS "thisMonthTxCount",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisMonthStart} THEN CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END ELSE 0 END), 0)::numeric AS "thisMonthVolume",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisMonthStart} THEN CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END ELSE 0 END), 0)::int AS "thisMonthPointsIssued",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisMonthStart} THEN CASE WHEN type = 'redeem' THEN points ELSE 0 END ELSE 0 END), 0)::int AS "thisMonthPointsRedeemed",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${thisMonthStart} THEN "customerId" END)::int AS "thisMonthCustomers",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${thisMonthStart} THEN "merchantId" END)::int AS "thisMonthMerchants",
+
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN 1 ELSE 0 END), 0)::int AS "lastMonthTxCount",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END ELSE 0 END), 0)::numeric AS "lastMonthVolume",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END ELSE 0 END), 0)::int AS "lastMonthPointsIssued",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN CASE WHEN type = 'redeem' THEN points ELSE 0 END ELSE 0 END), 0)::int AS "lastMonthPointsRedeemed",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN "customerId" END)::int AS "lastMonthCustomers",
+        COUNT(DISTINCT CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} THEN "merchantId" END)::int AS "lastMonthMerchants",
+
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${thisMonthStart} AND type = 'redeem' AND "reversedById" IS NULL THEN "platformFee" ELSE 0 END), 0)::numeric AS "thisMonthFees",
+        COALESCE(SUM(CASE WHEN "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd} AND type = 'redeem' AND "reversedById" IS NULL THEN "platformFee" ELSE 0 END), 0)::numeric AS "lastMonthFees"
       FROM "Transaction"
-      WHERE status = 'completed' AND "createdAt" >= ${thisWeekStart}
+      WHERE status = 'completed'
     `,
     prisma.$queryRaw`
       SELECT
-        COUNT(*)::int AS "transactionCount",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END), 0)::numeric AS "volume",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END), 0)::int AS "pointsIssued",
-        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points ELSE 0 END), 0)::int AS "pointsRedeemed",
-        COUNT(DISTINCT "customerId")::int AS "uniqueCustomers",
-        COUNT(DISTINCT "merchantId")::int AS "uniqueMerchants"
-      FROM "Transaction"
-      WHERE status = 'completed' AND "createdAt" >= ${lastWeekStart} AND "createdAt" <= ${lastWeekEnd}
-    `,
-    prisma.$queryRaw`
-      SELECT
-        COUNT(*)::int AS "transactionCount",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END), 0)::numeric AS "volume",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END), 0)::int AS "pointsIssued",
-        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points ELSE 0 END), 0)::int AS "pointsRedeemed",
-        COUNT(DISTINCT "customerId")::int AS "uniqueCustomers",
-        COUNT(DISTINCT "merchantId")::int AS "uniqueMerchants"
-      FROM "Transaction"
-      WHERE status = 'completed' AND "createdAt" >= ${thisMonthStart}
-    `,
-    prisma.$queryRaw`
-      SELECT
-        COUNT(*)::int AS "transactionCount",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN "purchaseAmount" ELSE 0 END), 0)::numeric AS "volume",
-        COALESCE(SUM(CASE WHEN type IN ('earn','transfer') THEN points ELSE 0 END), 0)::int AS "pointsIssued",
-        COALESCE(SUM(CASE WHEN type = 'redeem' THEN points ELSE 0 END), 0)::int AS "pointsRedeemed",
-        COUNT(DISTINCT "customerId")::int AS "uniqueCustomers",
-        COUNT(DISTINCT "merchantId")::int AS "uniqueMerchants"
-      FROM "Transaction"
-      WHERE status = 'completed' AND "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd}
+        COALESCE(SUM(CASE WHEN ms."createdAt" >= ${thisMonthStart} THEN p.price ELSE 0 END), 0)::numeric AS "thisMonthRevenue",
+        COUNT(CASE WHEN ms."createdAt" >= ${thisMonthStart} THEN 1 END)::int AS "thisMonthCount",
+        COALESCE(SUM(CASE WHEN ms."createdAt" >= ${lastMonthStart} AND ms."createdAt" <= ${lastMonthEnd} THEN p.price ELSE 0 END), 0)::numeric AS "lastMonthRevenue",
+        COUNT(CASE WHEN ms."createdAt" >= ${lastMonthStart} AND ms."createdAt" <= ${lastMonthEnd} THEN 1 END)::int AS "lastMonthCount"
+      FROM "MerchantSubscription" ms
+      JOIN "SubscriptionPlan" p ON p.id = ms."planId"
     `
   ]);
 
-  const tw = thisWeek[0] || {};
-  const lw = lastWeek[0] || {};
-  const tm = thisMonth[0] || {};
-  const lm = lastMonth[0] || {};
+  const r = txRows[0] || {};
+  const s = subRows[0] || {};
 
-  function calcChange(current, previous) {
-    if (!previous || previous === 0) return { change: 0, direction: 'flat' };
-    const diff = ((current - previous) / previous) * 100;
-    return { change: parseFloat(diff.toFixed(1)), direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat' };
-  }
-
-  return {
+  const transactions = {
     weekOverWeek: {
       thisWeek: {
-        transactionCount: tw.transactionCount || 0,
-        volume: parseFloat(tw.volume || 0),
-        pointsIssued: tw.pointsIssued || 0,
-        pointsRedeemed: tw.pointsRedeemed || 0,
-        uniqueCustomers: tw.uniqueCustomers || 0,
-        uniqueMerchants: tw.uniqueMerchants || 0
+        transactionCount: r.thisWeekCount || 0,
+        volume: parseFloat(r.thisWeekVolume || 0),
+        pointsIssued: r.thisWeekPointsIssued || 0,
+        pointsRedeemed: r.thisWeekPointsRedeemed || 0,
+        uniqueCustomers: r.thisWeekCustomers || 0,
+        uniqueMerchants: r.thisWeekMerchants || 0
       },
       lastWeek: {
-        transactionCount: lw.transactionCount || 0,
-        volume: parseFloat(lw.volume || 0),
-        pointsIssued: lw.pointsIssued || 0,
-        pointsRedeemed: lw.pointsRedeemed || 0,
-        uniqueCustomers: lw.uniqueCustomers || 0,
-        uniqueMerchants: lw.uniqueMerchants || 0
+        transactionCount: r.lastWeekCount || 0,
+        volume: parseFloat(r.lastWeekVolume || 0),
+        pointsIssued: r.lastWeekPointsIssued || 0,
+        pointsRedeemed: r.lastWeekPointsRedeemed || 0,
+        uniqueCustomers: r.lastWeekCustomers || 0,
+        uniqueMerchants: r.lastWeekMerchants || 0
       },
       changes: {
-        transactionCount: calcChange(tw.transactionCount || 0, lw.transactionCount || 0),
-        volume: calcChange(parseFloat(tw.volume || 0), parseFloat(lw.volume || 0)),
-        uniqueCustomers: calcChange(tw.uniqueCustomers || 0, lw.uniqueCustomers || 0),
-        uniqueMerchants: calcChange(tw.uniqueMerchants || 0, lw.uniqueMerchants || 0)
+        transactionCount: calcChange(r.thisWeekCount || 0, r.lastWeekCount || 0),
+        volume: calcChange(parseFloat(r.thisWeekVolume || 0), parseFloat(r.lastWeekVolume || 0)),
+        uniqueCustomers: calcChange(r.thisWeekCustomers || 0, r.lastWeekCustomers || 0),
+        uniqueMerchants: calcChange(r.thisWeekMerchants || 0, r.lastWeekMerchants || 0)
       }
     },
     monthOverMonth: {
       thisMonth: {
-        transactionCount: tm.transactionCount || 0,
-        volume: parseFloat(tm.volume || 0),
-        pointsIssued: tm.pointsIssued || 0,
-        pointsRedeemed: tm.pointsRedeemed || 0,
-        uniqueCustomers: tm.uniqueCustomers || 0,
-        uniqueMerchants: tm.uniqueMerchants || 0
+        transactionCount: r.thisMonthTxCount || 0,
+        volume: parseFloat(r.thisMonthVolume || 0),
+        pointsIssued: r.thisMonthPointsIssued || 0,
+        pointsRedeemed: r.thisMonthPointsRedeemed || 0,
+        uniqueCustomers: r.thisMonthCustomers || 0,
+        uniqueMerchants: r.thisMonthMerchants || 0
       },
       lastMonth: {
-        transactionCount: lm.transactionCount || 0,
-        volume: parseFloat(lm.volume || 0),
-        pointsIssued: lm.pointsIssued || 0,
-        pointsRedeemed: lm.pointsRedeemed || 0,
-        uniqueCustomers: lm.uniqueCustomers || 0,
-        uniqueMerchants: lm.uniqueMerchants || 0
+        transactionCount: r.lastMonthTxCount || 0,
+        volume: parseFloat(r.lastMonthVolume || 0),
+        pointsIssued: r.lastMonthPointsIssued || 0,
+        pointsRedeemed: r.lastMonthPointsRedeemed || 0,
+        uniqueCustomers: r.lastMonthCustomers || 0,
+        uniqueMerchants: r.lastMonthMerchants || 0
       },
       changes: {
-        transactionCount: calcChange(tm.transactionCount || 0, lm.transactionCount || 0),
-        volume: calcChange(parseFloat(tm.volume || 0), parseFloat(lm.volume || 0)),
-        uniqueCustomers: calcChange(tm.uniqueCustomers || 0, lm.uniqueCustomers || 0),
-        uniqueMerchants: calcChange(tm.uniqueMerchants || 0, lm.uniqueMerchants || 0)
+        transactionCount: calcChange(r.thisMonthTxCount || 0, r.lastMonthTxCount || 0),
+        volume: calcChange(parseFloat(r.thisMonthVolume || 0), parseFloat(r.lastMonthVolume || 0)),
+        uniqueCustomers: calcChange(r.thisMonthCustomers || 0, r.lastMonthCustomers || 0),
+        uniqueMerchants: calcChange(r.thisMonthMerchants || 0, r.lastMonthMerchants || 0)
       }
     }
   };
-}
 
-/**
- * Get user activity trends (MoM active users).
- */
-async function getUserTrends() {
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-
-  const [thisMonthCustomers, lastMonthCustomers, thisMonthMerchants, lastMonthMerchants] = await Promise.all([
-    prisma.$queryRaw`
-      SELECT COUNT(DISTINCT t."customerId")::int AS "activeCount"
-      FROM "Transaction" t
-      WHERE t.status = 'completed' AND t."createdAt" >= ${thisMonthStart}
-    `,
-    prisma.$queryRaw`
-      SELECT COUNT(DISTINCT t."customerId")::int AS "activeCount"
-      FROM "Transaction" t
-      WHERE t.status = 'completed' AND t."createdAt" >= ${lastMonthStart} AND t."createdAt" <= ${lastMonthEnd}
-    `,
-    prisma.$queryRaw`
-      SELECT COUNT(DISTINCT t."merchantId")::int AS "activeCount"
-      FROM "Transaction" t
-      WHERE t.status = 'completed' AND t."createdAt" >= ${thisMonthStart}
-    `,
-    prisma.$queryRaw`
-      SELECT COUNT(DISTINCT t."merchantId")::int AS "activeCount"
-      FROM "Transaction" t
-      WHERE t.status = 'completed' AND t."createdAt" >= ${lastMonthStart} AND t."createdAt" <= ${lastMonthEnd}
-    `
-  ]);
-
-  const thisC = thisMonthCustomers[0]?.activeCount || 0;
-  const lastC = lastMonthCustomers[0]?.activeCount || 0;
-  const thisM = thisMonthMerchants[0]?.activeCount || 0;
-  const lastM = lastMonthMerchants[0]?.activeCount || 0;
-
-  function calcChange(current, previous) {
-    if (!previous || previous === 0) return { change: 0, direction: 'flat' };
-    const diff = ((current - previous) / previous) * 100;
-    return { change: parseFloat(diff.toFixed(1)), direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat' };
-  }
-
-  return {
+  const users = {
     customers: {
-      thisMonth: thisC,
-      lastMonth: lastC,
-      change: calcChange(thisC, lastC)
+      thisMonth: r.thisMonthCustomers || 0,
+      lastMonth: r.lastMonthCustomers || 0,
+      change: calcChange(r.thisMonthCustomers || 0, r.lastMonthCustomers || 0)
     },
     merchants: {
-      thisMonth: thisM,
-      lastMonth: lastM,
-      change: calcChange(thisM, lastM)
+      thisMonth: r.thisMonthMerchants || 0,
+      lastMonth: r.lastMonthMerchants || 0,
+      change: calcChange(r.thisMonthMerchants || 0, r.lastMonthMerchants || 0)
     }
   };
-}
 
-/**
- * Get revenue trends (MoM platform fee + subscription revenue).
- */
-async function getRevenueTrends() {
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const thisFee = parseFloat(r.thisMonthFees || 0);
+  const lastFee = parseFloat(r.lastMonthFees || 0);
+  const thisRev = parseFloat(s.thisMonthRevenue || 0);
+  const lastRev = parseFloat(s.lastMonthRevenue || 0);
 
-  const [thisMonthFees, lastMonthFees, thisMonthSubs, lastMonthSubs] = await Promise.all([
-    prisma.$queryRaw`
-      SELECT COALESCE(SUM("platformFee"), 0)::numeric AS "totalFee"
-      FROM "Transaction"
-      WHERE type = 'redeem' AND status = 'completed' AND "reversedById" IS NULL AND "createdAt" >= ${thisMonthStart}
-    `,
-    prisma.$queryRaw`
-      SELECT COALESCE(SUM("platformFee"), 0)::numeric AS "totalFee"
-      FROM "Transaction"
-      WHERE type = 'redeem' AND status = 'completed' AND "reversedById" IS NULL AND "createdAt" >= ${lastMonthStart} AND "createdAt" <= ${lastMonthEnd}
-    `,
-    prisma.$queryRaw`
-      SELECT COUNT(*)::int AS "count", COALESCE(SUM(p.price), 0)::numeric AS "revenue"
-      FROM "MerchantSubscription" ms
-      JOIN "SubscriptionPlan" p ON p.id = ms."planId"
-      WHERE ms."createdAt" >= ${thisMonthStart}
-    `,
-    prisma.$queryRaw`
-      SELECT COUNT(*)::int AS "count", COALESCE(SUM(p.price), 0)::numeric AS "revenue"
-      FROM "MerchantSubscription" ms
-      JOIN "SubscriptionPlan" p ON p.id = ms."planId"
-      WHERE ms."createdAt" >= ${lastMonthStart} AND ms."createdAt" <= ${lastMonthEnd}
-    `
-  ]);
-
-  const thisFee = parseFloat(thisMonthFees[0]?.totalFee || 0);
-  const lastFee = parseFloat(lastMonthFees[0]?.totalFee || 0);
-  const thisRev = parseFloat(thisMonthSubs[0]?.revenue || 0);
-  const lastRev = parseFloat(lastMonthSubs[0]?.revenue || 0);
-
-  function calcChange(current, previous) {
-    if (!previous || previous === 0) return { change: 0, direction: 'flat' };
-    const diff = ((current - previous) / previous) * 100;
-    return { change: parseFloat(diff.toFixed(1)), direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat' };
-  }
-
-  return {
+  const revenue = {
     platformFees: {
       thisMonth: thisFee,
       lastMonth: lastFee,
@@ -241,13 +156,35 @@ async function getRevenueTrends() {
     subscriptionRevenue: {
       thisMonth: thisRev,
       lastMonth: lastRev,
-      count: thisMonthSubs[0]?.count || 0,
+      count: s.thisMonthCount || 0,
       change: calcChange(thisRev, lastRev)
     }
   };
+
+  return { transactions, users, revenue };
+}
+
+/**
+ * Backward-compatible wrappers that delegate to getTrendsData.
+ * These exist so the controller can still destructure individual functions if needed.
+ */
+async function getTransactionTrends() {
+  const { transactions } = await getTrendsData();
+  return transactions;
+}
+
+async function getUserTrends() {
+  const { users } = await getTrendsData();
+  return users;
+}
+
+async function getRevenueTrends() {
+  const { revenue } = await getTrendsData();
+  return revenue;
 }
 
 module.exports = {
+  getTrendsData,
   getTransactionTrends,
   getUserTrends,
   getRevenueTrends

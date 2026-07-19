@@ -606,36 +606,37 @@ async function getExpiringPoints(customerId, daysAhead = 30) {
  */
 async function getPointsSummary(customerId) {
   const now = new Date();
-  const thirtyDaysFromNow = new Date(now);
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  // Active balance (non-expired entries)
-  const activeBalance = await getCustomerBalance(customerId);
+  // All 5 queries are independent reads — run in parallel
+  const [activeBalance, lifetimeEarned, lifetimeRedeemed, expiringInfo, expiredPoints] = await Promise.all([
+    // Active balance (non-expired entries)
+    getCustomerBalance(customerId),
 
-  // Lifetime earned (all positive entries, including expired)
-  const lifetimeEarned = await prisma.pointsLedger.aggregate({
-    where: { customerId, pointsChange: { gt: 0 } },
-    _sum: { pointsChange: true }
-  });
+    // Lifetime earned (all positive entries, including expired)
+    prisma.pointsLedger.aggregate({
+      where: { customerId, pointsChange: { gt: 0 } },
+      _sum: { pointsChange: true }
+    }),
 
-  // Lifetime redeemed (all negative entries)
-  const lifetimeRedeemed = await prisma.pointsLedger.aggregate({
-    where: { customerId, pointsChange: { lt: 0 } },
-    _sum: { pointsChange: true }
-  });
+    // Lifetime redeemed (all negative entries)
+    prisma.pointsLedger.aggregate({
+      where: { customerId, pointsChange: { lt: 0 } },
+      _sum: { pointsChange: true }
+    }),
 
-  // Points expiring within 30 days
-  const expiringInfo = await getExpiringPoints(customerId, 30);
+    // Points expiring within 30 days
+    getExpiringPoints(customerId, 30),
 
-  // Total expired points (entries where expiresAt is in the past and pointsChange > 0)
-  const expiredPoints = await prisma.pointsLedger.aggregate({
-    where: {
-      customerId,
-      pointsChange: { gt: 0 },
-      expiresAt: { not: null, lte: now }
-    },
-    _sum: { pointsChange: true }
-  });
+    // Total expired points (entries where expiresAt is in the past and pointsChange > 0)
+    prisma.pointsLedger.aggregate({
+      where: {
+        customerId,
+        pointsChange: { gt: 0 },
+        expiresAt: { not: null, lte: now }
+      },
+      _sum: { pointsChange: true }
+    })
+  ]);
 
   return {
     activeBalance,

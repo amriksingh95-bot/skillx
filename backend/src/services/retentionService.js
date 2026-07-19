@@ -12,14 +12,14 @@ async function getCustomerRetentionRate() {
   const lastPeriodStart = new Date(thisPeriodStart);
   lastPeriodStart.setDate(lastPeriodStart.getDate() - 30);
 
-  const [thisPeriodCustomers, lastPeriodCustomers, retainedCustomers] = await Promise.all([
+  const [thisPeriodResult, lastPeriodResult, retainedResult] = await Promise.all([
     prisma.$queryRaw`
-      SELECT DISTINCT "customerId" AS id
+      SELECT COUNT(DISTINCT "customerId")::int AS count
       FROM "Transaction"
       WHERE status = 'completed' AND "createdAt" >= ${thisPeriodStart}
     `,
     prisma.$queryRaw`
-      SELECT DISTINCT "customerId" AS id
+      SELECT COUNT(DISTINCT "customerId")::int AS count
       FROM "Transaction"
       WHERE status = 'completed' AND "createdAt" >= ${lastPeriodStart} AND "createdAt" < ${thisPeriodStart}
     `,
@@ -32,9 +32,9 @@ async function getCustomerRetentionRate() {
     `
   ]);
 
-  const thisCount = thisPeriodCustomers.length;
-  const lastCount = lastPeriodCustomers.length;
-  const retained = retainedCustomers[0]?.count || 0;
+  const thisCount = thisPeriodResult[0]?.count || 0;
+  const lastCount = lastPeriodResult[0]?.count || 0;
+  const retained = retainedResult[0]?.count || 0;
 
   const retentionRate = lastCount > 0 ? parseFloat(((retained / lastCount) * 100).toFixed(1)) : 100;
   const churnRate = parseFloat((100 - retentionRate).toFixed(1));
@@ -61,14 +61,14 @@ async function getMerchantRetentionRate() {
   const lastPeriodStart = new Date(thisPeriodStart);
   lastPeriodStart.setDate(lastPeriodStart.getDate() - 30);
 
-  const [thisPeriodMerchants, lastPeriodMerchants, retainedMerchants] = await Promise.all([
+  const [thisPeriodResult, lastPeriodResult, retainedResult] = await Promise.all([
     prisma.$queryRaw`
-      SELECT DISTINCT "merchantId" AS id
+      SELECT COUNT(DISTINCT "merchantId")::int AS count
       FROM "Transaction"
       WHERE status = 'completed' AND "createdAt" >= ${thisPeriodStart}
     `,
     prisma.$queryRaw`
-      SELECT DISTINCT "merchantId" AS id
+      SELECT COUNT(DISTINCT "merchantId")::int AS count
       FROM "Transaction"
       WHERE status = 'completed' AND "createdAt" >= ${lastPeriodStart} AND "createdAt" < ${thisPeriodStart}
     `,
@@ -81,9 +81,9 @@ async function getMerchantRetentionRate() {
     `
   ]);
 
-  const thisCount = thisPeriodMerchants.length;
-  const lastCount = lastPeriodMerchants.length;
-  const retained = retainedMerchants[0]?.count || 0;
+  const thisCount = thisPeriodResult[0]?.count || 0;
+  const lastCount = lastPeriodResult[0]?.count || 0;
+  const retained = retainedResult[0]?.count || 0;
 
   const retentionRate = lastCount > 0 ? parseFloat(((retained / lastCount) * 100).toFixed(1)) : 100;
   const churnRate = parseFloat((100 - retentionRate).toFixed(1));
