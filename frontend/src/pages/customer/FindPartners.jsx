@@ -3,7 +3,7 @@ import api from '../../services/api';
 import { 
   Search, MapPin, Phone, Mail, Store, ShoppingCart, Navigation,
   Coffee, Scissors, Stethoscope, Pill, Shirt, BookOpen, 
-  Dumbbell, Wrench, Hotel, GraduationCap, Info, AlertCircle 
+  Dumbbell, Wrench, Hotel, GraduationCap, Info, AlertCircle, Layers 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
@@ -32,18 +32,18 @@ export default function FindPartners() {
 
   // Category filter list
   const categoryPills = [
-    { id: 'all', label: '?? All' },
-    { id: 'grocery', label: '?? Grocery' },
-    { id: 'cafe', label: '? Cafe & Restaurant' },
-    { id: 'beauty', label: '?? Beauty & Salon' },
-    { id: 'doctor', label: '?? Doctor & Clinic' },
-    { id: 'pharmacy', label: '?? Pharmacy' },
-    { id: 'fashion', label: '?? Fashion & Clothing' },
-    { id: 'stationery', label: '?? Stationery & Books' },
-    { id: 'gym', label: '??? Gym & Fitness' },
-    { id: 'electronics', label: '?? Electronics & Repair' },
-    { id: 'hotel', label: '?? Hotel & Travel' },
-    { id: 'education', label: '?? Education' }
+    { id: 'all', label: 'All', Icon: Layers },
+    { id: 'grocery', label: 'Grocery', Icon: ShoppingCart },
+    { id: 'cafe', label: 'Cafe & Restaurant', Icon: Coffee },
+    { id: 'beauty', label: 'Beauty & Salon', Icon: Scissors },
+    { id: 'doctor', label: 'Doctor & Clinic', Icon: Stethoscope },
+    { id: 'pharmacy', label: 'Pharmacy', Icon: Pill },
+    { id: 'fashion', label: 'Fashion & Clothing', Icon: Shirt },
+    { id: 'stationery', label: 'Stationery & Books', Icon: BookOpen },
+    { id: 'gym', label: 'Gym & Fitness', Icon: Dumbbell },
+    { id: 'electronics', label: 'Electronics & Repair', Icon: Wrench },
+    { id: 'hotel', label: 'Hotel & Travel', Icon: Hotel },
+    { id: 'education', label: 'Education', Icon: GraduationCap }
   ];
 
   // Extract unique cities from merchants
@@ -153,11 +153,11 @@ export default function FindPartners() {
       <div>
         <h1 className="text-2xl font-black text-slate-800 dark:text-white">Find Partners</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Discover SkillXT merchants near you � earn and redeem points at all listed outlets
+          Discover SkillXT merchants near you — earn and redeem points at all listed outlets
         </p>
       </div>
 
-      {/* SECTION 1 � SEARCH BAR */}
+      {/* SECTION 1 — SEARCH BAR */}
       <div className="relative">
         <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
           <Search className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function FindPartners() {
         />
       </div>
 
-      {/* SECTION 1.5 � CITY FILTER DROPDOWN */}
+      {/* SECTION 1.5 — CITY FILTER DROPDOWN */}
       {uniqueCities.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">City:</span>
@@ -188,7 +188,7 @@ export default function FindPartners() {
         </div>
       )}
 
-      {/* SECTION 2 � CATEGORY FILTER PILLS */}
+      {/* SECTION 2 — CATEGORY FILTER PILLS */}
       <div 
         className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none"
         style={{
@@ -209,13 +209,14 @@ export default function FindPartners() {
                   : 'bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
               } btn-press`}
             >
+              <pill.Icon className="w-3.5 h-3.5 shrink-0" />
               {pill.label}
             </button>
           );
         })}
       </div>
 
-      {/* SECTION 3 � RESULTS COUNT + SORT */}
+      {/* SECTION 3 — RESULTS COUNT + SORT */}
       <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-700/40 pt-4 flex-wrap gap-3">
         <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">
           Showing {filteredMerchants.length} {filteredMerchants.length === 1 ? 'partner' : 'partners'}
@@ -235,7 +236,7 @@ export default function FindPartners() {
         </div>
       </div>
 
-      {/* SECTION 4 � MERCHANT CARDS GRID */}
+      {/* SECTION 4 — MERCHANT CARDS GRID */}
       {filteredMerchants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredMerchants.map((m) => {
@@ -328,7 +329,7 @@ export default function FindPartners() {
           })}
         </div>
       ) : (
-        /* SECTION 5 � EMPTY STATE */
+        /* SECTION 5 — EMPTY STATE */
         <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6">
           <div className="p-4 bg-slate-100 dark:bg-slate-800/40 text-slate-400 rounded-2xl mb-4">
             <Store className="w-8 h-8 text-slate-400" />

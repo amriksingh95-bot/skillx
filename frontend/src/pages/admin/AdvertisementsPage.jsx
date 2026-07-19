@@ -25,7 +25,7 @@ export default function AdvertisementsPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
 
-  const tabs = ['All', 'Pending', 'Approved', 'Rejected', 'Expired', 'Live', 'Paused', 'Queued'];
+  const tabs = ['All', 'Pending', 'Approved', 'Rejected', 'Expired', 'Live', 'Paused'];
 
   const getSuggestedResumeAction = (ad) => {
     const hasConfirmedPayment = ad.payments?.some(p => p.status === 'confirmed');
@@ -695,7 +695,7 @@ export default function AdvertisementsPage() {
                 fontWeight: 'bold',
                 fontSize: '16px'
               }}
-            >�</button>
+            ><X className="w-4 h-4" /></button>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import Modal from './Modal';
+import { getIconEmoji } from '../constants/adThemes';
 
 const pulseStyle = (
   <style>{`
@@ -308,7 +309,7 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
         >
           {ad.imageUrl && !imgError ? (
             <img src={ad.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} onError={() => setImgError(true)} />
-          ) : ad.icon || '🏪'}
+          ) : getIconEmoji(ad.icon)}
         </div>
         <div style={{ minWidth: 0, flex: '1 1 auto', maxWidth: '100%' }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word' }}>

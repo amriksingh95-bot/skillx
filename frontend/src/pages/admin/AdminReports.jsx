@@ -245,7 +245,7 @@ export default function AdminReports() {
       header: 'Top-Ups',
       render: (row) => {
         const { failedTopUps, lateTopUps } = row.metrics;
-        if (failedTopUps === 0 && lateTopUps === 0) return <span className="text-xs text-slate-400">�</span>;
+        if (failedTopUps === 0 && lateTopUps === 0) return <span className="text-xs text-slate-400">—</span>;
         return (
           <div className="text-xs space-y-0.5">
             {failedTopUps > 0 && <div className="text-red-500 font-bold">{failedTopUps} failed</div>}
@@ -468,7 +468,7 @@ export default function AdminReports() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="font-bold text-base text-slate-800 dark:text-white">Points Liability Trend</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Weekly outstanding balance � last 12 weeks (issued - redeemed)</p>
+            <p className="text-xs text-slate-400 mt-0.5">Weekly outstanding balance — last 12 weeks (issued - redeemed)</p>
           </div>
           <button
             onClick={fetchLiabilityTrend}
@@ -554,7 +554,7 @@ export default function AdminReports() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="font-bold text-base text-slate-800 dark:text-white">Merchant Health</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Active merchant tier classification � critical, warning, healthy</p>
+            <p className="text-xs text-slate-400 mt-0.5">Active merchant tier classification — critical, warning, healthy</p>
           </div>
           <button
             onClick={fetchMerchantHealth}

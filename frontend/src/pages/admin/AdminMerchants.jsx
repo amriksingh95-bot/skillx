@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle } from 'lucide-react';
+import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // --- Predefined categories (must match your original dropdown list) -----------
@@ -40,10 +41,7 @@ function generateRandomPassword() {
   return passwordArray.join('');
 }
 
-function getInitialTab() {
-  const tab = new URLSearchParams(window.location.search).get('tab');
-  return (tab === 'pending' || tab === 'paymentPending') ? tab : 'all';
-}
+// Removed getInitialTab (now query-driven)
 
 export default function AdminMerchants() {
   const [merchants, setMerchants] = useState([]);
@@ -64,8 +62,9 @@ export default function AdminMerchants() {
   const [merchantToDeactivate, setMerchantToDeactivate] = useState(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState(getInitialTab);
+  // Tab State (driven by URL query params)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'all';
   const [paymentPendingList, setPaymentPendingList] = useState([]);
   const [paymentPendingPagination, setPaymentPendingPagination] = useState(null);
 
@@ -614,7 +613,7 @@ export default function AdminMerchants() {
           accessor: 'user',
           render: (row) => (
             <div>
-              <span className="text-slate-800 dark:text-white block">{row.user?.mobile ? `+91 ${row.user.mobile}` : '�'}</span>
+              <span className="text-slate-800 dark:text-white block">{row.user?.mobile ? `+91 ${row.user.mobile}` : '—'}</span>
             </div>
           )
         },
@@ -760,7 +759,7 @@ export default function AdminMerchants() {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700">
         <button
-          onClick={() => { setActiveTab('all'); setPage(1); setSearch(''); }}
+          onClick={() => { setSearchParams({ tab: 'all' }); setPage(1); setSearch(''); }}
           className={`px-4 py-2.5 text-sm font-bold transition-colors border-b-2 ${
             activeTab === 'all'
               ? 'border-primary text-primary'
@@ -770,7 +769,7 @@ export default function AdminMerchants() {
           All Merchants
         </button>
         <button
-          onClick={() => { setActiveTab('pending'); setPage(1); setSearch(''); }}
+          onClick={() => { setSearchParams({ tab: 'pending' }); setPage(1); setSearch(''); }}
           className={`px-4 py-2.5 text-sm font-bold transition-colors border-b-2 ${
             activeTab === 'pending'
               ? 'border-primary text-primary'
@@ -780,7 +779,7 @@ export default function AdminMerchants() {
           Pending Approval
         </button>
         <button
-          onClick={() => { setActiveTab('paymentPending'); setPage(1); setSearch(''); }}
+          onClick={() => { setSearchParams({ tab: 'paymentPending' }); setPage(1); setSearch(''); }}
           className={`px-4 py-2.5 text-sm font-bold transition-colors border-b-2 ${
             activeTab === 'paymentPending'
               ? 'border-primary text-primary'
@@ -791,10 +790,9 @@ export default function AdminMerchants() {
         </button>
       </div>
 
-      {/* Context Banner */}
-      {activeTab === 'pending' && (
+      {/* Context Banner */}      {activeTab === 'pending' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl">
-          <span className="text-amber-500 text-lg leading-none mt-0.5">?</span>
+          <span className="text-amber-500 text-lg leading-none mt-0.5"><Clock className="w-5 h-5" /></span>
           <div>
             <p className="text-sm font-extrabold text-amber-700 dark:text-amber-400">These merchants have registered but are waiting for your approval.</p>
             <p className="text-xs text-amber-600 dark:text-amber-500 font-semibold mt-0.5">Review their details and click <span className="underline">Approve</span> to move them to payment, or <span className="underline">Reject</span> to decline their application. They cannot use the platform until approved.</p>
@@ -804,9 +802,9 @@ export default function AdminMerchants() {
 
       {activeTab === 'paymentPending' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
-          <span className="text-blue-500 text-lg leading-none mt-0.5">??</span>
+          <span className="text-blue-500 text-lg leading-none mt-0.5"><CheckCircle className="w-5 h-5" /></span>
           <div>
-            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ?399/month subscription.</p>
+            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ₹399/month subscription.</p>
             <p className="text-xs text-blue-600 dark:text-blue-500 font-semibold mt-0.5">Check your bank/UPI for their payment screenshot. Click <span className="underline">Confirm Payment</span> to activate their account. They get 1,000 bonus points on activation.</p>
           </div>
         </div>
@@ -814,10 +812,10 @@ export default function AdminMerchants() {
 
       {activeTab === 'all' && (
         <div className="flex items-start gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
-          <span className="text-slate-400 text-lg leading-none mt-0.5">??</span>
+          <span className="text-slate-400 text-lg leading-none mt-0.5"><Store className="w-5 h-5" /></span>
           <div>
-            <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">Complete merchant directory � all statuses.</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending ? approved ? payment_pending ? active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
+            <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">Complete merchant directory - all statuses.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending -> approved -> payment_pending -> active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
           </div>
         </div>
       )}
@@ -966,7 +964,7 @@ export default function AdminMerchants() {
                 ))}
               </select>
 
-              {/* ? NEW: Custom category box � only shows when Other is selected */}
+              {/* ✅ NEW: Custom category box — only shows when Other is selected */}
               {category === 'other' && (
                 <div className="mt-3">
                   <label className="block text-xs font-bold text-blue-500 uppercase tracking-wider mb-2">
@@ -976,7 +974,7 @@ export default function AdminMerchants() {
                     type="text"
                     required
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-blue-400 dark:border-blue-500 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="e.g. bakery, salon, hardware�"
+                    placeholder="e.g. bakery, salon, hardware…"
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
                   />
@@ -1127,7 +1125,7 @@ export default function AdminMerchants() {
                         required
                         style={{ color: isCategoryModified ? '#facc15' : undefined }}
                         className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 ${isCategoryModified ? 'border-amber-500 bg-amber-50/20 dark:bg-amber-950/15 font-semibold' : 'border-blue-400 dark:border-blue-500 text-slate-800 dark:text-white'}`}
-                        placeholder="e.g. bakery, salon, hardware�"
+                        placeholder="e.g. bakery, salon, hardware…"
                         value={customCategory}
                         onChange={(e) => setCustomCategory(e.target.value)}
                       />

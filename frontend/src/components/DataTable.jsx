@@ -168,7 +168,7 @@ export default function DataTable({
         </div>
       )}
 
-      {/* Sticky horizontal scrollbar at top � outside scroll container so it doesn't scroll with content */}
+      {/* Sticky horizontal scrollbar at top — outside scroll container so it doesn't scroll with content */}
       {stickyHeader && scrollThumbWidth > 0 && (
         <div
           className="w-full relative z-10"

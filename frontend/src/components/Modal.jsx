@@ -35,7 +35,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-text-primary/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-0 bg-text-primary/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
         onClick={closeOnOverlay ? onClose : undefined}
       />
 
