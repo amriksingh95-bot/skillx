@@ -113,6 +113,15 @@ export function AuthProvider({ children }) {
 
         if (
           error.response &&
+          error.response.data &&
+          (error.response.data.code === 'ACCOUNT_PENDING' || error.response.data.code === 'PAYMENT_REQUIRED' || error.response.data.code === 'PAYMENT_UNDER_VERIFICATION')
+        ) {
+          window.location.href = `/suspended?code=${error.response.data.code}`;
+          return Promise.reject(error);
+        }
+
+        if (
+          error.response &&
           error.response.status === 401 &&
           error.response.data &&
           error.response.data.code === 'TOKEN_EXPIRED' &&
