@@ -102,9 +102,6 @@ app.use('/api/chatbot', chatbotRoutes);
 const adminAdPaymentRoutes = require('./routes/adminAdPayment');
 app.use('/api/admin', adminAdPaymentRoutes);
 
-// Serve uploaded files (ad payment screenshots, etc.)
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
-
 // Advanced Health Check
 app.get('/health', async (req, res) => {
   let dbStatus = 'disconnected';

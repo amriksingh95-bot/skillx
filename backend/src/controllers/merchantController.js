@@ -933,27 +933,19 @@ async function getCustomerInsights(req, res, next) {
       }
     });
 
-    const repeatCustomers = await prisma.customer.count({
-      where: {
-        transactions: {
-          some: {
-            merchantId,
-            type: 'earn'
-          }
-        },
-        AND: [
-          {
-            transactions: {
-              some: {
-                merchantId,
-                type: 'earn'
-              }
-            }
-          }
-        ]
-      },
-      _count: undefined
-    });
+    const repeatRows = await prisma.$queryRaw`
+      SELECT COUNT(*)::int AS count
+      FROM (
+        SELECT "customerId"
+        FROM "Transaction"
+        WHERE "merchantId" = ${merchantId}
+          AND status = 'completed'
+          AND type = 'earn'
+        GROUP BY "customerId"
+        HAVING COUNT(*) >= 2
+      ) sub
+    `;
+    const repeatCustomers = repeatRows[0]?.count || 0;
 
     const topCustomers = await prisma.customer.findMany({
       where: {
@@ -982,7 +974,6 @@ async function getCustomerInsights(req, res, next) {
         totalCustomers,
         signedUpByMe: totalCustomers,
         repeatCustomers,
-        fromNetwork: repeatCustomers,
         topCustomers
       }
     });
@@ -993,26 +984,10 @@ async function getCustomerInsights(req, res, next) {
 
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-
-const uploadDir = path.resolve(__dirname, '../../uploads/payment-screenshots');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `payment-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
-    cb(null, name);
-  }
-});
+const { uploadBuffer } = require('../lib/supabaseStorage');
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|webp/;
@@ -1051,10 +1026,19 @@ async function uploadPaymentScreenshot(req, res, next) {
       return next(err);
     }
 
+    const ext = path.extname(req.file.originalname);
+    const filename = `payment-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    const publicUrl = await uploadBuffer(
+      req.file.buffer,
+      'subscription-payment-screenshots',
+      filename,
+      req.file.mimetype
+    );
+
     const updated = await prisma.merchant.update({
       where: { id: merchantId },
       data: {
-        paymentScreenshot: `/uploads/payment-screenshots/${req.file.filename}`,
+        paymentScreenshot: publicUrl,
         status: 'payment_pending'
       }
     });
@@ -1133,10 +1117,19 @@ async function uploadRenewalScreenshot(req, res, next) {
       return next(err);
     }
 
+    const ext = path.extname(req.file.originalname);
+    const filename = `payment-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    const publicUrl = await uploadBuffer(
+      req.file.buffer,
+      'subscription-payment-screenshots',
+      filename,
+      req.file.mimetype
+    );
+
     const updated = await prisma.merchant.update({
       where: { id: merchantId },
       data: {
-        paymentScreenshot: `/uploads/payment-screenshots/${req.file.filename}`,
+        paymentScreenshot: publicUrl,
         status: 'payment_pending',
         pendingRenewalSubscriptionId: subscriptionId
       }
@@ -1274,7 +1267,6 @@ async function updateMerchantPassword(req, res, next) {
 async function getPointsHealth(req, res, next) {
   try {
     const merchantId = req.user.merchantId;
-    console.log('[points-health] merchantId:', merchantId, '| type:', typeof merchantId);
 
     // Query 1: Total lifetime points issued and redeemed (Transaction table, simple & fast)
     const totals = await prisma.$queryRaw`
@@ -1286,7 +1278,6 @@ async function getPointsHealth(req, res, next) {
         AND status = 'completed'
         AND "reversedById" IS NULL
     `;
-    console.log('[points-health] totals raw:', JSON.stringify(totals));
     const pointsIssued = totals[0]?.pointsIssued || 0;
     const pointsRedeemed = totals[0]?.pointsRedeemed || 0;
 
@@ -1302,7 +1293,6 @@ async function getPointsHealth(req, res, next) {
         AND t."reversedById" IS NULL
         AND (pl."expiresAt" IS NULL OR pl."expiresAt" > NOW())
     `;
-    console.log('[points-health] active raw:', JSON.stringify(active));
     const pointsIssuedActive = active[0]?.pointsIssuedActive || 0;
     const pointsRedeemedActive = active[0]?.pointsRedeemedActive || 0;
 
@@ -1397,33 +1387,27 @@ async function getRepeatCustomers(req, res, next) {
 async function getROIReport(req, res, next) {
   try {
     const merchantId = req.user.merchantId;
-    console.log('[roi-report] merchantId:', merchantId, '| type:', typeof merchantId);
 
     // --- COST (all-time) ---
     // Subscription spend: SUM of plan.price across all subscriptions for this merchant
-    console.log('[roi-report] Running subCost query...');
     const subCost = await prisma.$queryRaw`
       SELECT COALESCE(SUM(sp."price"), 0)::float AS "subscriptionTotal"
       FROM "MerchantSubscription" ms
       JOIN "SubscriptionPlan" sp ON sp.id = ms."planId"
       WHERE ms."merchantId" = ${merchantId}
     `;
-    console.log('[roi-report] subCost raw:', JSON.stringify(subCost));
     const subscriptionTotal = subCost[0]?.subscriptionTotal || 0;
 
     // Top-up spend: SUM of amountPaid for confirmed top-ups
-    console.log('[roi-report] Running topUpCost query...');
     const topUpCost = await prisma.$queryRaw`
       SELECT COALESCE(SUM("amountPaid"), 0)::float AS "topUpTotal"
       FROM "PointsTopUp"
       WHERE "merchantId" = ${merchantId} AND status = 'confirmed'
     `;
-    console.log('[roi-report] topUpCost raw:', JSON.stringify(topUpCost));
     const topUpTotal = topUpCost[0]?.topUpTotal || 0;
     const totalSpent = subscriptionTotal + topUpTotal;
 
     // --- BUSINESS IMPACT (all-time) ---
-    console.log('[roi-report] Running impact query...');
     const impact = await prisma.$queryRaw`
       SELECT
         COALESCE(SUM(CASE WHEN type = 'earn' AND status = 'completed' THEN "purchaseAmount" END), 0)::float AS "totalSalesVolume",
@@ -1431,7 +1415,6 @@ async function getROIReport(req, res, next) {
       FROM "Transaction"
       WHERE "merchantId" = ${merchantId}
     `;
-    console.log('[roi-report] impact raw:', JSON.stringify(impact));
     const totalSalesVolume = impact[0]?.totalSalesVolume || 0;
     const uniqueCustomers = impact[0]?.uniqueCustomers || 0;
 
@@ -1439,7 +1422,6 @@ async function getROIReport(req, res, next) {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    console.log('[roi-report] Running avgBillTrend query... ninetyDaysAgo:', ninetyDaysAgo.toISOString());
     const avgBillTrend = await prisma.$queryRaw`
       SELECT
         TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') AS "month",
@@ -1452,10 +1434,8 @@ async function getROIReport(req, res, next) {
       GROUP BY DATE_TRUNC('month', "createdAt")
       ORDER BY DATE_TRUNC('month', "createdAt") ASC
     `;
-    console.log('[roi-report] avgBillTrend raw:', JSON.stringify(avgBillTrend));
 
     // --- LOYALTY (all-time) ---
-    console.log('[roi-report] Running loyalty query...');
     const loyalty = await prisma.$queryRaw`
       SELECT
         COALESCE(SUM(CASE WHEN type = 'redeem' AND status = 'completed' THEN "purchaseAmount" END), 0)::float AS "totalDiscountsGiven",
@@ -1464,11 +1444,9 @@ async function getROIReport(req, res, next) {
       FROM "Transaction"
       WHERE "merchantId" = ${merchantId}
     `;
-    console.log('[roi-report] loyalty raw:', JSON.stringify(loyalty));
     const totalDiscountsGiven = loyalty[0]?.totalDiscountsGiven || 0;
     const pointsIssued = loyalty[0]?.pointsIssued || 0;
     const pointsRedeemed = loyalty[0]?.pointsRedeemed || 0;
-    console.log('[roi-report] FINAL: subscriptionTotal=', subscriptionTotal, 'topUpTotal=', topUpTotal, 'totalSalesVolume=', totalSalesVolume, 'uniqueCustomers=', uniqueCustomers, 'totalDiscountsGiven=', totalDiscountsGiven, 'pointsIssued=', pointsIssued, 'pointsRedeemed=', pointsRedeemed);
 
     res.status(200).json({
       success: true,

@@ -1,24 +1,11 @@
 const prisma = require('../lib/prisma');
 const { sendWhatsAppAlert, sendTelegramAlert } = require('../utils/whatsappNotify');
+const { uploadBuffer } = require('../lib/supabaseStorage');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-
-const uploadDir = path.resolve(__dirname, '../../uploads/topup-screenshots');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `topup-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`);
-  }
-});
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|webp/;
@@ -107,10 +94,19 @@ async function uploadTopUpScreenshot(req, res, next) {
       select: { businessName: true }
     });
 
+    const ext = path.extname(req.file.originalname);
+    const filename = `topup-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    const publicUrl = await uploadBuffer(
+      req.file.buffer,
+      'topup-screenshots',
+      filename,
+      req.file.mimetype
+    );
+
     await prisma.pointsTopUp.update({
       where: { id: topUpId },
       data: {
-        screenshotPath: `/uploads/topup-screenshots/${req.file.filename}`,
+        screenshotPath: publicUrl,
         status: 'pending'
       }
     });
