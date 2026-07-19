@@ -3,7 +3,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { RefreshCw, Plus, CreditCard, Clock, CheckCircle, AlertTriangle, Store, Calendar, AlertCircle, TrendingDown } from 'lucide-react';
+import { RefreshCw, Plus, CreditCard, Clock, CheckCircle, AlertTriangle, Store, Calendar, AlertCircle, TrendingDown, Image, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminMerchantSubscriptions() {
@@ -397,9 +397,9 @@ const handleOpenAdd = () => {
               <div key={merchant.id} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{merchant.businessName}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{merchant.user?.email} � {merchant.user?.mobile}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{merchant.user?.email} — {merchant.user?.mobile}</p>
                   <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${merchant.status === 'payment_pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {merchant.status === 'payment_pending' ? '? Screenshot uploaded' : '?? Awaiting payment'}
+                    {merchant.status === 'payment_pending' ? <span className="inline-flex items-center gap-1"><Image className="w-3.5 h-3.5" /> Screenshot uploaded</span> : <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Awaiting payment</span>}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -426,11 +426,11 @@ const handleOpenAdd = () => {
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-slate-800 dark:text-slate-100">Payment Screenshot</h3>
-              <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl btn-press">�</button>
+              <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl btn-press"><X className="w-5 h-5" /></button>
             </div>
             <p className="text-sm text-slate-500">{screenshotModal.merchantName}</p>
             <img
-              src={`${api.defaults.baseURL}${screenshotModal.url}`}
+              src={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
               alt="Payment Screenshot"
               className="w-full rounded-xl border border-slate-200 object-contain max-h-80"
             />

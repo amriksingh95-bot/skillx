@@ -116,7 +116,7 @@ export default function TopUpRequests() {
                     <td className="px-4 py-3">
                       {item.screenshotPath ? (
                         <a
-                          href={`${api.defaults.baseURL}${item.screenshotPath}`}
+                          href={item.screenshotPath.startsWith('http') ? item.screenshotPath : `${api.defaults.baseURL}${item.screenshotPath}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 font-medium"
