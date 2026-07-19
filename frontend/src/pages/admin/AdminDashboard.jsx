@@ -6,7 +6,7 @@ import {
   Layers,
   ArrowUpRight,
   ArrowDownLeft,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   TrendingDown,
   RefreshCw,
@@ -41,6 +41,7 @@ export default function AdminDashboard() {
   const [retention, setRetention] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingAdCount, setPendingAdCount] = useState(0);
 
   const fetchDashboardData = async () => {
     try {
@@ -53,12 +54,19 @@ export default function AdminDashboard() {
 
   const fetchPendingCount = async () => {
     try {
-      const res = await api.get('/api/admin/merchants?page=1&limit=50');
-      const merchants = res.data.data.merchants || [];
-      const count = merchants.filter(m => m.status === 'pending').length;
-      setPendingCount(count);
+      const res = await api.get('/api/admin/merchants/pending-count');
+      setPendingCount(res.data.data.count);
     } catch (err) {
-      // Silent
+      console.error('Failed to fetch pending merchant count:', err);
+    }
+  };
+
+  const fetchPendingAdCount = async () => {
+    try {
+      const res = await api.get('/api/admin/advertisements/pending-count');
+      setPendingAdCount(res.data.data.count);
+    } catch (err) {
+      console.error('Failed to fetch pending ad count:', err);
     }
   };
 
@@ -82,14 +90,14 @@ export default function AdminDashboard() {
 
   const handleRefresh = async () => {
     setLoading(true);
-    await Promise.all([fetchDashboardData(), fetchTrends(), fetchRetention()]);
+    await Promise.all([fetchDashboardData(), fetchTrends(), fetchRetention(), fetchPendingCount(), fetchPendingAdCount()]);
     setLoading(false);
     toast.success('Admin metrics updated!');
   };
 
   useEffect(() => {
     const initData = async () => {
-      await Promise.all([fetchDashboardData(), fetchTrends(), fetchRetention(), fetchPendingCount()]);
+      await Promise.all([fetchDashboardData(), fetchTrends(), fetchRetention(), fetchPendingCount(), fetchPendingAdCount()]);
       setLoading(false);
     };
     initData();
@@ -149,10 +157,25 @@ export default function AdminDashboard() {
         />
         <StatCard
           icon={Clock}
-          label="Pending Approvals"
+          label="Pending Merchants"
           value={pendingCount}
-          trend={{ type: 'down', value: 'Awaiting review' }}
-          color="warning"
+          trend={
+            pendingCount > 0
+              ? { type: 'down', value: 'Awaiting review' }
+              : { type: 'neutral', value: 'New Merchant Signup' }
+          }
+          color={pendingCount > 0 ? 'warning' : 'success'}
+        />
+        <StatCard
+          icon={Megaphone}
+          label="Pending Ads"
+          value={pendingAdCount}
+          trend={
+            pendingAdCount > 0
+              ? { type: 'down', value: 'Awaiting review' }
+              : { type: 'neutral', value: 'All caught up' }
+          }
+          color={pendingAdCount > 0 ? 'warning' : 'success'}
         />
         <StatCard
           icon={Layers}
@@ -165,9 +188,9 @@ export default function AdminDashboard() {
           }
         />
         <StatCard
-          icon={DollarSign}
+          icon={IndianRupee}
           label="Reward Liability"
-          value={`?${cards.liability.toLocaleString('en-IN')}`}
+          value={`₹${cards.liability.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           trend={{ type: 'down', value: 'Outstanding' }}
         />
         <StatCard
@@ -192,8 +215,9 @@ export default function AdminDashboard() {
         />
         <StatCard
           icon={TrendingUp}
-          label="Outstanding Balance"
+          label="Unredeemed Customer Points"
           value={(cards.pointsIssued - cards.pointsRedeemed).toLocaleString('en-IN')}
+          trend={{ type: 'neutral', value: 'Circulating' }}
         />
 
         {/* Revenue Comparison Cards */}
@@ -392,18 +416,20 @@ export default function AdminDashboard() {
         {/* Top Merchants BarChart */}
         <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm">
           <h3 className="font-bold text-base text-slate-800 dark:text-white mb-6">Top 7 Merchants by Activity</h3>
-          <div className="h-80 w-full">
+          <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts.topMerchants}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:hidden" />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" className="hidden dark:block" />
-                <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} />
+                <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} interval={0} angle={-35} textAnchor="end" height={60} />
                 <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} />
                  <Tooltip
                    contentStyle={{
                      borderRadius: '12px',
                      fontSize: '13px'
                    }}
+                   labelStyle={{ color: '#1e293b', fontWeight: 600 }}
+                   itemStyle={{ color: '#475569' }}
                  />
                  <Bar dataKey="transactions" name="Transactions Count" fill="#2563EB" radius={[8, 8, 0, 0]} barSize={35} />
               </BarChart>

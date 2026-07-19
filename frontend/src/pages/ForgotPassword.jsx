@@ -103,7 +103,6 @@ export default function ForgotPassword() {
     try {
       const response = await api.post('/api/auth/request-reset', { identifier });
       toast.success(response.data.message || 'OTP sent successfully.');
-      console.log('Reset response:', response.data);
       setMobile(response.data.data?.mobile || identifier); // Save mobile for reset call
       setStep(2);
       setAttemptsRemaining(null);
@@ -141,7 +140,6 @@ export default function ForgotPassword() {
 
     setIsLoading(true);
     try {
-      console.log('Submitting reset with mobile:', mobile, 'otp:', otp);
       const response = await api.post('/api/auth/reset-password', {
         mobile,
         otp,

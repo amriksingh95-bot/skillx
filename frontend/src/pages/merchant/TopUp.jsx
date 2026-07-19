@@ -21,6 +21,7 @@ export default function TopUp() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [topUpId, setTopUpId] = useState(null);
+  const [upiId, setUpiId] = useState('');
   const [upiCopied, setUpiCopied] = useState(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export default function TopUp() {
       });
       const id = res.data.data.topUpId;
       setTopUpId(id);
+      setUpiId(res.data.data.upiId || '');
       toast.success('Top-up request created. Upload your payment screenshot.');
       await fetchHistory();
       return id;
@@ -273,10 +275,10 @@ export default function TopUp() {
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
             <p className="text-xs text-slate-400">UPI ID</p>
             <div className="flex items-center justify-between bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-dark-border">
-              <span className="text-sm font-bold text-slate-800 dark:text-white select-all">amriksingh95@okhdfcbank</span>
+              <span className="text-sm font-bold text-slate-800 dark:text-white select-all">{upiId}</span>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText('amriksingh95@okhdfcbank');
+                  navigator.clipboard.writeText(upiId);
                   setUpiCopied(true);
                   setTimeout(() => setUpiCopied(false), 2000);
                 }}

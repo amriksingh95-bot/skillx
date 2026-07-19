@@ -1,9 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import SkillXTLogo from '../components/SkillXTLogo';
-import { X, Send, MessageCircle, Minimize2, Bot, User } from 'lucide-react';
+import { X, Send, MessageCircle, Bot, User, GripVertical } from 'lucide-react';
+
+const STORAGE_KEY = 'skillxt_chatbot_position';
+const DEFAULT_BOTTOM = 80;
+const MIN_BOTTOM = 50;
+const MAX_BOTTOM = 160;
 
 export default function FloatingChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +16,18 @@ export default function FloatingChatbot() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [bottom, setBottom] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved !== null) {
+      const n = parseInt(saved, 10);
+      if (!isNaN(n)) return n;
+    }
+    return DEFAULT_BOTTOM;
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartBottom = useRef(0);
+  const hasMoved = useRef(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
 
@@ -29,6 +46,42 @@ export default function FloatingChatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, String(bottom));
+  }, [bottom]);
+
+  const handleDragStart = useCallback((e) => {
+    setIsDragging(true);
+    hasMoved.current = false;
+    dragStartY.current = e.clientY;
+    dragStartBottom.current = bottom;
+  }, [bottom]);
+
+  const handleDragMove = useCallback((e) => {
+    if (!isDragging) return;
+    const delta = dragStartY.current - e.clientY;
+    if (Math.abs(delta) > 5) {
+      hasMoved.current = true;
+    }
+    const newBottom = Math.max(MIN_BOTTOM, Math.min(MAX_BOTTOM, dragStartBottom.current + delta));
+    setBottom(newBottom);
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('pointermove', handleDragMove);
+      window.addEventListener('pointerup', handleDragEnd);
+      return () => {
+        window.removeEventListener('pointermove', handleDragMove);
+        window.removeEventListener('pointerup', handleDragEnd);
+      };
+    }
+  }, [isDragging, handleDragMove, handleDragEnd]);
 
   const handleSend = async (text) => {
     if (!text.trim()) return;
@@ -73,12 +126,23 @@ export default function FloatingChatbot() {
   };
 
   return (
-    <div className="fixed bottom-20 right-4 z-[9999] font-sans">
+    <div
+      className="fixed right-4 z-[9999] font-sans select-none"
+      style={{ bottom: `${bottom}px` }}
+    >
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95"
+          onPointerDown={handleDragStart}
+          onClick={(e) => {
+            if (hasMoved.current) {
+              e.preventDefault();
+              return;
+            }
+            setIsOpen(true);
+          }}
+          className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 cursor-grab active:cursor-grabbing touch-none select-none"
         >
+          <GripVertical className="w-4 h-4 opacity-60" />
           <div className="relative">
             <MessageCircle className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
@@ -88,7 +152,7 @@ export default function FloatingChatbot() {
       )}
 
       {isOpen && (
-        <div className="w-[350px] h-[480px] bg-white dark:bg-dark-card rounded-2xl shadow-2xl border border-slate-200 dark:border-dark-border flex flex-col overflow-hidden">
+        <div className="absolute bottom-full right-0 mb-2 w-[350px] h-[480px] bg-white dark:bg-dark-card rounded-2xl shadow-2xl border border-slate-200 dark:border-dark-border flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-indigo-600 text-white">
             <div className="flex items-center gap-2">

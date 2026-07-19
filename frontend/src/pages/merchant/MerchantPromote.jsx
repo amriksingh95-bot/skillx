@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { Megaphone, X, Copy, Check, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -37,6 +37,8 @@ export default function MerchantPromote() {
   const [adPaymentUpiId, setAdPaymentUpiId] = useState('');
   const [adPaymentAmount, setAdPaymentAmount] = useState(0);
   const [upiCopied, setUpiCopied] = useState(false);
+  const [successAdId, setSuccessAdId] = useState(null);
+  const adPaymentUploadRef = useRef(null);
 
   const fetchMyAds = async () => {
     try {
@@ -66,6 +68,14 @@ export default function MerchantPromote() {
     };
     initData();
   }, []);
+
+  useEffect(() => {
+    if (payingAdId && adPaymentId && adPaymentUploadRef.current) {
+      requestAnimationFrame(() => {
+        adPaymentUploadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+  }, [payingAdId, adPaymentId]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -188,6 +198,8 @@ export default function MerchantPromote() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Screenshot uploaded. Admin will verify within 24 hours.');
+      setSuccessAdId(payingAdId);
+      setTimeout(() => setSuccessAdId(null), 3000);
       setPayingAdId(null);
       setAdPaymentId(null);
       setAdScreenshot(null);
@@ -650,7 +662,7 @@ export default function MerchantPromote() {
 
                     return (
                       <>
-                      <tr key={ad.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <tr key={ad.id} className={`transition-colors ${successAdId === ad.id ? 'bg-emerald-50/80 dark:bg-emerald-900/20 ring-2 ring-emerald-300 dark:ring-emerald-700' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
                         <td className="px-6 py-4 text-sm font-semibold text-slate-800 dark:text-white">{ad.title}</td>
                         <td className="px-6 py-4 text-sm capitalize">{ad.package}</td>
                         <td className="px-6 py-4 text-sm">
@@ -675,6 +687,7 @@ export default function MerchantPromote() {
                                     disabled={payingAdId === ad.id && !adPaymentId}
                                     className="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
                                   >
+                                    {payingAdId === ad.id && !adPaymentId && <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" />}
                                     Pay Now
                                   </button>
                                 );
@@ -745,7 +758,7 @@ export default function MerchantPromote() {
                 if (ad.status === 'paused') badgeClass = 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
 
                 return (
-                  <div key={ad.id} className="p-4 space-y-2.5">
+                  <div key={ad.id} className={`p-4 space-y-2.5 transition-colors ${successAdId === ad.id ? 'bg-emerald-50/80 dark:bg-emerald-900/20 ring-2 ring-emerald-300 dark:ring-emerald-700 rounded-xl' : ''}`}>
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mt-0.5">Title</span>
                       <span className="text-sm font-semibold text-slate-800 dark:text-white text-right">{ad.title}</span>
@@ -784,8 +797,9 @@ export default function MerchantPromote() {
                           <button
                             onClick={() => handleRequestAdPayment(ad.id)}
                             disabled={payingAdId === ad.id && !adPaymentId}
-                            className="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 rounded-lg transition-colors disabled:opacity-50 btn-press"
+                            className="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 rounded-lg transition-colors flex items-center gap-1 disabled:opacity-50 btn-press"
                           >
+                            {payingAdId === ad.id && !adPaymentId && <span className="w-3 h-3 border-2 border-white border-t-transparent animate-spin rounded-full" />}
                             Pay Now
                           </button>
 );
@@ -879,7 +893,7 @@ export default function MerchantPromote() {
             )}
           </div>
 
-          <form onSubmit={handleUploadAdPaymentScreenshot} className="space-y-4 text-left">
+          <form ref={adPaymentUploadRef} onSubmit={handleUploadAdPaymentScreenshot} className="space-y-4 text-left">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 Payment Screenshot

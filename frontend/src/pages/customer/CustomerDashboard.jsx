@@ -17,7 +17,8 @@ import {
   MessageSquare,
   AlertCircle,
   Clock,
-  CreditCard
+  CreditCard,
+  Sparkles
 } from 'lucide-react';
 import Badge from '../../components/Badge';
 import DataTable from '../../components/DataTable';
@@ -175,7 +176,7 @@ export default function CustomerDashboard() {
             if (data.type === 'POINTS_RECEIVED') {
               toast.success(
                 <div className="flex flex-col text-left">
-                  <span className="font-bold">?? Points Received!</span>
+                  <span className="font-bold"><Sparkles className="w-4 h-4 inline mr-1" /> Points Received!</span>
                   <span className="text-xs mt-0.5">You received {data.points} points from {data.merchantName}.</span>
                 </div>,
                 { duration: 6000 }
@@ -247,7 +248,7 @@ export default function CustomerDashboard() {
     },
     {
       header: 'Merchant',
-      accessor: (row) => row.merchant.businessName
+      accessor: (row) => /referral bonus/i.test(row.remarks) ? 'Referral Bonus' : row.merchant.businessName
     },
     {
       header: 'Type',
