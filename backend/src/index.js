@@ -9,7 +9,12 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Startup Validation
-const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'PORT', 'FRONTEND_URL'];
+const requiredEnvVars = [
+  'DATABASE_URL', 'JWT_SECRET', 'PORT', 'FRONTEND_URL',
+  'JWT_REFRESH_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'SUPABASE_BUCKET',
+  'GMAIL_USER', 'GMAIL_APP_PASSWORD', 'GEMINI_API_KEY', 'UPI_ID',
+  'API_URL', 'BACKEND_URL'
+];
 const missingVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 if (missingVars.length > 0) {
   console.error(`[Startup Error]: Missing critical environment variables: ${missingVars.join(', ')}`);
@@ -27,6 +32,7 @@ if (!BigInt.prototype.toJSON) {
 
 const { apiLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
+const requestId = require('./middleware/requestId');
 
 // Routes imports
 const authRoutes = require('./routes/auth');
@@ -41,8 +47,12 @@ const PORT = process.env.PORT || 5000;
 
 // Allowed origins for CORS and CSP
 const normalizeOrigin = (origin) => origin ? origin.replace(/\/+$/, '') : null;
+const corsOriginsList = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
 const frontendOrigins = [
   process.env.FRONTEND_URL,
+  ...corsOriginsList,
 ].map(normalizeOrigin).filter(Boolean);
 const allowedOrigins = Array.from(new Set(frontendOrigins));
 
@@ -86,6 +96,9 @@ app.use(cors(corsOptions));
 // Parsing Requests
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Assign request ID for logging/tracing
+app.use(requestId);
 
 // Apply general API rate limiter to all API endpoints
 app.use('/api', apiLimiter);
