@@ -40,7 +40,7 @@ async function confirmTopUp(req, res, next) {
 
     const topUp = await prisma.pointsTopUp.findUnique({
       where: { id: topUpId },
-      include: { merchant: true }
+      include: { merchant: { select: { id: true, businessName: true, pointsBalance: true, userId: true } } }
     });
 
     if (!topUp) {

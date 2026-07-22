@@ -74,8 +74,38 @@ router.get('/profile', async (req, res, next) => {
 });
 
 // Merchant profile update routes
-router.put('/profile', merchantController.updateMerchantProfile);
-router.put('/profile/password', merchantController.updateMerchantPassword);
+router.put(
+  '/profile',
+  [
+    body('businessName').trim().notEmpty().withMessage('Business name is required.').isLength({ max: 100 }).withMessage('Business name must be at most 100 characters.'),
+    body('ownerName').trim().notEmpty().withMessage('Owner name is required.'),
+    body('address').trim().notEmpty().withMessage('Address is required.'),
+    body('landmark').optional({ checkFalsy: true }).trim(),
+    body('openingTime').optional({ checkFalsy: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Opening time must be in HH:MM format (24-hour).'),
+    body('closingTime').optional({ checkFalsy: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Closing time must be in HH:MM format (24-hour).'),
+    body('workingDays').optional({ checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Working days must be at most 100 characters.'),
+    body('googleMapsUrl').optional({ checkFalsy: true }).isURL().withMessage('Google Maps URL must be a valid link.'),
+    body('category').optional({ checkFalsy: true }).trim().isIn(['grocery', 'medical', 'doctor', 'cafe', 'electronics', 'fashion', 'beauty', 'stationery', 'gym', 'hotel', 'education', 'other']).withMessage('Invalid category.'),
+    body('alternativePhone').optional({ checkFalsy: true }).matches(/^[6-9]\d{9}$/).withMessage('Alternative phone must be a valid 10-digit Indian mobile number.'),
+  ],
+  validate,
+  merchantController.updateMerchantProfile
+);
+router.put(
+  '/profile/password',
+  [
+    body('oldPassword').notEmpty().withMessage('Current password is required.'),
+    body('newPassword').isStrongPassword({
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+    }).withMessage('New password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'),
+  ],
+  validate,
+  merchantController.updateMerchantPassword
+);
 
 // Subscription routes — accessible to approved/payment_pending merchants too
 router.get('/subscription', async (req, res, next) => {
@@ -390,7 +420,13 @@ router.post(
 router.post(
   '/ads',
   [
-    body('title').trim().notEmpty().withMessage('Title is required.'),
+    body('title').trim().notEmpty().withMessage('Title is required.').isLength({ max: 100 }).withMessage('Title must be at most 100 characters.'),
+    body('description').trim().notEmpty().withMessage('Description is required.').isLength({ max: 150 }).withMessage('Description must be at most 150 characters.'),
+    body('ctaText').trim().notEmpty().withMessage('CTA text is required.').isLength({ max: 50 }).withMessage('CTA text must be at most 50 characters.'),
+    body('ctaLink').trim().optional({ checkFalsy: true }).isURL().withMessage('CTA link must be a valid URL.'),
+    body('bg').trim().notEmpty().withMessage('Theme is required.'),
+    body('accent').trim().notEmpty().withMessage('Theme accent is required.'),
+    body('icon').trim().notEmpty().withMessage('Business icon is required.'),
     body('package').isIn(['starter', 'growth', 'premium']).withMessage('Package must be starter, growth, or premium.')
   ],
   validate,

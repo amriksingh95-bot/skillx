@@ -320,7 +320,7 @@ export default function CustomerDashboard() {
           </button>
           <button
             onClick={handleRefresh}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
+            className="p-3 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
           >
             <RefreshCw className="w-4 h-4" />
             <span className="hidden sm:inline">Refresh</span>
@@ -333,7 +333,7 @@ export default function CustomerDashboard() {
         {/* Customer Profile & Balance */}
         <div className="lg:col-span-2 space-y-6">
           {/* Points Balance Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl p-8 shadow-lg shadow-blue-500/20">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl p-8 shadow-lg shadow-blue-500/20 border border-blue-500/20">
             {/* Background absolute decor */}
             <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-12 translate-y-12">
               <Wallet className="w-64 h-64" />
@@ -400,8 +400,8 @@ export default function CustomerDashboard() {
           )}
 
           {/* Quick stats grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm flex items-center gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center gap-4">
               <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
                 <ArrowUpCircle className="w-6 h-6" />
               </div>
@@ -413,7 +413,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm flex items-center gap-4">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex items-center gap-4">
               <div className="p-3 bg-amber-50 dark:bg-amber-950/20 text-amber-500 dark:text-amber-400 rounded-xl">
                 <ArrowDownCircle className="w-6 h-6" />
               </div>
@@ -427,7 +427,7 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Refer & Earn Card */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 rounded-lg">
                 <Gift className="w-5 h-5 text-indigo-500" />
@@ -439,7 +439,7 @@ export default function CustomerDashboard() {
               Invite your friends to SkillXT Rewards. When they sign up using your referral code, both of you will receive <strong>20 points</strong> instantly!
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100 dark:border-dark-border mt-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mt-4">
               <div className="flex-1 w-full text-left">
                 <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-400">Your Unique Referral Code</span>
                 <span className="font-mono text-base font-black text-slate-800 dark:text-white mt-1.5 block select-all">
@@ -464,13 +464,13 @@ export default function CustomerDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-xl p-4 text-center">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">This Month's Referrals</span>
                 <span className="text-xl font-extrabold text-slate-800 dark:text-white mt-1 block">
                   {referralStats.monthlyReferrals}
                 </span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-xl p-4 text-center">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Points Earned from Referrals</span>
                 <span className="text-xl font-extrabold text-[#00bcd4] mt-1 block">
                   +{referralStats.totalPointsEarned}
@@ -481,7 +481,7 @@ export default function CustomerDashboard() {
 
           {/* Milestones Card */}
           {milestones && milestones.length > 0 && (
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm space-y-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 dark:bg-blue-950/20 text-blue-500 rounded-lg">
                   <Gift className="w-5 h-5 text-blue-500" />
@@ -493,7 +493,7 @@ export default function CustomerDashboard() {
                 {milestones.map((m) => (
                   <div 
                     key={m.id} 
-                    className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-xl flex flex-col justify-between"
+                    className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex justify-between items-start gap-2">
@@ -533,7 +533,7 @@ export default function CustomerDashboard() {
           )}
 
           {/* Profile metadata card */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-base text-slate-800 dark:text-white mb-4">Account Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center gap-3">
@@ -631,7 +631,7 @@ export default function CustomerDashboard() {
 
         <div className="space-y-6">
           {/* QR Code Presentation Box */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 rounded-2xl mb-4">
               <QrCode className="w-6 h-6" />
             </div>
@@ -651,13 +651,13 @@ export default function CustomerDashboard() {
               ) : null}
             </div>
 
-            <span className="text-xs font-mono font-semibold text-slate-400 mt-4 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-dark-border">
+            <span className="text-xs font-mono font-semibold text-slate-400 mt-4 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
               {profile?.qrCode}
             </span>
           </div>
 
           {/* Complaints & Feedback Presentation Box */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
             <div className="p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-2xl mb-4">
               <MessageSquare className="w-6 h-6" />
             </div>
@@ -669,7 +669,7 @@ export default function CustomerDashboard() {
               onClick={() => setIsComplaintModalOpen(true)}
               className="w-full mt-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md shadow-rose-500/10 transition-colors btn-press"
             >
-              Submit Complaint or Feedback
+              Submit
             </button>
           </div>
         </div>
@@ -703,7 +703,7 @@ export default function CustomerDashboard() {
               />
             )}
           </div>
-          <span className="text-sm font-mono font-semibold text-slate-500 mt-4 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-dark-border">
+          <span className="text-sm font-mono font-semibold text-slate-500 mt-4 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
             {profile?.qrCode}
           </span>
           <p className="text-xs text-slate-400 mt-3 max-w-xs">

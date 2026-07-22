@@ -9,7 +9,7 @@ const { releaseHeldRewards } = require('../services/merchantReferralService');
 
 // Verbose logging helper — only logs when SCHEDULER_VERBOSE_LOGS=true
 const verboseLog = (...args) => {
-  if (process.env.SCHEDULER_VERBOSE_LOGS === 'true') verboseLog(...args);
+  if (process.env.SCHEDULER_VERBOSE_LOGS === 'true') console.log(...args);
 };
 
 let reminderJob = null;

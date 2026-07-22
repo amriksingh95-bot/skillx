@@ -44,6 +44,7 @@ export default function AdminCustomers() {
   const [createMobile, setCreateMobile] = useState('');
   const [createEmail, setCreateEmail] = useState('');
   const [createPassword, setCreatePassword] = useState('');
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [createCity, setCreateCity] = useState('');
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
 
@@ -733,14 +734,19 @@ export default function AdminCustomers() {
 
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password *</label>
-            <input
-              type="password"
-              required
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
-              placeholder="Min 8 characters"
-              value={createPassword}
-              onChange={(e) => setCreatePassword(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                type={showCreatePassword ? 'text' : 'password'}
+                required
+                className="w-full px-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
+                placeholder="Min 8 characters"
+                value={createPassword}
+                onChange={(e) => setCreatePassword(e.target.value)}
+              />
+              <button type="button" onClick={() => setShowCreatePassword(!showCreatePassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                {showCreatePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div>

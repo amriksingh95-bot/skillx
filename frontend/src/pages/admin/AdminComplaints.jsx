@@ -184,7 +184,7 @@ export default function AdminComplaints() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm space-y-4">
         <div className="flex items-center gap-2 font-bold text-sm text-slate-800 dark:text-white">
           <Filter className="w-4 h-4 text-primary" />
           Filter Submissions

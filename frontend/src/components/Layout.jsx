@@ -56,7 +56,7 @@ export default function Layout() {
         <div className="flex-1 flex flex-col min-w-0">
           <Navbar onMenuToggle={() => setMobileMenuOpen(true)} />
           
-          <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto pb-32">
+          <main className="flex-1 p-5 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto pb-32">
             <Outlet />
           </main>
         </div>

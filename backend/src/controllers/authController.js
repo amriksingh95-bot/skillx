@@ -406,7 +406,7 @@ async function refreshToken(req, res, next) {
     // Find all non-revoked tokens for the user and compare hashes
     const candidateTokens = await prisma.refreshToken.findMany({
       where: { isRevoked: false },
-      include: { user: { include: { merchant: true, customer: true } } }
+      include: { user: { select: { id: true, email: true, mobile: true, role: true, isActive: true, createdAt: true, merchant: true, customer: true } } }
     });
 
     let matchedRecord = null;
@@ -608,12 +608,11 @@ async function requestReset(req, res, next) {
       return next(err);
     }
 
-    const { otp } = await generateAndSendOTP(user.mobile, user.email, 'reset');
+    await generateAndSendOTP(user.mobile, user.email, 'reset');
 
     res.status(200).json({
       success: true,
-      message: 'OTP sent to your registered email address.',
-      data: { mobile: user.mobile }
+      message: 'OTP sent to your registered email address.'
     });
   } catch (error) {
     next(error);
@@ -624,12 +623,40 @@ async function requestReset(req, res, next) {
  * Reset Password using OTP.
  */
 async function resetPassword(req, res, next) {
-  const { mobile, otp, newPassword } = req.body;
+  const { mobile, otp, newPassword, identifier } = req.body;
   const ipAddress = req.ip;
 
+  // Accept either `mobile` (legacy) or `identifier` (email or mobile)
+  const lookupValue = identifier || mobile;
+  if (!lookupValue) {
+    const err = new Error('Mobile number or identifier is required.');
+    err.status = 400;
+    err.code = 'VALIDATION_ERROR';
+    return next(err);
+  }
+
   try {
-    // Verify OTP
-    const isOtpValid = await verifyOTP(mobile, otp, 'reset');
+    // Resolve the user's mobile from identifier (email or mobile)
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: lookupValue },
+          { email: lookupValue }
+        ]
+      }
+    });
+
+    if (!user) {
+      const err = new Error('User not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    const userMobile = user.mobile;
+
+    // Verify OTP using the resolved mobile
+    const isOtpValid = await verifyOTP(userMobile, otp, 'reset');
     if (!isOtpValid) {
       const err = new Error('Invalid or expired OTP.');
       err.status = 400;
@@ -639,19 +666,8 @@ async function resetPassword(req, res, next) {
 
     // Immediately delete the verified OTP record from database
     await prisma.oTPVerification.deleteMany({
-      where: { mobile, purpose: 'reset', verified: true }
+      where: { mobile: userMobile, purpose: 'reset', verified: true }
     });
-
-    const user = await prisma.user.findUnique({
-      where: { mobile }
-    });
-
-    if (!user) {
-      const err = new Error('User not found.');
-      err.status = 404;
-      err.code = 'NOT_FOUND';
-      return next(err);
-    }
 
     // Hash and update password
     const passwordHash = await bcrypt.hash(newPassword, 10);
@@ -861,7 +877,6 @@ async function registerMerchantSelf(req, res, next) {
       `New Merchant Application%0A` +
       `Business: ${businessName}%0A` +
       `Owner: ${ownerName}%0A` +
-      `Mobile: ${mobile}%0A` +
       `City: ${city}%0A` +
       `Category: ${category}%0A` +
       `Action needed: Admin approval required`
@@ -871,7 +886,6 @@ async function registerMerchantSelf(req, res, next) {
       `New Merchant Application%0A` +
       `Business: ${businessName}%0A` +
       `Owner: ${ownerName}%0A` +
-      `Mobile: ${mobile}%0A` +
       `City: ${city}%0A` +
       `Category: ${category}%0A` +
       `Action needed: Admin approval required`

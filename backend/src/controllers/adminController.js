@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs');
 const { v4: uuidv4 } = require('uuid');
 const { getCustomerBalance, processReversal } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
+const { pauseExistingLiveAds } = require('../services/adService');
 const { GRACE_PERIOD_DAYS, getBonusForPosition } = require('../services/subscriptionService');
 const { processReferralOnFirstPayment, processReferralOnRenewal } = require('../services/merchantReferralService');
 
@@ -1378,7 +1379,10 @@ async function getTransactions(req, res, next) {
         where: whereCondition,
         include: {
           customer: {
-            include: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
               user: {
                 select: {
                   id: true,
@@ -2300,6 +2304,25 @@ async function updateAdStatus(req, res, next) {
         updateData.approvedAt = new Date();
       }
 
+      // If going live, pause any existing live ads for this merchant
+      if (status === 'live') {
+        const pausedCount = await pauseExistingLiveAds(ad.merchantId, ad.id);
+        if (pausedCount > 0) {
+          await createAuditLog(
+            null,
+            'AD_AUTO_PAUSED_BULK',
+            'Advertisement',
+            ad.id,
+            {
+              merchantId: ad.merchantId,
+              adsPaused: pausedCount,
+              reason: 'Auto-paused existing live ads before activating new ad.',
+            },
+            req.ip
+          );
+        }
+      }
+
       const updated = await prisma.advertisement.update({
         where: { id },
         data: updateData
@@ -2532,7 +2555,7 @@ async function approveMerchant(req, res, next) {
     const merchantId = req.params.id;
     const merchant = await prisma.merchant.findUnique({
       where: { id: merchantId },
-      include: { user: true }
+      include: { user: { select: { id: true, email: true, mobile: true, role: true, isActive: true, createdAt: true } } }
     });
 
     if (!merchant) {
@@ -2576,7 +2599,7 @@ async function rejectMerchant(req, res, next) {
 
     const merchant = await prisma.merchant.findUnique({
       where: { id: merchantId },
-      include: { user: true }
+      include: { user: { select: { id: true, email: true, mobile: true, role: true, isActive: true, createdAt: true } } }
     });
 
     if (!merchant) {

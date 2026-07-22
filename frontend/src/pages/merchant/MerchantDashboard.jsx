@@ -61,6 +61,8 @@ export default function MerchantDashboard() {
   const [mockQr, setMockQr] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 8 });
+  const bellButtonRef = useRef(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -153,6 +155,20 @@ export default function MerchantDashboard() {
     };
     initData();
   }, []);
+
+  // Close notification dropdown on click-outside, scroll, or resize
+  useEffect(() => {
+    if (!showNotifications) return;
+    const close = () => setShowNotifications(false);
+    document.addEventListener('mousedown', close);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [showNotifications]);
 
   const handleQrScanSuccess = async (decodedText) => {
     setShowScanner(false);
@@ -307,8 +323,20 @@ export default function MerchantDashboard() {
           {/* Notification Bell */}
           <div className="relative">
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center btn-press relative"
+              ref={bellButtonRef}
+              onClick={() => {
+                if (!showNotifications && bellButtonRef.current) {
+                  const rect = bellButtonRef.current.getBoundingClientRect();
+                  const isMobile = window.innerWidth < 640;
+                  const dropdownWidth = isMobile ? 288 : 320;
+                  const margin = 8;
+                  let left = rect.left + rect.width / 2 - dropdownWidth / 2;
+                  left = Math.max(margin, Math.min(left, window.innerWidth - dropdownWidth - margin));
+                  setDropdownPos({ top: rect.bottom + 8, left });
+                }
+                setShowNotifications(!showNotifications);
+              }}
+              className="p-3 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center btn-press relative"
             >
               <Bell className="w-4 h-4 text-slate-600 dark:text-slate-300" />
               {notifications.filter(n => !n.isRead).length > 0 && (
@@ -318,8 +346,11 @@ export default function MerchantDashboard() {
               )}
             </button>
             {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-xl z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-slate-100 dark:border-dark-border flex items-center justify-between">
+              <div
+                className="fixed w-72 sm:w-80 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-50 overflow-hidden"
+                style={{ top: dropdownPos.top, left: dropdownPos.left }}
+              >
+                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <p className="text-sm font-bold text-slate-800 dark:text-white">Notifications</p>
                   <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 btn-press">
                     <X className="w-4 h-4" />
@@ -354,7 +385,7 @@ export default function MerchantDashboard() {
                   )}
                 </div>
                 {notifications.length > 0 && (
-                  <div className="px-4 py-2 border-t border-slate-100 dark:border-dark-border">
+                  <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-700">
                     <button
                       onClick={() => { setShowNotifications(false); navigate('/merchant/referrals'); }}
                       className="w-full text-center text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline btn-press"
@@ -368,7 +399,7 @@ export default function MerchantDashboard() {
           </div>
           <button
             onClick={handleRefresh}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press"
+            className="p-3 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
@@ -488,7 +519,7 @@ export default function MerchantDashboard() {
       {/* Top Section: Wallet + Stats Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Merchant Wallet Card */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/10 flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between">
           <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-6 translate-y-6">
             <Wallet className="w-48 h-48" />
           </div>
@@ -513,7 +544,7 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
           <StatCard
             icon={Users}
             label="Today's Customers"
@@ -540,7 +571,7 @@ export default function MerchantDashboard() {
       {/* Customer Onboarding & Insights Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Onboarding QR Code Card */}
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm flex flex-col items-center justify-between text-center min-h-[320px]">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-between text-center min-h-[320px]">
           <div className="w-full">
             <div className="flex items-center justify-center gap-2 mb-2">
               <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -572,7 +603,7 @@ export default function MerchantDashboard() {
 
           <div className="w-full space-y-2">
             {stats?.merchantCode && (
-              <span className="block text-xs font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-dark-border truncate">
+              <span className="block text-xs font-mono font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 truncate">
                 {stats.merchantCode}
               </span>
             )}
@@ -594,7 +625,7 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Customer Insights Card */}
-        <div className="lg:col-span-2 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -612,7 +643,7 @@ export default function MerchantDashboard() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm text-center">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm text-center">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Customers You've Personally Signed Up
                 </span>
@@ -621,7 +652,7 @@ export default function MerchantDashboard() {
                 </span>
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm text-center">
+              <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm text-center">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Repeat Customers
                 </span>
@@ -648,7 +679,7 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div
           onClick={() => navigate('/merchant/add-points')}
-          className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
         >
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 rounded-2xl">
             <PlusCircle className="w-8 h-8" />
@@ -666,7 +697,7 @@ export default function MerchantDashboard() {
 
         <div
           onClick={() => navigate('/merchant/redeem-points')}
-          className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
         >
           <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl">
             <Gift className="w-8 h-8" />
@@ -684,7 +715,7 @@ export default function MerchantDashboard() {
 
         <div
           onClick={() => setIsComplaintModalOpen(true)}
-          className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
         >
           <div className="p-4 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-2xl">
             <MessageSquare className="w-8 h-8" />
@@ -772,7 +803,7 @@ export default function MerchantDashboard() {
       >
         <div className="space-y-6">
           {/* Step Progress Bar */}
-          <div className="flex items-center justify-between border border-slate-100 dark:border-dark-border rounded-2xl p-3 md:p-4 bg-slate-50 dark:bg-slate-900/20 shadow-sm mb-4">
+          <div className="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-2xl p-3 md:p-4 bg-slate-50 dark:bg-slate-900/20 shadow-sm mb-4">
             <div className="flex items-center gap-2 md:gap-3">
               <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm ${
                 transferStep === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
@@ -819,12 +850,12 @@ export default function MerchantDashboard() {
               ) : (
                 <div className="space-y-6">
                   {showScanner && (
-                    <div className="border border-slate-100 dark:border-dark-border rounded-2xl p-4 bg-slate-50 dark:bg-slate-900/40">
+                    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-slate-50 dark:bg-slate-900/40">
                       <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                         <Camera className="w-4 h-4 text-emerald-600" />
                         Live Camera View
                       </div>
-                      <div id="merchant-transfer-qr-reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border shadow-sm" />
+                      <div id="merchant-transfer-qr-reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 shadow-sm" />
                     </div>
                   )}
 
@@ -869,7 +900,7 @@ export default function MerchantDashboard() {
               </div>
 
               {/* Customer Info Card */}
-              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-dark-border p-5 rounded-2xl space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold">
                     <User className="w-6 h-6" />
@@ -957,7 +988,7 @@ export default function MerchantDashboard() {
               </div>
 
               {/* Receipt summary */}
-              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-100 dark:border-dark-border p-6 rounded-2xl max-w-xs mx-auto text-left space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 p-6 rounded-2xl max-w-xs mx-auto text-left space-y-4">
                 <div className="flex justify-between items-center text-xs text-slate-400">
                   <span>Customer Name</span>
                   <span className="font-bold text-slate-700 dark:text-slate-200">{scannedCustomer?.name}</span>

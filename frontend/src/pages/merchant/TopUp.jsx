@@ -214,7 +214,7 @@ export default function TopUp() {
               className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isSubmitting && <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />}
-              Submit Payment Proof
+              Submit
             </button>
           </form>
           )}
@@ -235,7 +235,7 @@ export default function TopUp() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-dark-border">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Package</th>
+                  <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Package</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Points</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
@@ -245,7 +245,7 @@ export default function TopUp() {
               <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
                 {history.map((item) => (
                   <tr key={item.id}>
-                    <td className="px-4 py-3 text-sm font-bold text-slate-800 dark:text-white capitalize">{item.packageName}</td>
+                    <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-bold text-slate-800 dark:text-white capitalize">{item.packageName}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">₹{item.amountPaid}</td>
                     <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">{item.pointsToCredit.toLocaleString()}</td>
                     <td className="px-4 py-3">{getStatusBadge(item.status)}</td>

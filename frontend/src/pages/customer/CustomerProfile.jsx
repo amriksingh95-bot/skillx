@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { 
   User, Mail, Smartphone, Lock, Award, Calendar, 
   MapPin, Check, Copy, Heart, Shield, Sparkles,
-  PhoneCall, KeyRound, AlertTriangle, QrCode, Wallet
+  PhoneCall, KeyRound, AlertTriangle, QrCode, Wallet, Eye, EyeOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
@@ -58,6 +58,9 @@ export default function CustomerProfile() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
   const fetchProfile = async () => {
@@ -173,7 +176,8 @@ export default function CustomerProfile() {
         favouriteCategories: data.favouriteCategories || [],
         dietaryPreference: data.dietaryPreference || '',
         notificationOptIn: data.notificationOptIn !== undefined ? data.notificationOptIn : true,
-        profilePhoto: data.profilePhoto || ''
+        profilePhoto: data.profilePhoto || '',
+        alternativePhone: data.alternativePhone || ''
       };
       setFormData(updatedForm);
       setOriginalData(updatedForm);
@@ -534,13 +538,17 @@ export default function CustomerProfile() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Alternative Phone</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Alternative Phone</label>
                 <input
+                  type="tel"
                   name="alternativePhone"
-                  value={formData.alternativePhone || ''}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  autoComplete="off"
                   placeholder="Alternative contact number"
+                  className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border rounded-xl text-sm transition-all focus:outline-none focus:ring-1 focus:ring-primary ${
+                    modifiedFields.alternativePhone ? 'border-primary text-primary font-semibold' : 'border-slate-200 dark:border-slate-900 text-slate-900 dark:text-white'
+                  }`}
+                  value={formData.alternativePhone || ''}
+                  onChange={(e) => handleInputChange('alternativePhone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                   maxLength={10}
                 />
               </div>
@@ -905,39 +913,54 @@ export default function CustomerProfile() {
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Current Password</label>
-                <input
-                  type="password"
-                  required
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
-                  placeholder="Enter current password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    required
+                    className="w-full px-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
+                    placeholder="Enter current password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={() => setShowOldPassword(!showOldPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">New Password</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
-                  placeholder="Min 6 characters"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    className="w-full px-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
+                    placeholder="Min 6 characters"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Confirm New Password</label>
-                <input
-                  type="password"
-                  required
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    className="w-full px-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               {confirmPassword && newPassword !== confirmPassword && (

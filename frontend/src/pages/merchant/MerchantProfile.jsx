@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Building, MapPin, Clock, Lock, Save, X } from 'lucide-react';
+import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff } from 'lucide-react';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -13,6 +13,9 @@ export default function MerchantProfile() {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -302,15 +305,30 @@ export default function MerchantProfile() {
             <form onSubmit={handlePasswordChange} className="space-y-3">
               <div>
                 <label className={labelClass}>Current Password</label>
-                <input type="password" value={oldPassword} onChange={e => setOldPassword(e.target.value)} className={inputClass} required />
+                <div className="relative">
+                  <input type={showOldPassword ? 'text' : 'password'} value={oldPassword} onChange={e => setOldPassword(e.target.value)} className={`${inputClass} pr-10`} required />
+                  <button type="button" onClick={() => setShowOldPassword(!showOldPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={labelClass}>New Password</label>
-                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={inputClass} required minLength={8} />
+                <div className="relative">
+                  <input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} className={`${inputClass} pr-10`} required minLength={8} />
+                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Confirm New Password</label>
-                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputClass} required />
+                <div className="relative">
+                  <input type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={`${inputClass} pr-10`} required />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 btn-press">
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm btn-press">Cancel</button>

@@ -249,11 +249,11 @@ export default function MerchantRedeemPoints() {
       </div>
 
       {/* Lookup Card */}
-      <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm space-y-6">
         <h3 className="font-bold text-base text-slate-800 dark:text-white">Identify Customer</h3>
         
-        <form onSubmit={handleSearch} className="flex gap-3 flex-wrap sm:flex-nowrap">
-          <div className="relative flex-1">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 min-w-0">
             <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
               <Search className="w-4 h-4" />
             </span>
@@ -265,26 +265,28 @@ export default function MerchantRedeemPoints() {
               onChange={(e) => setIdentifier(e.target.value)}
             />
           </div>
-          <button
-            type="submit"
-            disabled={isSearching}
-            className="px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
-          >
-            {isSearching ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
-            Lookup
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowScanner(!showScanner)}
-            className={`px-4 py-3 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-              showScanner
-                ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/50'
-                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-dark-border dark:text-slate-300'
-            } btn-press`}
-          >
-            <QrCode className="w-4 h-4" />
-            {showScanner ? 'Close Scanner' : 'Scan QR'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={isSearching}
+              className="px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
+            >
+              {isSearching ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
+              Lookup
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowScanner(!showScanner)}
+              className={`px-4 py-3 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                showScanner
+                  ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/50'
+                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-dark-border dark:text-slate-300'
+              } btn-press`}
+            >
+              <QrCode className="w-4 h-4" />
+              {showScanner ? 'Close Scanner' : 'Scan QR'}
+            </button>
+          </div>
         </form>
 
         {/* Real camera scanner container */}
@@ -322,7 +324,7 @@ export default function MerchantRedeemPoints() {
       {customer && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Info Card */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm space-y-4">
             <h3 className="font-bold text-base text-slate-800 dark:text-white">Customer Details</h3>
             
             <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
@@ -363,7 +365,7 @@ export default function MerchantRedeemPoints() {
           </div>
 
           {/* Issue Points Form */}
-          <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-bold text-base text-slate-800 dark:text-white">Redeem Points</h3>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">

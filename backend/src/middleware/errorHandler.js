@@ -16,10 +16,11 @@ function errorHandler(err, req, res, next) {
 
   // 1. Log the error securely to the server console
   const timestamp = new Date().toISOString();
-  console.error(`[${timestamp}] ERROR: ${req.method} ${req.originalUrl} - Status: ${status}`);
-  console.error(`Message: ${err.message}`);
+  const requestId = req.id || 'unknown';
+  console.error(`[${timestamp}] [${requestId}] ERROR: ${req.method} ${req.originalUrl.split('?')[0]} - Status: ${status}`);
+  console.error(`[${requestId}] Message: ${err.message}`);
   if (err.stack) {
-    console.error(`Stack: ${err.stack}`);
+    console.error(`[${requestId}] Stack: ${err.stack}`);
   }
 
   // 2. Send safe response to client
@@ -27,6 +28,7 @@ function errorHandler(err, req, res, next) {
     success: false,
     message,
     code,
+    requestId,
     ...(process.env.NODE_ENV !== 'production' ? { stack: err.stack } : {}),
     ...(err.retryAfter !== undefined ? { retryAfter: err.retryAfter } : {}),
     ...(err.attemptsRemaining !== undefined ? { attemptsRemaining: err.attemptsRemaining } : {})

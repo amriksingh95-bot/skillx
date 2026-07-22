@@ -90,7 +90,7 @@ export default function MerchantReports() {
         <button
           onClick={handleRefresh}
           disabled={loading}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press disabled:opacity-50"
+          className="p-3 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold shrink-0 btn-press disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -98,7 +98,7 @@ export default function MerchantReports() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <StatCard
           icon={ArrowUpRight}
           label="Points Issued (All Time)"
@@ -127,7 +127,7 @@ export default function MerchantReports() {
       </div>
 
       {/* Explanatory Note */}
-      <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+      <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
         <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">About This Report</h3>
         <ul className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5">
           <li><span className="font-semibold text-slate-600 dark:text-slate-300">Points Issued:</span> Total points credited to customers via purchases and transfers (excluding reversed transactions).</li>
@@ -156,7 +156,7 @@ export default function MerchantReports() {
 
         {/* Top Repeat Customers Table */}
         {repeatData && repeatData.topRepeatCustomers.length > 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-100 dark:border-dark-border">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Top Repeat Customers</h3>
             </div>
@@ -164,7 +164,7 @@ export default function MerchantReports() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
-                    <th className="px-5 py-3">Customer</th>
+                    <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3">Customer</th>
                     <th className="px-5 py-3 text-center">Visits</th>
                     <th className="px-5 py-3">Last Visit</th>
                   </tr>
@@ -172,7 +172,7 @@ export default function MerchantReports() {
                 <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
                   {repeatData.topRepeatCustomers.map((customer, idx) => (
                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-5 py-3">
+                      <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3">
                         <span className="text-sm font-medium text-slate-800 dark:text-white">{customer.name}</span>
                       </td>
                       <td className="px-5 py-3 text-center">
@@ -194,7 +194,7 @@ export default function MerchantReports() {
         )}
 
         {repeatData && repeatData.topRepeatCustomers.length === 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-8 text-center shadow-sm">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center shadow-sm">
             <UserCheck className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">No repeat customers in the last 30 days.</p>
           </div>
@@ -239,7 +239,7 @@ export default function MerchantReports() {
 
         {/* Avg Bill Value Trend Chart */}
         {roiData && roiData.impact.avgBillTrend.length > 0 && (
-          <div className="mt-6 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+          <div className="mt-6 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Average Bill Value Trend (Last 90 Days)</h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -331,7 +331,7 @@ export default function MerchantReports() {
 
         {/* Top Customers Table */}
         {topCustomersData && topCustomersData.customers.length > 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-100 dark:border-dark-border">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">Top Customers by Revenue</h3>
             </div>
@@ -339,7 +339,7 @@ export default function MerchantReports() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
-                    <th className="px-5 py-3 text-center">#</th>
+                    <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3 text-center">#</th>
                     <th className="px-5 py-3">Customer</th>
                     <th className="px-5 py-3">Mobile</th>
                     <th className="px-5 py-3 text-right">Total Spent</th>
@@ -356,7 +356,7 @@ export default function MerchantReports() {
                 <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
                   {topCustomersData.customers.map((customer) => (
                     <tr key={customer.rank} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-5 py-3 text-center">
+                      <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3 text-center">
                         <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{customer.rank}</span>
                       </td>
                       <td className="px-5 py-3">
@@ -423,7 +423,7 @@ export default function MerchantReports() {
         )}
 
         {topCustomersData && topCustomersData.customers.length === 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-8 text-center shadow-sm">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center shadow-sm">
             <Users className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">No customer data available yet.</p>
           </div>
@@ -433,7 +433,7 @@ export default function MerchantReports() {
         {topCustomersData && topCustomersData.customers.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             {/* Bar Chart: Top 10 by Total Spent */}
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Top 10 Customers by Revenue</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -463,7 +463,7 @@ export default function MerchantReports() {
             </div>
 
             {/* Pie Chart: Revenue Contribution — Top 10 vs Rest */}
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Revenue Contribution — Top 10 vs Rest</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -539,7 +539,7 @@ export default function MerchantReports() {
         <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Customer Growth & Churn Report</h2>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <StatCard
             icon={UserCheck}
             label="New Customers (This Month)"
@@ -570,7 +570,7 @@ export default function MerchantReports() {
         {growthChurnData && growthChurnData.monthlyCohort.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             {/* Bar Chart: Monthly New Customer Trend */}
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Monthly New Customers (Last 6 Months)</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -590,7 +590,7 @@ export default function MerchantReports() {
             </div>
 
             {/* Pie Chart: Status Breakdown */}
-            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-5 shadow-sm">
+            <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Customer Status Breakdown</h3>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -654,7 +654,7 @@ export default function MerchantReports() {
 
         {/* At-Risk Customers Table */}
         {growthChurnData && growthChurnData.atRiskCustomers.length > 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-100 dark:border-dark-border">
               <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">At-Risk Customers</h3>
             </div>
@@ -662,7 +662,7 @@ export default function MerchantReports() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
-                    <th className="px-5 py-3">Customer</th>
+                    <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3">Customer</th>
                     <th className="px-5 py-3">Mobile</th>
                     <th className="px-5 py-3">Last Purchase</th>
                   </tr>
@@ -670,7 +670,7 @@ export default function MerchantReports() {
                 <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
                   {growthChurnData.atRiskCustomers.map((customer, idx) => (
                     <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-5 py-3">
+                      <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-5 py-3">
                         <span className="text-sm font-medium text-slate-800 dark:text-white">{customer.name}</span>
                       </td>
                       <td className="px-5 py-3">
@@ -692,7 +692,7 @@ export default function MerchantReports() {
         )}
 
         {growthChurnData && growthChurnData.atRiskCustomers.length === 0 && (
-          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-8 text-center shadow-sm">
+          <div className="mt-4 bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center shadow-sm">
             <UserCheck className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
             <p className="text-sm text-slate-500 dark:text-slate-400">No at-risk customers at this time.</p>
           </div>

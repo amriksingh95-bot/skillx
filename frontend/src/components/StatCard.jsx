@@ -51,10 +51,10 @@ export default function StatCard({
   const variant = colorVariants[color] || colorVariants.primary;
 
   return (
-    <div className={`ui-card-hover ${compact ? 'p-4' : 'p-6'} group`}>
+    <div className={`ui-card-hover ${compact ? 'p-4' : 'p-4'} group`}>
       <div className="flex items-center justify-between">
-        <div className={`${compact ? 'p-2' : 'p-3'} ${variant.iconBg} rounded-xl ${variant.iconText} transition-transform group-hover:scale-105`}>
-          {Icon && <Icon className={compact ? 'w-5 h-5' : 'w-6 h-6'} />}
+        <div className={`${compact ? 'p-2' : 'p-2.5'} ${variant.iconBg} rounded-xl ${variant.iconText} transition-transform group-hover:scale-105`}>
+          {Icon && <Icon className={compact ? 'w-5 h-5' : 'w-5 h-5'} />}
         </div>
         {trend && (
           <div
@@ -77,9 +77,9 @@ export default function StatCard({
           </div>
         )}
       </div>
-      <div className={compact ? 'mt-3' : 'mt-4'}>
-        <h3 className="text-text-tertiary dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">{label}</h3>
-        <p className={`${compact ? 'text-xl' : 'text-2xl'} font-bold mt-1 text-text-primary dark:text-white`}>{value}</p>
+      <div className={compact ? 'mt-3' : 'mt-3'}>
+        <h3 className="text-text-tertiary dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">{label}</h3>
+        <p className={`${compact ? 'text-xl' : 'text-xl'} font-bold mt-1 text-text-primary dark:text-white`}>{value}</p>
       </div>
     </div>
   );

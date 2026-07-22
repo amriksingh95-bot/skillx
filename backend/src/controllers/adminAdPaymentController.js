@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { createAuditLog } = require('../services/auditLogService');
+const { pauseExistingLiveAds } = require('../services/adService');
 
 async function getPendingAdPayments(req, res, next) {
   try {
@@ -89,6 +90,23 @@ async function confirmAdPayment(req, res, next) {
           confirmedAt: now
         }
       });
+
+      // Pause any existing live ads for this merchant before activating the new one
+      const pausedCount = await pauseExistingLiveAds(ad.merchantId, ad.id, tx);
+      if (pausedCount > 0) {
+        await createAuditLog(
+          null,
+          'AD_AUTO_PAUSED_BULK',
+          'Advertisement',
+          ad.id,
+          {
+            merchantId: ad.merchantId,
+            adsPaused: pausedCount,
+            reason: 'Auto-paused existing live ads before activating new ad.',
+          },
+          req.ip
+        );
+      }
 
       await tx.advertisement.update({
         where: { id: ad.id },

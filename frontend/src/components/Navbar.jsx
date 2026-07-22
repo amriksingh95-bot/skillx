@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu, Sun, Moon, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Badge from './Badge';
@@ -7,6 +8,11 @@ import Badge from './Badge';
 export default function Navbar({ onMenuToggle }) {
   const { user, logout, loggingOut } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const profilePath = user?.role === 'merchant' ? '/merchant/profile'
+    : user?.role === 'customer' ? '/customer/profile'
+    : null;
 
   if (!user) return null;
 
@@ -40,23 +46,40 @@ export default function Navbar({ onMenuToggle }) {
         </button>
 
         {/* User Card */}
-        <div className="flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border">
-          <div className="hidden md:flex flex-col text-right">
-            <span className="text-sm font-bold">{user.name}</span>
-            <div className="mt-0.5">
-              <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
+        {profilePath ? (
+          <button
+            onClick={() => navigate(profilePath)}
+            className="flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors -m-1 p-1"
+          >
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-sm font-bold">{user.name}</span>
+              <div className="mt-0.5">
+                <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
+              </div>
+            </div>
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
+              <User className="w-5 h-5" />
+            </div>
+          </button>
+        ) : (
+          <div className="flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border">
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-sm font-bold">{user.name}</span>
+              <div className="mt-0.5">
+                <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
+              </div>
+            </div>
+            <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
+              <User className="w-5 h-5" />
             </div>
           </div>
-          <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
-            <User className="w-5 h-5" />
-          </div>
-        </div>
+        )}
 
         {/* Logout */}
         <button
           onClick={logout}
           disabled={loggingOut}
-          className="p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30 disabled:opacity-50 disabled:pointer-events-none"
+          className="ml-2 p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30 disabled:opacity-50 disabled:pointer-events-none"
           title="Sign Out"
         >
           <LogOut className="w-4 h-4" />

@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { createAuditLog } = require('../services/auditLogService');
+const { pauseExistingLiveAds } = require('../services/adService');
 
 async function runAdExpiryCheck() {
   const summary = {

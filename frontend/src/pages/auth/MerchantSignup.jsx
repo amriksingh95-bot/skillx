@@ -619,6 +619,20 @@ export default function MerchantSignup() {
               )}
             </div>
 
+            <label className="flex items-start gap-2 text-xs text-slate-400">
+              <input
+                type="checkbox"
+                required
+                className="mt-0.5 rounded border-slate-600 text-[#16a34a] focus:ring-emerald-500/20"
+              />
+              <span>
+                I agree to the{' '}
+                <Link to="/privacy-policy" target="_blank" className="text-[#38bdf8] hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
             {/* Send OTP Button */}
             <button
               type="submit"

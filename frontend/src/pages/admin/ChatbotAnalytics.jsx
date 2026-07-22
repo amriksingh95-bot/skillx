@@ -52,7 +52,7 @@ export default function ChatbotAnalytics() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-500/10 text-blue-600 rounded-xl">

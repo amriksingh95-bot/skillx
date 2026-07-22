@@ -376,7 +376,7 @@ export default function MerchantSubscription() {
               className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isUploading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
-              Submit Payment Proof
+              Submit
             </button>
           </form>
         </div>
@@ -493,7 +493,7 @@ export default function MerchantSubscription() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-slate-800/50">
-                    <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Plan</th>
+                    <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Plan</th>
                     <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                     <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Start Date</th>
                     <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">End Date</th>
@@ -506,7 +506,7 @@ export default function MerchantSubscription() {
                     const SubIcon = subConfig.icon;
                     return (
                       <tr key={sub.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-4 py-3">
+                        <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-4 py-3">
                           <span className="text-sm font-bold text-slate-800 dark:text-white">
                             {sub.plan?.displayName || 'Unknown Plan'}
                           </span>

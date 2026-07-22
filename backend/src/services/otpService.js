@@ -57,14 +57,14 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
   if (email) {
     const emailResult = await sendOTPEmail(email, otp, purpose);
     if (!emailResult.success) {
-      console.warn(`[OTP Service]: Email delivery failed for ${email}: ${emailResult.reason}`);
+      console.warn(`[OTP Service]: Email delivery failed for masked user: ${emailResult.reason}`);
     }
   }
 
   // 5. Call the external mock SMS gateway with raw OTP code
   await sendSMS(mobile, otp);
 
-  return { verification, otp };
+  return { verification };
 }
 
 /**

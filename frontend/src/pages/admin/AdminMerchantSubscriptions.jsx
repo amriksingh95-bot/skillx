@@ -3,7 +3,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { RefreshCw, Plus, CreditCard, Clock, CheckCircle, AlertTriangle, Store, Calendar, AlertCircle, TrendingDown, Image, X } from 'lucide-react';
+import { RefreshCw, Plus, CreditCard, Clock, CheckCircle, AlertTriangle, Store, Calendar, AlertCircle, TrendingDown, Image, X, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function AdminMerchantSubscriptions() {
@@ -429,11 +429,23 @@ const handleOpenAdd = () => {
               <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl btn-press"><X className="w-5 h-5" /></button>
             </div>
             <p className="text-sm text-slate-500">{screenshotModal.merchantName}</p>
-            <img
-              src={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
-              alt="Payment Screenshot"
-              className="w-full rounded-xl border border-slate-200 object-contain max-h-80"
-            />
+            {screenshotModal.url && screenshotModal.url.toLowerCase().endsWith('.pdf') ? (
+              <a
+                href={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 transition"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span className="text-sm font-medium">Open PDF in new tab</span>
+              </a>
+            ) : (
+              <img
+                src={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
+                alt="Payment Screenshot"
+                className="w-full rounded-xl border border-slate-200 object-contain max-h-80"
+              />
+            )}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })}
@@ -461,10 +473,10 @@ const handleOpenAdd = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 dark:text-white">Merchant Subscriptions</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Merchant Subscriptions</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             View and manage merchant subscriptions, renewals, and grace periods.
           </p>
         </div>
@@ -481,7 +493,8 @@ const handleOpenAdd = () => {
             className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold shadow-sm flex items-center gap-2 transition-all btn-press"
           >
             <Plus className="w-4 h-4" />
-            Create Subscription
+            <span className="hidden sm:inline">Create Subscription</span>
+            <span className="sm:hidden">Create</span>
           </button>
         </div>
       </div>
@@ -495,7 +508,7 @@ const handleOpenAdd = () => {
               <button
                 key={idx}
                 onClick={() => { setStatusFilter(card.filter); setPage(1); }}
-                className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl p-4 text-left hover:shadow-md transition-all btn-press"
+                className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-left hover:shadow-md transition-all btn-press"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-1.5 rounded-lg ${card.bg}`}>
@@ -511,10 +524,10 @@ const handleOpenAdd = () => {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none">
         {[
           { value: '', label: 'All' },
-          { value: 'payment_pending', label: '? Pending Payment' },
+          { value: 'payment_pending', label: 'Pending Payment' },
           { value: 'active', label: 'Active' },
           { value: 'grace_period', label: 'Grace Period' },
           { value: 'expired', label: 'Expired' },
@@ -523,7 +536,7 @@ const handleOpenAdd = () => {
           <button
             key={tab.value}
             onClick={() => { setStatusFilter(tab.value); setPage(1); }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
               statusFilter === tab.value
                 ? 'bg-primary text-white shadow-sm'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'

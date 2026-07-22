@@ -350,6 +350,18 @@ export default function DataTable({
                   )}
                   {columns.map((col, colIdx) => {
                     const value = getCellValue(row, col);
+                    if (col.render) {
+                      return (
+                        <div key={colIdx} className="flex items-start justify-between gap-3">
+                          <span className="text-2xs font-bold uppercase tracking-wider text-text-tertiary dark:text-slate-500 shrink-0 mt-0.5">
+                            {col.header}
+                          </span>
+                          <span className="text-sm text-text-primary dark:text-slate-300 font-medium text-right min-w-0">
+                            {renderCellValue(row, col, value)}
+                          </span>
+                        </div>
+                      );
+                    }
                     if (value === null || value === undefined || value === '' || value === '-') return null;
                     return (
                       <div key={colIdx} className="flex items-start justify-between gap-3">

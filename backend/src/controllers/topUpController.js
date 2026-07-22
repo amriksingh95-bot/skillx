@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { sendWhatsAppAlert, sendTelegramAlert } = require('../utils/whatsappNotify');
 const { uploadBuffer } = require('../lib/supabaseStorage');
+const { validateImageFile } = require('../utils/validateImageFile');
 const multer = require('multer');
 const path = require('path');
 
@@ -8,7 +9,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
+    const allowed = /jpeg|jpg|png|webp|pdf/;
     const ext = allowed.test(path.extname(file.originalname).toLowerCase());
     const mime = allowed.test(file.mimetype);
     if (ext && mime) return cb(null, true);
@@ -86,6 +87,14 @@ async function uploadTopUpScreenshot(req, res, next) {
       const err = new Error('Screenshot is required.');
       err.status = 400;
       err.code = 'VALIDATION_ERROR';
+      return next(err);
+    }
+
+    const fileTypeResult = await validateImageFile(req.file.buffer);
+    if (!fileTypeResult.valid) {
+      const err = new Error(fileTypeResult.error);
+      err.status = 400;
+      err.code = 'INVALID_FILE_TYPE';
       return next(err);
     }
 

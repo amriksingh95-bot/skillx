@@ -110,6 +110,7 @@ async function getProfile(req, res, next) {
         referredCount,
         referredPoints,
         profilePhoto: customer.profilePhoto,
+        alternativePhone: customer.alternativePhone,
         updatedAt: customer.updatedAt,
         balance,
         rewardSettings: rewardSettings ? {
@@ -581,6 +582,7 @@ async function updateProfile(req, res, next) {
         referredBy: updatedCustomer.referredBy,
         referredByName,
         profilePhoto: updatedCustomer.profilePhoto,
+        alternativePhone: updatedCustomer.alternativePhone,
         updatedAt: updatedCustomer.updatedAt,
         balance,
         stats: {
@@ -605,7 +607,7 @@ async function requestMobileOTP(req, res, next) {
   try {
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
-      include: { user: true }
+      include: { user: { select: { id: true, email: true, mobile: true, role: true, isActive: true, createdAt: true } } }
     });
 
     if (!customer) {
@@ -616,7 +618,7 @@ async function requestMobileOTP(req, res, next) {
     }
 
     const hasEmail = customer.email && customer.email.trim().length > 0;
-    const { otp } = await generateAndSendOTP(customer.user.mobile, hasEmail ? customer.email : null, 'change_mobile');
+    await generateAndSendOTP(customer.user.mobile, hasEmail ? customer.email : null, 'change_mobile');
 
     if (hasEmail) {
       res.status(200).json({
@@ -644,7 +646,7 @@ async function updateMobile(req, res, next) {
   try {
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
-      include: { user: true }
+      include: { user: { select: { id: true, email: true, mobile: true, role: true, isActive: true, createdAt: true } } }
     });
 
     if (!customer) {
@@ -767,7 +769,7 @@ async function updateEmail(req, res, next) {
 async function getSSEToken(req, res, next) {
   try {
     const sseToken = jwt.sign(
-      { userId: req.user.id, purpose: 'sse' },
+      { userId: req.user.id, role: 'customer', customerId: req.user.customerId, purpose: 'sse' },
       JWT_SECRET,
       { expiresIn: '5m' }
     );

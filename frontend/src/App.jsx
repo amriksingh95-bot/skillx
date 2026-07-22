@@ -15,6 +15,7 @@ const Register = React.lazy(() => import('./pages/Register'));
 const MerchantSignup = React.lazy(() => import('./pages/auth/MerchantSignup'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
 const Suspended = React.lazy(() => import('./pages/Suspended'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 
 // Admin Pages — lazy-loaded
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
@@ -75,6 +76,7 @@ export default function App() {
 <Route path="/merchant-signup" element={<MerchantSignup />} />
 <Route path="/forgot-password" element={<ForgotPassword />} />
 <Route path="/suspended" element={<Suspended />} />
+<Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
             {/* Authenticated Routes with Shell Layout */}
             <Route path="/" element={<MerchantSubscriptionProvider><Layout /></MerchantSubscriptionProvider>}>

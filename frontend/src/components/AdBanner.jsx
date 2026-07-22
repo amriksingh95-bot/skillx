@@ -1,19 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import Modal from './Modal';
-import { getIconEmoji } from '../constants/adThemes';
+import AdCard from './AdCard';
 
-const pulseStyle = (
+const carouselStyle = (
   <style>{`
-    @keyframes pulse-ring {
-      0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(245,158,11,0); }
-      100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
-    }
     .ad-carousel-wrapper { min-height: 160px; height: 160px; }
     .ad-carousel-inner { padding-left: 44px; padding-right: 44px; }
     @media (max-width: 640px) {
-      .ad-carousel-wrapper { min-height: 124px; height: 124px; }
+      .ad-carousel-wrapper { min-height: 160px; height: 160px; }
       .ad-carousel-inner { padding-left: 40px; padding-right: 40px; }
     }
   `}</style>
@@ -218,176 +213,25 @@ export function getDirectionsUrl(ad) {
 }
 
 function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
-  const directionsUrl = getDirectionsUrl(ad);
-  const canShowDirections = ad.showDirections && directionsUrl;
-  const locationText = [ad.merchant?.address, ad.merchant?.city].filter(Boolean).join(', ') || 'Location not set';
-  const accent = ad.accent || '#f59e0b';
-  const [imgError, setImgError] = useState(false);
-
   return (
     <div
       style={{
         position: 'absolute',
         inset: 0,
         height: 160,
-        display: 'grid',
-        gridTemplateColumns: '36px 200px 1fr 100px 36px',
-        gap: '12px',
-        padding: '0 12px',
-        background: ad.bg || 'linear-gradient(110deg,#0f172a,#1e293b)',
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateX(0)' : 'translateX(30px)',
         transition: 'opacity 0.35s ease, transform 0.35s ease',
         pointerEvents: visible ? 'auto' : 'none',
       }}
-      className="ad-slide-grid"
     >
-      <style>{`
-        @media (max-width: 640px) {
-          .ad-slide-grid {
-            grid-template-columns: 36px 1fr 36px !important;
-            grid-template-rows: auto auto !important;
-          }
-          .ad-slide-grid > div:nth-child(1) { grid-column: 1; }
-          .ad-slide-grid > div:nth-child(2) { grid-column: 2 / -1; }
-          .ad-slide-grid > div:nth-child(3) { grid-column: 2; }
-          .ad-slide-grid > div:nth-child(4) { grid-column: 2 / -1; grid-row: 2; justify-self: end; margin-right: 36px; }
-          .ad-slide-grid > div:nth-child(5) { grid-column: 3; }
-        }
-      `}</style>
-
-      {/* Column 1: Left arrow */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button
-          onClick={onPrevClick}
-          aria-label="Previous ad"
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: 'rgba(0,0,0,0.35)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            lineHeight: 1,
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          ‹
-        </button>
-      </div>
-
-      {/* Column 2: Brand/merchant identity - clickable only for directions */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          cursor: canShowDirections ? 'pointer' : 'default',
-        }}
-        onClick={canShowDirections ? () => { if (directionsUrl) window.open(directionsUrl, '_blank', 'noopener,noreferrer'); } : undefined}
-        role={canShowDirections ? 'button' : undefined}
-        tabIndex={canShowDirections ? 0 : undefined}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 10,
-            background: accent + '33',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 22,
-            flexShrink: 0,
-            border: `1px solid ${accent}66`,
-          }}
-        >
-          {ad.imageUrl && !imgError ? (
-            <img src={ad.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} onError={() => setImgError(true)} />
-          ) : getIconEmoji(ad.icon)}
-        </div>
-        <div style={{ minWidth: 0, flex: '1 1 auto', maxWidth: '100%' }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-            {ad.merchant?.businessName || 'Partner'}
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', whiteSpace: 'normal', wordBreak: 'break-word', overflowWrap: 'break-word', marginTop: 2 }}>
-            {locationText}
-          </div>
-        </div>
-      </div>
-
-      {/* Column 3: Headline + Description content */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.3, width: '100%', textAlign: 'center' }}>
-          {ad.title}
-        </div>
-        {ad.description && (
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, width: '100%', textAlign: 'center', whiteSpace: 'pre-wrap', marginTop: 4 }}>
-            {ad.description}
-          </div>
-        )}
-      </div>
-
-      {/* Column 4: Badge */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button
-          onClick={() => onBadgeClick(ad)}
-          style={{
-            width: 96,
-            height: 96,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: '#f59e0b',
-            color: '#000',
-            fontWeight: 800,
-            fontSize: ad.ctaText.length > 10 ? 12 : 14,
-            lineHeight: 1.15,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            padding: 8,
-            boxShadow: `0 0 0 0 #f59e0b88`,
-            animation: `pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite`,
-            whiteSpace: 'normal',
-            wordBreak: 'break-word',
-            flexShrink: 0,
-          }}
-        >
-          {ad.ctaText}
-        </button>
-      </div>
-
-      {/* Column 5: Right arrow */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button
-          onClick={onNextClick}
-          aria-label="Next ad"
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: 'rgba(0,0,0,0.35)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            lineHeight: 1,
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          ›
-        </button>
-      </div>
+      <AdCard
+        ad={ad}
+        onBadgeClick={onBadgeClick}
+        showArrows={true}
+        enableDirections={true}
+        style={{ height: '100%', borderRadius: 0 }}
+      />
     </div>
   );
 }
@@ -576,7 +420,7 @@ export default function AdBanner() {
   if (ads.length === 0) {
     return (
       <>
-        {pulseStyle}
+        {carouselStyle}
         <AdCarousel ads={DEMO_ADS} accent="#f59e0b" onBadgeClick={handleBadgeClick} />
       </>
     );
@@ -584,7 +428,7 @@ export default function AdBanner() {
 
   return (
     <>
-      {pulseStyle}
+      {carouselStyle}
       <AdCarousel ads={ads} onBadgeClick={handleBadgeClick} />
       {modalAd && <AdModal ad={modalAd} onClose={() => setModalAd(null)} />}
     </>

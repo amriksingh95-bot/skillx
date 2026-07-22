@@ -3,7 +3,8 @@ const responses = require('../data/chatbot-responses.json');
 
 async function handleChatMessage(req, res, next) {
   try {
-    const { message, userRole = 'guest', userId = null } = req.body;
+    const { message, userRole = 'guest' } = req.body;
+    const userId = req.user?.id || null;
 
     if (!message || typeof message !== 'string') {
       const err = new Error('Message is required.');

@@ -6,9 +6,9 @@ import SkillXTLogo from '../components/SkillXTLogo';
 import { X, Send, MessageCircle, Bot, User, GripVertical } from 'lucide-react';
 
 const STORAGE_KEY = 'skillxt_chatbot_position';
-const DEFAULT_BOTTOM = 80;
-const MIN_BOTTOM = 50;
-const MAX_BOTTOM = 160;
+const DEFAULT_BOTTOM = 140;
+const MIN_BOTTOM = 100;
+const MAX_BOTTOM = 220;
 
 export default function FloatingChatbot() {
   const [isOpen, setIsOpen] = useState(false);

@@ -90,7 +90,7 @@ export default function ComplaintModal({
             className="flex-1 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-1.5 btn-press"
           >
             {isSubmitting ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : null}
-            Submit Complaint
+            Submit
           </button>
         </div>
       </form>

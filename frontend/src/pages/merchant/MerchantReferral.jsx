@@ -276,7 +276,7 @@ export default function MerchantReferral() {
       </div>
 
       {/* Reward Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
           label="Active Referrals"
@@ -322,8 +322,8 @@ export default function MerchantReferral() {
 
       {/* Business Categories to Invite */}
       {nearby.length > 0 && (
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 className="text-lg font-black text-slate-800 dark:text-white">
               Businesses to Invite
             </h2>
@@ -378,8 +378,8 @@ export default function MerchantReferral() {
 
       {/* My Referrals List */}
       {referrals.length > 0 && (
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 className="text-lg font-black text-slate-800 dark:text-white">
               My Referrals
             </h2>
@@ -501,8 +501,8 @@ export default function MerchantReferral() {
 
       {/* Leaderboard */}
       {leaderboard.length > 0 && (
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-dark-border">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
             <h2 className="text-lg font-black text-slate-800 dark:text-white flex items-center gap-2">
               <Award className="w-5 h-5 text-amber-500" />
               Referral Leaderboard
@@ -549,7 +549,7 @@ export default function MerchantReferral() {
 
       {/* Empty State */}
       {!loading && referrals.length === 0 && nearby.length === 0 && (
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-12 text-center">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-12 text-center">
           <div className="inline-flex p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-full mb-4">
             <Gift className="w-8 h-8 text-emerald-500" />
           </div>

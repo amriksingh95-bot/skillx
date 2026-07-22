@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import AdStepper from '../../components/AdStepper';
+import AdCard from '../../components/AdCard';
 import Badge from '../../components/Badge';
 import { THEMES, ICONS } from '../../constants/adThemes';
 import gpayQR from '../../assets/gpay-qr.png';
@@ -323,7 +324,7 @@ export default function MerchantPromote() {
       </div>
 
       {/* Ad Creation Form */}
-      <div id="ad-form-container" className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm">
+      <div id="ad-form-container" className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm">
         <h3 className="font-bold text-base text-slate-800 dark:text-white mb-4">
           {editingAdId ? 'Edit Advertisement Campaign' : 'Submit New Advertisement'}
         </h3>
@@ -409,7 +410,7 @@ export default function MerchantPromote() {
                   key={key}
                   type="button"
                   onClick={() => setAdIcon(key)}
-                  className={`p-3 rounded-xl transition-all flex flex-col items-center justify-center text-xs ${adIcon === key ? 'border-2 border-cyan-400 bg-cyan-50/20' : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'} btn-press`}
+                  className={`p-3 rounded-xl transition-all flex flex-col items-center justify-center text-xs ${adIcon === key ? 'border-2 border-cyan-400 bg-cyan-100 dark:bg-cyan-900/40' : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'} btn-press`}
                   title={label}
                 >
                   <Icon className="w-5 h-5" />
@@ -422,107 +423,24 @@ export default function MerchantPromote() {
           <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Live Preview</label>
             <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-2 bg-slate-50 dark:bg-slate-800/30">
-              <div
-                style={{
-                  minHeight: 160,
-                  display: 'grid',
-                  gridTemplateColumns: '36px 200px 1fr 100px 36px',
-                  gap: '12px',
-                  padding: '0 12px',
-                  background: THEMES[adTheme].bg,
+              <AdCard
+                ad={{
+                  bg: THEMES[adTheme]?.bg,
+                  accent: THEMES[adTheme]?.accent,
+                  icon: adIcon,
+                  imageUrl: adImageUrl || undefined,
+                  title: adTitle || 'Your Ad Headline',
+                  description: adDescription || undefined,
+                  ctaText: adCtaText || 'Learn More',
+                  merchant: {
+                    businessName: merchantProfile?.businessName || 'Your Business Name',
+                    address: merchantProfile?.address || merchantProfile?.city || 'Location not set',
+                    city: merchantProfile?.city || undefined,
+                  },
                 }}
-                className="ad-preview-grid"
-              >
-                <style>{`
-                  @media (max-width: 640px) {
-                    .ad-preview-grid {
-                      grid-template-columns: 36px 1fr 36px !important;
-                      grid-template-rows: auto auto auto !important;
-                    }
-                    .ap-arrow-first { grid-column: 1; }
-                    .ap-brand { grid-column: 2 / -1; }
-                    .ap-headline { grid-column: 2; }
-                    .ap-badge { grid-column: 2 / -1; grid-row: 3; justify-self: end; margin-right: 36px; }
-                    .ap-arrow-last { grid-column: 3; grid-row: auto; justify-self: auto; margin-right: 0; font-size: inherit; }
-                  }
-                `}</style>
-
-                {/* Arrow spacer */}
-                <div className="ap-arrow-first"></div>
-
-                {/* Brand identity - use stats for merchant info */}
-                <div className="ap-brand" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 10,
-                      background: THEMES[adTheme].accent + '33',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 22,
-                      flexShrink: 0,
-                      border: `1px solid ${THEMES[adTheme].accent}66`,
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {adImageUrl ? (
-                      <img src={adImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span>{adIcon === 'store' ? '🏪' : adIcon === 'scissors' ? '✂️' : adIcon === 'device-laptop' ? '💻' : adIcon === 'pill' ? '💊' : adIcon === 'shirt' ? '👕' : adIcon === 'tools' ? '🛠️' : adIcon === 'car' ? '🚗' : adIcon === 'book' ? '📚' : adIcon === 'coffee' ? '☕' : adIcon === 'pizza' ? '🍕' : adIcon === 'heart' ? '❤️' : adIcon === 'home' ? '🏠' : '🏪'}</span>
-                    )}
-                  </div>
-                  <div style={{ minWidth: 0, flex: '1 1 auto', maxWidth: '100%' }}>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                      {merchantProfile?.businessName || 'Your Business Name'}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', whiteSpace: 'normal', wordBreak: 'break-word', marginTop: 2 }}>
-                      {merchantProfile?.address || merchantProfile?.city || 'Location not set'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Headline + Description */}
-                <div className="ap-headline" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.3, width: '100%', textAlign: 'center' }}>
-                    {adTitle || 'Your Ad Headline'}
-                  </div>
-                  {adDescription && (
-                    <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, width: '100%', textAlign: 'center', whiteSpace: 'pre-wrap', marginTop: 4 }}>
-                      {adDescription}
-                    </div>
-                  )}
-                </div>
-
-                {/* Badge */}
-                <div className="ap-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <button
-                    style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: '50%',
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: '#f59e0b',
-                      color: '#000',
-                      fontWeight: 800,
-                      fontSize: (adCtaText || 'Learn More').length > 10 ? 12 : 14,
-                      lineHeight: 1.15,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      padding: 8,
-                    }}
-                  >
-                    {adCtaText || 'Learn More'}
-                  </button>
-                </div>
-
-                {/* Arrow spacer */}
-                <div className="ap-arrow-last"></div>
-              </div>
+                showArrows={false}
+                style={{ height: 160 }}
+              />
             </div>
           </div>
 
@@ -626,7 +544,7 @@ export default function MerchantPromote() {
               className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 text-sm font-black rounded-xl shadow-md transition-all flex items-center justify-center gap-2 btn-press"
             >
               {submittingAd ? <span className="w-5 h-5 border-2 border-slate-950 border-t-transparent animate-spin rounded-full" /> : null}
-              {editingAdId ? 'Update Ad' : 'Submit Ad for Approval'}
+              {editingAdId ? 'Update Ad' : 'Submit'}
             </button>
           </div>
         </form>
@@ -635,7 +553,7 @@ export default function MerchantPromote() {
       {/* Existing Ads Table */}
       <div className="space-y-4">
         <h3 className="font-bold text-lg text-slate-800 dark:text-white">My Advertisements</h3>
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
           {/* Desktop Table */}
           <div className="hidden md:block w-full overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -924,7 +842,7 @@ export default function MerchantPromote() {
                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
               >
                 {adPaymentSubmitting && <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" />}
-                Submit Payment Proof
+                Submit
               </button>
             </div>
           </form>

@@ -94,7 +94,7 @@ export default function AdPayments() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-slate-800/50">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Merchant</th>
+                  <th className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Merchant</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Ad Title</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Package</th>
                   <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Amount</th>
@@ -107,7 +107,7 @@ export default function AdPayments() {
               <tbody className="divide-y divide-slate-100 dark:divide-dark-border">
                 {payments.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                    <td className="px-4 py-3">
+                    <td className="sticky left-0 z-10 bg-white dark:bg-dark-card border-r border-slate-200 dark:border-slate-700 px-4 py-3">
                       <span className="text-sm font-bold text-slate-800 dark:text-white">{item.advertisement?.merchant?.businessName || 'N/A'}</span>
                       <span className="block text-xs text-slate-400">{item.advertisement?.merchant?.user?.mobile || ''}</span>
                     </td>

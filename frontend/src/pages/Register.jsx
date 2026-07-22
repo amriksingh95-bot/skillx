@@ -499,6 +499,20 @@ export default function Register() {
               />
             </div>
 
+            <label className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <input
+                type="checkbox"
+                required
+                className="mt-0.5 rounded border-slate-300 text-primary focus:ring-primary/20"
+              />
+              <span>
+                I agree to the{' '}
+                <Link to="/privacy-policy" target="_blank" className="text-primary hover:underline font-medium">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
+
             <button
               type="submit"
               disabled={isLoading || password.length < 8 || password !== confirmPassword}

@@ -35,11 +35,17 @@ Thumbs.db
 backend/.env
 backend/auth-check.js
 backend/prisma/dev.db
+backend/backups/
 *.db
 
 # Debug / test scripts
 backend/debug-top-customers.js
 backend/test_brewbeans.js
+backend/qa_check.js
+backend/check-customer-hash.js
+backend/check-otp-table.js
+backend/src/utils/testLocation.js
+backend/src/utils/testTelegram.js
 
 # Test coverage
 coverage/

@@ -3,6 +3,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Badge from '../../components/Badge';
 import AdStepper from '../../components/AdStepper';
+import AdCard from '../../components/AdCard';
 import { getDirectionsUrl } from '../../components/AdBanner';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { Megaphone, Eye, MousePointerClick, RefreshCw, Check, X, AlertCircle } from 'lucide-react';
@@ -350,8 +351,8 @@ export default function AdvertisementsPage() {
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl text-indigo-600 dark:text-indigo-400">
               <Eye className="w-6 h-6" />
@@ -368,7 +369,7 @@ export default function AdvertisementsPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
+        <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl text-emerald-600 dark:text-emerald-400">
               <MousePointerClick className="w-6 h-6" />
@@ -387,7 +388,7 @@ export default function AdvertisementsPage() {
       </div>
 
       {/* Filter Tabs Container */}
-      <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm space-y-4">
         <div className="flex items-center gap-2 font-bold text-sm text-slate-800 dark:text-white">
           <Megaphone className="w-4 h-4 text-primary" />
           Filter by Status
@@ -572,128 +573,33 @@ export default function AdvertisementsPage() {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            cursor: 'pointer'
+            cursor: 'pointer',
+            padding: 16,
           }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
-            <div
-              className="ad-preview-grid"
-              style={{
-                minHeight: 160,
-                display: 'grid',
-                gridTemplateColumns: '36px 200px 1fr 100px 36px',
-                gap: '12px',
-                padding: '0 12px',
-                background: THEMES[matchThemeKey(previewAd.bg)].bg,
-                borderRadius: 12,
-                overflow: 'hidden',
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', maxWidth: 480, width: '100%' }}>
+            <AdCard
+              ad={{
+                ...previewAd,
+                accent: previewAd.accent || THEMES[matchThemeKey(previewAd.bg)]?.accent || '#f59e0b',
               }}
-            >
-              <style>{`
-                @media (max-width: 640px) {
-                  .ad-preview-grid {
-                    grid-template-columns: 36px 1fr 36px !important;
-                    grid-template-rows: auto auto auto !important;
-                  }
-                  .ap-arrow-first { grid-column: 1; }
-                  .ap-brand { grid-column: 2 / -1; }
-                  .ap-headline { grid-column: 2; }
-                  .ap-desc { grid-column: 2 / -1; font-size: 12px; }
-                  .ap-badge { grid-column: 2 / -1; grid-row: 3; justify-self: end; margin-right: 36px; }
-                  .ap-arrow-last { grid-column: 3; grid-row: auto; justify-self: auto; margin-right: 0; font-size: inherit; }
-                }
-              `}</style>
-
-              {/* Arrow spacer */}
-              <div className="ap-arrow-first"></div>
-
-              {/* Brand identity */}
-              <div className="ap-brand" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 10,
-                    background: THEMES[matchThemeKey(previewAd.bg)].accent + '33',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 22,
-                    flexShrink: 0,
-                    border: `1px solid ${THEMES[matchThemeKey(previewAd.bg)].accent}66`,
-                    overflow: 'hidden'
-                  }}
-                >
-                  {previewAd.imageUrl ? (
-                    <img src={previewAd.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: 28 }}>{getIconEmoji(previewAd.icon)}</span>
-                  )}
-                </div>
-                <div style={{ minWidth: 0, flex: '1 1 auto', maxWidth: '100%' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#fff', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                    {previewAd.merchant?.businessName || 'Business Name'}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', whiteSpace: 'normal', wordBreak: 'break-word', marginTop: 2 }}>
-                    Location not set
-                  </div>
-                </div>
-              </div>
-
-              {/* Headline */}
-              <div className="ap-headline" style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.3, width: '100%', textAlign: 'center' }}>
-                  {previewAd.title}
-                </div>
-              </div>
-
-              {/* Description */}
-              {previewAd.description && (
-                <div className="ap-desc" style={{ gridColumn: '2 / -1', fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 1.4, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
-                  {previewAd.description}
-                </div>
-              )}
-
-              {/* Badge */}
-              <div className="ap-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <button
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: '50%',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: '#f59e0b',
-                    color: '#000',
-                    fontWeight: 800,
-                    fontSize: (previewAd.ctaText || 'Learn More').length > 10 ? 12 : 14,
-                    lineHeight: 1.15,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    padding: 8,
-                  }}
-                >
-                  {previewAd.ctaText || 'Learn More'}
-                </button>
-              </div>
-
-              {/* Arrow spacer */}
-              <div className="ap-arrow-last"></div>
-            </div>
+              showArrows={false}
+              style={{ height: 160 }}
+            />
             <button
               onClick={() => setPreviewAd(null)}
               style={{
                 position: 'absolute',
-                top: '-12px', right: '-12px',
-                background: 'white',
-                border: 'none',
+                top: -10, right: -10,
+                background: '#1e293b',
+                border: '2px solid rgba(255,255,255,0.3)',
                 borderRadius: '50%',
-                width: '28px', height: '28px',
+                width: 32, height: 32,
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '16px'
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                zIndex: 10,
               }}
             ><X className="w-4 h-4" /></button>
           </div>

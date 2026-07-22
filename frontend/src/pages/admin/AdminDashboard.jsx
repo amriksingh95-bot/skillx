@@ -142,7 +142,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
         <StatCard
           icon={Users}
           label="Total Customers"
@@ -366,7 +366,7 @@ export default function AdminDashboard() {
             <Activity className="w-5 h-5 text-secondary" />
             <h3 className="font-bold text-base text-slate-800 dark:text-white">Retention Metrics</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Customer Retention (30d)</p>
               <span className="text-xl font-black text-secondary">{retention.customerRetention.retentionRate ?? 0}%</span>
