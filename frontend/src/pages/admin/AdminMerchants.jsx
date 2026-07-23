@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import DataTable from '../../components/DataTable';
@@ -815,7 +815,7 @@ export default function AdminMerchants() {
           <span className="text-slate-400 text-lg leading-none mt-0.5"><Store className="w-5 h-5" /></span>
           <div>
             <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">Complete merchant directory - all statuses.</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending -> approved -> payment_pending -> active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Status flow: <span className="font-black text-slate-700 dark:text-slate-200">pending -&gt; approved -&gt; payment_pending -&gt; active</span>. Use the other tabs to action pending approvals or confirm payments.</p>
           </div>
         </div>
       )}
