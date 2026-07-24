@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { getIconEmoji } from '../constants/adThemes';
 
 export default function AdCard({
   ad,
   onBadgeClick,
+  onSlidesComplete,
   showArrows = true,
   enableDirections = false,
   className = '',
@@ -13,6 +14,28 @@ export default function AdCard({
   const [slide1Error, setSlide1Error] = useState(false);
   const [slide2Error, setSlide2Error] = useState(false);
   const touchStartX = useRef(null);
+  const slideTimerRef = useRef(null);
+  const slideRef = useRef(0);
+  const onSlidesCompleteRef = useRef(onSlidesComplete);
+  slideRef.current = slide;
+  onSlidesCompleteRef.current = onSlidesComplete;
+
+  const resetTimer = useCallback(() => {
+    clearTimeout(slideTimerRef.current);
+    slideTimerRef.current = setTimeout(() => {
+      if (slideRef.current >= TOTAL_SLIDES - 1) {
+        setSlide(0);
+        onSlidesCompleteRef.current?.();
+        return;
+      }
+      setSlide(s => s + 1);
+    }, 4000);
+  }, []);
+
+  useEffect(() => {
+    resetTimer();
+    return () => clearTimeout(slideTimerRef.current);
+  }, [slide, resetTimer]);
 
   const accent = ad?.accent || '#f59e0b';
   const slide2Img = ad?.slide2ImageUrl || ad?.imageUrl;
@@ -93,6 +116,10 @@ export default function AdCard({
           70% { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
           100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
         }
+        @keyframes ad-progress-fill {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
       `}</style>
 
       {/* Progress Bars */}
@@ -104,10 +131,29 @@ export default function AdCard({
               flex: 1,
               height: 3,
               borderRadius: 2,
-              background: i <= slide ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.25)',
-              transition: 'background 0.3s ease',
+              background: 'rgba(255,255,255,0.25)',
+              overflow: 'hidden',
+              position: 'relative',
             }}
-          />
+          >
+            {i < slide && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'rgba(255,255,255,0.85)',
+              }} />
+            )}
+            {i === slide && (
+              <div
+                key={`progress-${slide}`}
+                style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(255,255,255,0.85)',
+                  transformOrigin: 'left',
+                  animation: 'ad-progress-fill 4s linear forwards',
+                }}
+              />
+            )}
+          </div>
         ))}
       </div>
 

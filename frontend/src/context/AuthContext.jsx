@@ -62,7 +62,7 @@ export function AuthProvider({ children }) {
           // Decode JWT to get fresh role — never trust stale localStorage user data
           const payload = decodeAccessToken(newAccessToken);
           if (payload && payload.userId && payload.role) {
-            setUser({ id: payload.userId, role: payload.role });
+            setUser({ id: payload.userId, role: payload.role, name: payload.name });
           }
         } catch (error) {
           // Token refresh failed — silently clear user, do NOT call logout()

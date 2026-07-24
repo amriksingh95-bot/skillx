@@ -7,7 +7,7 @@ import { X, Send, MessageCircle, Bot, User, GripVertical } from 'lucide-react';
 
 const STORAGE_KEY = 'skillxt_chatbot_position';
 const DEFAULT_BOTTOM = 140;
-const MIN_BOTTOM = 100;
+const MIN_BOTTOM = 28;
 const MAX_BOTTOM = 220;
 
 export default function FloatingChatbot() {

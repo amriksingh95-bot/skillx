@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Modal from './Modal';
 import AdCard from './AdCard';
@@ -212,7 +212,7 @@ export function getDirectionsUrl(ad) {
   return null;
 }
 
-function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
+function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick, onSlidesComplete }) {
   return (
     <div
       style={{
@@ -228,6 +228,7 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
       <AdCard
         ad={ad}
         onBadgeClick={onBadgeClick}
+        onSlidesComplete={onSlidesComplete}
         showArrows={true}
         enableDirections={true}
         style={{ height: '100%', borderRadius: 0 }}
@@ -330,6 +331,15 @@ function AdCarousel({ ads, accent, onBadgeClick }) {
   const ad = ads[currentIndex];
   const currentAccent = ad?.accent || accent || '#f59e0b';
 
+  const handleSlidesComplete = useCallback(() => {
+    if (ads.length <= 1) return;
+    setFade(false);
+    timeoutRef.current = setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % ads.length);
+      setFade(true);
+    }, 300);
+  }, [ads.length]);
+
   return (
     <div style={{ width: '100%', maxWidth: 960, margin: '0 auto', marginBottom: 8, position: 'relative' }}>
       <div
@@ -351,6 +361,7 @@ function AdCarousel({ ads, accent, onBadgeClick }) {
             onBadgeClick={onBadgeClick}
             onPrevClick={goPrev}
             onNextClick={goNext}
+            onSlidesComplete={handleSlidesComplete}
           />
         ))}
 

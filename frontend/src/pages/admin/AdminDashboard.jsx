@@ -21,8 +21,6 @@ import {
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -413,29 +411,45 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Top Merchants BarChart */}
-        <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm">
-          <h3 className="font-bold text-base text-slate-800 dark:text-white mb-6">Top 7 Merchants by Activity</h3>
-          <div className="h-96 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={charts.topMerchants}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:hidden" />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" className="hidden dark:block" />
-                <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} interval={0} angle={-35} textAnchor="end" height={60} />
-                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} />
-                 <Tooltip
-                   contentStyle={{
-                     borderRadius: '12px',
-                     fontSize: '13px'
-                   }}
-                   labelStyle={{ color: '#1e293b', fontWeight: 600 }}
-                   itemStyle={{ color: '#475569' }}
-                 />
-                 <Bar dataKey="transactions" name="Transactions Count" fill="#2563EB" radius={[8, 8, 0, 0]} barSize={35} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {/* Top Merchants horizontal bar list */}
+        {(() => {
+          const merchants = charts.topMerchants || [];
+          const maxTx = Math.max(...merchants.map((m) => m.transactions), 1);
+          const rows = Array.from({ length: 7 }, (_, i) => merchants[i] || null);
+          return (
+            <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm">
+              <h3 className="font-bold text-base text-slate-800 dark:text-white mb-5">Top 7 Merchants by Activity</h3>
+              <div className="flex flex-col gap-3">
+                {rows.map((m, i) =>
+                  m ? (
+                    <div key={m.name} className="flex items-center gap-3">
+                      <span className="w-28 shrink-0 text-sm font-medium text-slate-700 dark:text-slate-200 truncate" title={m.name}>
+                        {m.name}
+                      </span>
+                      <div className="flex-1 h-6 rounded-full bg-slate-100 dark:bg-slate-700/50 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[#2563EB] transition-all duration-500"
+                          style={{ width: `${(m.transactions / maxTx) * 100}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right text-sm font-semibold text-slate-600 dark:text-slate-300 tabular-nums">
+                        {m.transactions}
+                      </span>
+                    </div>
+                  ) : (
+                    <div key={`ghost-${i}`} className="flex items-center gap-3">
+                      <span className="w-28 shrink-0 text-sm italic text-slate-400 dark:text-slate-500 truncate">
+                        Awaiting merchant
+                      </span>
+                      <div className="flex-1 h-6 rounded-full border border-dashed border-slate-300 dark:border-slate-600" />
+                      <span className="w-10 text-right text-sm text-slate-400 dark:text-slate-500">–</span>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Customer Growth LineChart */}
         <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm lg:col-span-2">

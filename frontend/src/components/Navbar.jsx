@@ -14,11 +14,19 @@ export default function Navbar({ onMenuToggle }) {
     : user?.role === 'customer' ? '/customer/profile'
     : null;
 
+  const initials = user?.name
+    ? user.name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
+    : '';
+
+  const roleLabel = user?.role
+    ? user.role.charAt(0).toUpperCase() + user.role.slice(1).replace('_', ' ')
+    : '';
+
   if (!user) return null;
 
   return (
     <header className="bg-white dark:bg-dark-card border-b border-slate-100 dark:border-dark-border sticky top-0 z-10 w-full px-6 py-4 flex items-center justify-between text-slate-800 dark:text-slate-100 shadow-sm">
-      {/* Left side: Mobile menu toggle + Welcome text */}
+      {/* Left side: Mobile menu toggle + Identity (mobile) + Welcome text (desktop) */}
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuToggle}
@@ -26,6 +34,27 @@ export default function Navbar({ onMenuToggle }) {
         >
           <Menu className="w-5 h-5" />
         </button>
+        {/* Mobile user info — initials + name + role, visible below sm only */}
+        {profilePath && (
+          <button
+            onClick={() => navigate(profilePath)}
+            className="flex sm:hidden items-center gap-2.5"
+          >
+            {initials && (
+              <div className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                {initials}
+              </div>
+            )}
+            {user.name && (
+              <div className="flex flex-col text-left leading-tight min-w-0">
+                <span className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate max-w-[100px]">{user.name}</span>
+                {roleLabel && (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">{roleLabel}</span>
+                )}
+              </div>
+            )}
+          </button>
+        )}
         <div className="hidden sm:block">
           <h2 className="font-bold text-lg leading-tight">Welcome, {user.name}</h2>
           <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">
@@ -34,7 +63,7 @@ export default function Navbar({ onMenuToggle }) {
         </div>
       </div>
 
-      {/* Right side: Dark mode, Profile details, Logout */}
+      {/* Right side: Dark mode, Desktop profile card, Logout */}
       <div className="flex items-center gap-4">
         {/* Dark Mode Toggle */}
         <button
@@ -45,13 +74,13 @@ export default function Navbar({ onMenuToggle }) {
           {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* User Card */}
+        {/* User Card — desktop only */}
         {profilePath ? (
           <button
             onClick={() => navigate(profilePath)}
-            className="flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors -m-1 p-1"
+            className="hidden sm:flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors -m-1 p-1"
           >
-            <div className="hidden md:flex flex-col text-right">
+            <div className="flex flex-col text-right">
               <span className="text-sm font-bold">{user.name}</span>
               <div className="mt-0.5">
                 <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
@@ -62,8 +91,8 @@ export default function Navbar({ onMenuToggle }) {
             </div>
           </button>
         ) : (
-          <div className="flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border">
-            <div className="hidden md:flex flex-col text-right">
+          <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border">
+            <div className="flex flex-col text-right">
               <span className="text-sm font-bold">{user.name}</span>
               <div className="mt-0.5">
                 <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>

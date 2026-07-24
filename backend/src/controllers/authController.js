@@ -484,9 +484,17 @@ async function refreshToken(req, res, next) {
       }
     });
 
+    // Derive display name from the already-loaded user relations
+    let name = 'System Administrator';
+    if (matchedRecord.user.role === 'merchant' && matchedRecord.user.merchant) {
+      name = matchedRecord.user.merchant.businessName;
+    } else if (matchedRecord.user.role === 'customer' && matchedRecord.user.customer) {
+      name = matchedRecord.user.customer.name;
+    }
+
     // Generate new Access Token (15 minutes expiry)
     const accessToken = jwt.sign(
-      { userId: matchedRecord.user.id, role: matchedRecord.user.role, merchantId: matchedRecord.user.merchant?.id || null, customerId: matchedRecord.user.customer?.id || null },
+      { userId: matchedRecord.user.id, role: matchedRecord.user.role, name, merchantId: matchedRecord.user.merchant?.id || null, customerId: matchedRecord.user.customer?.id || null },
       JWT_SECRET,
       { expiresIn: '15m' }
     );
@@ -496,7 +504,8 @@ async function refreshToken(req, res, next) {
       message: 'Token refreshed successfully.',
       data: {
         accessToken,
-        refreshToken: newRefreshTokenString
+        refreshToken: newRefreshTokenString,
+        name
       }
     });
   } catch (error) {
