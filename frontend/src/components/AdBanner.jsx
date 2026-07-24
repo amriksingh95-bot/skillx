@@ -5,10 +5,10 @@ import AdCard from './AdCard';
 
 const carouselStyle = (
   <style>{`
-    .ad-carousel-wrapper { min-height: 160px; height: 160px; }
+    .ad-carousel-wrapper { min-height: 262px; height: 262px; }
     .ad-carousel-inner { padding-left: 44px; padding-right: 44px; }
     @media (max-width: 640px) {
-      .ad-carousel-wrapper { min-height: 160px; height: 160px; }
+      .ad-carousel-wrapper { min-height: 262px; height: 262px; }
       .ad-carousel-inner { padding-left: 40px; padding-right: 40px; }
     }
   `}</style>
@@ -218,7 +218,7 @@ function AdSlide({ ad, visible, onBadgeClick, onPrevClick, onNextClick }) {
       style={{
         position: 'absolute',
         inset: 0,
-        height: 160,
+        height: 262,
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateX(0)' : 'translateX(30px)',
         transition: 'opacity 0.35s ease, transform 0.35s ease',
@@ -354,33 +354,6 @@ function AdCarousel({ ads, accent, onBadgeClick }) {
           />
         ))}
 
-        {/* Dots */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 5,
-          }}
-        >
-          {ads.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => goTo(i)}
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: i === currentIndex ? currentAccent : 'rgba(255,255,255,0.35)',
-                cursor: 'pointer',
-                transition: 'background 0.3s, transform 0.2s',
-                transform: i === currentIndex ? 'scale(1.2)' : 'scale(1)',
-              }}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

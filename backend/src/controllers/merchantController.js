@@ -643,7 +643,7 @@ async function submitComplaint(req, res, next) {
  */
 async function createAd(req, res, next) {
   const merchantId = req.user.merchantId;
-  const { title, description, imageUrl, ctaText, ctaLink, package: adPackage, showDirections, bg, accent, icon } = req.body;
+  const { title, description, ctaText, ctaLink, package: adPackage, showDirections, bg, accent, icon, trustText, slide2Caption } = req.body;
 
   if (!title || !adPackage) {
     const err = new Error('Title and package are required.');
@@ -653,17 +653,52 @@ async function createAd(req, res, next) {
   }
 
   try {
+    let imageUrl = req.body.imageUrl || null;
+    let slide2ImageUrl = null;
+
+    // Process uploaded image (slide 1) — required on create
+    if (req.files && req.files['image'] && req.files['image'][0]) {
+      const file = req.files['image'][0];
+      const fileTypeResult = await validateImageFile(file.buffer);
+      if (!fileTypeResult.valid) {
+        const err = new Error(fileTypeResult.error);
+        err.status = 400;
+        err.code = 'INVALID_FILE_TYPE';
+        return next(err);
+      }
+      const ext = path.extname(file.originalname);
+      const filename = `ad-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+      imageUrl = await uploadBuffer(file.buffer, 'ad-images', filename, file.mimetype);
+    }
+
+    // Process uploaded slide 2 image — optional
+    if (req.files && req.files['slide2Image'] && req.files['slide2Image'][0]) {
+      const file = req.files['slide2Image'][0];
+      const fileTypeResult = await validateImageFile(file.buffer);
+      if (!fileTypeResult.valid) {
+        const err = new Error(fileTypeResult.error);
+        err.status = 400;
+        err.code = 'INVALID_FILE_TYPE';
+        return next(err);
+      }
+      const ext = path.extname(file.originalname);
+      const filename = `ad-slide2-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+      slide2ImageUrl = await uploadBuffer(file.buffer, 'ad-images', filename, file.mimetype);
+    }
+
     const advertisement = await prisma.advertisement.create({
       data: {
         merchantId,
         title,
         description,
         imageUrl,
+        slide2ImageUrl,
+        slide2Caption: slide2Caption || null,
+        trustText: trustText || null,
         ctaText: ctaText || 'Learn More',
         ctaLink,
         package: adPackage,
-        showDirections: showDirections !== false,
-        bg,
+        showDirections: showDirections === true || showDirections === 'true',        bg,
         accent,
         icon,
         status: 'pending'
@@ -824,7 +859,7 @@ async function getActiveAds(req, res, next) {
 async function updateAd(req, res, next) {
   const { id } = req.params;
   const merchantId = req.user.merchantId;
-  const { title, description, imageUrl, ctaText, ctaLink, package: adPackage, showDirections, bg, accent, icon } = req.body;
+  const { title, description, ctaText, ctaLink, package: adPackage, showDirections, bg, accent, icon, trustText, slide2Caption } = req.body;
 
   try {
     const ad = await prisma.advertisement.findUnique({ where: { id } });
@@ -849,16 +884,53 @@ async function updateAd(req, res, next) {
       return next(err);
     }
 
+    // Start with existing URLs
+    let imageUrl = ad.imageUrl;
+    let slide2ImageUrl = ad.slide2ImageUrl;
+
+    // Process uploaded image (slide 1) — optional on update
+    if (req.files && req.files['image'] && req.files['image'][0]) {
+      const file = req.files['image'][0];
+      const fileTypeResult = await validateImageFile(file.buffer);
+      if (!fileTypeResult.valid) {
+        const err = new Error(fileTypeResult.error);
+        err.status = 400;
+        err.code = 'INVALID_FILE_TYPE';
+        return next(err);
+      }
+      const ext = path.extname(file.originalname);
+      const filename = `ad-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+      imageUrl = await uploadBuffer(file.buffer, 'ad-images', filename, file.mimetype);
+    }
+
+    // Process uploaded slide 2 image — optional
+    if (req.files && req.files['slide2Image'] && req.files['slide2Image'][0]) {
+      const file = req.files['slide2Image'][0];
+      const fileTypeResult = await validateImageFile(file.buffer);
+      if (!fileTypeResult.valid) {
+        const err = new Error(fileTypeResult.error);
+        err.status = 400;
+        err.code = 'INVALID_FILE_TYPE';
+        return next(err);
+      }
+      const ext = path.extname(file.originalname);
+      const filename = `ad-slide2-${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+      slide2ImageUrl = await uploadBuffer(file.buffer, 'ad-images', filename, file.mimetype);
+    }
+
     const updated = await prisma.advertisement.update({
       where: { id },
       data: {
         title: title || ad.title,
         description: description !== undefined ? description : ad.description,
-        imageUrl: imageUrl !== undefined ? imageUrl : ad.imageUrl,
+        imageUrl,
+        slide2ImageUrl,
+        slide2Caption: slide2Caption !== undefined ? slide2Caption : ad.slide2Caption,
+        trustText: trustText !== undefined ? trustText : ad.trustText,
         ctaText: ctaText !== undefined ? ctaText : ad.ctaText,
         ctaLink: ctaLink !== undefined ? ctaLink : ad.ctaLink,
         package: adPackage || ad.package,
-        showDirections: showDirections !== undefined ? showDirections : ad.showDirections,
+        showDirections: showDirections !== undefined ? (showDirections === true || showDirections === 'true') : ad.showDirections,
         bg: bg !== undefined ? bg : ad.bg,
         accent: accent !== undefined ? accent : ad.accent,
         icon: icon !== undefined ? icon : ad.icon,
@@ -1001,6 +1073,23 @@ const upload = multer({
     cb(new Error('Only image files are allowed.'));
   }
 });
+
+const adUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files are allowed (JPEG, PNG, WebP).'));
+  }
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'slide2Image', maxCount: 1 }
+]);
 
 async function uploadPaymentScreenshot(req, res, next) {
   try {
@@ -1797,6 +1886,7 @@ module.exports = {
   uploadPaymentScreenshot,
   uploadRenewalScreenshot,
   upload,
+  adUpload,
   updateMerchantProfile,
   updateMerchantPassword,
   getEcosystemStats,

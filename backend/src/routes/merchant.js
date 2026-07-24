@@ -5,7 +5,7 @@ const { validate } = require('../middleware/validator');
 const { validatePoints, validateAmount, handleValidationErrors } = require('../middleware/validators');
 const merchantController = require('../controllers/merchantController');
 const subscriptionService = require('../services/subscriptionService');
-const { upload } = require('../controllers/merchantController');
+const { upload, adUpload } = require('../controllers/merchantController');
 const topUpController = require('../controllers/topUpController');
 const adPaymentController = require('../controllers/adPaymentController');
 const prisma = require('../lib/prisma');
@@ -419,6 +419,7 @@ router.post(
 
 router.post(
   '/ads',
+  adUpload,
   [
     body('title').trim().notEmpty().withMessage('Title is required.').isLength({ max: 100 }).withMessage('Title must be at most 100 characters.'),
     body('description').trim().notEmpty().withMessage('Description is required.').isLength({ max: 150 }).withMessage('Description must be at most 150 characters.'),
@@ -437,6 +438,7 @@ router.get('/ads', merchantController.getMyAds);
 
 router.put(
   '/ads/:id',
+  adUpload,
   [
     param('id').isUUID().withMessage('Invalid ID format.')
   ],

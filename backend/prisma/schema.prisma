@@ -25,40 +25,40 @@ model User {
 }
 
 model Merchant {
-  id              String          @id @default(uuid())
-  userId          String          @unique
-  businessName    String
-  ownerName       String
-  email           String?
-  address         String?
-  city            String?
-  category        String
-  isActive        Boolean         @default(true)
-  createdAt       DateTime        @default(now())
-  closingTime     String?
-  googleMapsUrl   String?
-  isOpen          Boolean         @default(true)
-  landmark        String?
-  latitude        Float?
-  longitude       Float?
-  openingTime     String?
-  pointsBalance   Int             @default(0)
-  workingDays     String?
-  status          MerchantStatus  @default(pending)
-  statusChangedAt DateTime?
-  statusChangedBy String?
-  paymentScreenshot String?
+  id                           String                 @id @default(uuid())
+  userId                       String                 @unique
+  businessName                 String
+  ownerName                    String
+  email                        String?
+  address                      String?
+  category                     String
+  isActive                     Boolean                @default(true)
+  createdAt                    DateTime               @default(now())
+  closingTime                  String?
+  googleMapsUrl                String?
+  isOpen                       Boolean                @default(true)
+  landmark                     String?
+  latitude                     Float?
+  longitude                    Float?
+  openingTime                  String?
+  pointsBalance                Int                    @default(0)
+  workingDays                  String?
+  status                       MerchantStatus         @default(pending)
+  statusChangedAt              DateTime?
+  statusChangedBy              String?
+  paymentScreenshot            String?
+  merchantCode                 String?                @unique
+  city                         String?
+  alternativePhone             String?
   pendingRenewalSubscriptionId String?
-  alternativePhone  String?
-  merchantCode      String?       @unique
-  merchantReferralCode String?    @unique
-  referredByMerchantId String?
-  advertisements  Advertisement[]
-  auditLogs       AuditLog[]
-  user            User            @relation(fields: [userId], references: [id])
-  transactions    Transaction[]
-  subscriptions   MerchantSubscription[]
-  topUps           PointsTopUp[]
+  referredByMerchantId         String?
+  merchantReferralCode         String?                @unique
+  advertisements               Advertisement[]
+  auditLogs                    AuditLog[]
+  user                         User                   @relation(fields: [userId], references: [id])
+  subscriptions                MerchantSubscription[]
+  topUps                       PointsTopUp[]
+  transactions                 Transaction[]
 
   @@index([isActive])
   @@index([status])
@@ -69,37 +69,37 @@ model Merchant {
 }
 
 model Customer {
-  id                   String         @id @default(uuid())
-  userId               String         @unique
-  name                 String
-  email                String?
-  qrCode               String         @unique
-  isActive             Boolean        @default(true)
-  createdAt            DateTime       @default(now())
-  anniversaryDate      DateTime?
-  area                 String?
-  city                 String?
-  communicationPref    String?        @default("email")
-  dateOfBirth          DateTime?
-  dietaryPreference    String?
-  favouriteCategories  String?
-  gender               String?
-  maritalStatus        String?
-  notificationOptIn    Boolean        @default(true)
-  numberOfChildren     Int?           @default(0)
-  occupation           String?
-  pinCode              String?
-  preferredLanguage    String?        @default("English")
-  profilePhoto         String?
-  referralCode         String?        @unique
-  referredBy           String?
+  id                    String         @id @default(uuid())
+  userId                String         @unique
+  name                  String
+  email                 String?
+  qrCode                String         @unique
+  isActive              Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  anniversaryDate       DateTime?
+  area                  String?
+  city                  String?
+  communicationPref     String?        @default("email")
+  dateOfBirth           DateTime?
+  dietaryPreference     String?
+  favouriteCategories   String?
+  gender                String?
+  maritalStatus         String?
+  notificationOptIn     Boolean        @default(true)
+  numberOfChildren      Int?           @default(0)
+  occupation            String?
+  pinCode               String?
+  preferredLanguage     String?        @default("English")
+  profilePhoto          String?
+  referralCode          String?        @unique
+  referredBy            String?
+  updatedAt             DateTime       @updatedAt
+  referralPointsEarned  Int            @default(0)
   signedUpViaMerchantId String?
-  updatedAt            DateTime       @updatedAt
-  referralPointsEarned Int            @default(0)
   alternativePhone      String?
-  user                 User           @relation(fields: [userId], references: [id])
-  ledgerEntries        PointsLedger[]
-  transactions         Transaction[]
+  user                  User           @relation(fields: [userId], references: [id])
+  ledgerEntries         PointsLedger[]
+  transactions          Transaction[]
 
   @@index([isActive])
   @@index([referredBy])
@@ -112,16 +112,16 @@ model Transaction {
   customerId     String
   merchantId     String
   type           TransactionType
-  invoiceAmount  Decimal? @db.Decimal(10, 2)
   purchaseAmount Decimal?
-  platformFee    Decimal?
-  netAmount      Decimal?
   points         Int
   remarks        String?
   status         TransactionStatus @default(completed)
   reversedById   String?
   reversedAt     DateTime?
   createdAt      DateTime          @default(now())
+  netAmount      Decimal?
+  platformFee    Decimal?
+  invoiceAmount  Decimal?          @db.Decimal(10, 2)
   ledgerEntries  PointsLedger[]
   customer       Customer          @relation(fields: [customerId], references: [id])
   merchant       Merchant          @relation(fields: [merchantId], references: [id])
@@ -143,8 +143,8 @@ model PointsLedger {
   transactionId String
   pointsChange  Int
   balanceAfter  Int
-  expiresAt     DateTime?
   createdAt     DateTime    @default(now())
+  expiresAt     DateTime?
   customer      Customer    @relation(fields: [customerId], references: [id])
   transaction   Transaction @relation(fields: [transactionId], references: [id])
 
@@ -156,14 +156,14 @@ model PointsLedger {
 }
 
 model RewardSettings {
-  id                  String   @id @default(uuid())
-  pointsPerRupee      Decimal  @db.Decimal(10, 4)
-  rupeesPerPoint      Decimal  @db.Decimal(10, 4)
-  minRedeemPoints     Int      @default(100)
-  pointsExpiryDays    Int      @default(365)
-  redemptionFeePercent Decimal @default(5.00)
-  updatedAt           DateTime @updatedAt
-  updatedBy           String?
+  id                   String   @id @default(uuid())
+  pointsPerRupee       Decimal  @db.Decimal(10, 4)
+  rupeesPerPoint       Decimal  @db.Decimal(10, 4)
+  minRedeemPoints      Int      @default(100)
+  updatedAt            DateTime @updatedAt
+  updatedBy            String?
+  pointsExpiryDays     Int      @default(365)
+  redemptionFeePercent Decimal  @default(5.00)
 }
 
 model AuditLog {
@@ -202,10 +202,10 @@ model OTPVerification {
   id        String   @id @default(uuid())
   mobile    String
   otp       String
-  purpose   String   @default("register")
   verified  Boolean  @default(false)
   expiresAt DateTime
   createdAt DateTime @default(now())
+  purpose   String   @default("register")
 
   @@unique([mobile, purpose])
   @@index([expiresAt])
@@ -215,11 +215,11 @@ model OTPVerification {
 model OTPAttempt {
   id           String    @id @default(uuid())
   mobile       String
-  purpose      String    @default("register")
   attemptCount Int       @default(0)
   lockedUntil  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  purpose      String    @default("register")
 
   @@unique([mobile, purpose])
   @@map("otp_attempts")
@@ -244,46 +244,49 @@ model Complaint {
 }
 
 model Advertisement {
-  id               String        @id @default(uuid())
-  merchantId       String
-  title            String
-  description      String?
-  imageUrl         String?
-  ctaText          String        @default("Learn More")
-  ctaLink          String?
-  package          String
-  status           String        @default("pending") // pending, approved, rejected, expired, live, paused
-  pausedReason     String?
-  rejectionReason  String?
-  queuedAfterAdId  String?
-  approvedAt       DateTime?
-  startDate        DateTime?
-  endDate          DateTime?
-  impressions      Int           @default(0)
-  clicks           Int           @default(0)
-  showDirections   Boolean       @default(true)
-  bg               String?
-  accent           String?
-  icon             String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  merchant         Merchant      @relation(fields: [merchantId], references: [id])
-  payments         AdPayment[]
+  id              String      @id @default(uuid())
+  merchantId      String
+  title           String
+  description     String?
+  imageUrl        String?
+  ctaText         String      @default("Learn More")
+  ctaLink         String?
+  package         String
+  status          String      @default("pending")
+  startDate       DateTime?
+  endDate         DateTime?
+  impressions     Int         @default(0)
+  clicks          Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  showDirections  Boolean     @default(true)
+  accent          String?
+  bg              String?
+  icon            String?
+  pausedReason    String?
+  queuedAfterAdId String?
+  approvedAt      DateTime?
+  rejectionReason String?
+  slide2Caption   String?
+  slide2ImageUrl  String?
+  trustText       String?
+  payments        AdPayment[]
+  merchant        Merchant    @relation(fields: [merchantId], references: [id])
 
   @@index([merchantId])
   @@index([status])
 }
 
 model AdPayment {
-  id              String    @id @default(uuid())
+  id              String        @id @default(uuid())
   advertisementId String
   amountPaid      Float
   screenshotPath  String?
-  status          String    @default("pending") // pending, confirmed, rejected
+  status          String        @default("pending")
   paidAt          DateTime?
   confirmedBy     String?
   confirmedAt     DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime      @default(now())
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id])
 
   @@index([advertisementId])
@@ -298,66 +301,33 @@ model MilestoneBonus {
   createdAt   DateTime @default(now())
 }
 
-enum TransactionType {
-  earn
-  redeem
-  transfer
-  reversal
-  adjustment
-}
-
-enum TransactionStatus {
-  completed
-  pending
-  failed
-  reversed
-}
-
-enum MerchantStatus {
-  pending
-  approved
-  payment_pending
-  active
-  suspended
-  deactivated
-  rejected
-}
-
-enum SubscriptionStatus {
-  active
-  grace_period
-  expired
-  cancelled
-}
-
 model SubscriptionPlan {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  displayName   String
-  price         Decimal  @db.Decimal(10, 2)
-  durationDays  Int
-  features      Json?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    String                 @id @default(uuid())
+  name                  String                 @unique
+  displayName           String
+  price                 Decimal                @db.Decimal(10, 2)
+  durationDays          Int
+  features              Json?
+  isActive              Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   merchantSubscriptions MerchantSubscription[]
 }
 
 model MerchantSubscription {
-  id              String            @id @default(uuid())
-  merchantId      String
-  planId          String
-  startDate       DateTime
-  endDate         DateTime
-  status          SubscriptionStatus @default(active)
-  gracePeriodEnd  DateTime?
-  autoRenew       Boolean           @default(false)
-  paymentRef      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  merchant        Merchant          @relation(fields: [merchantId], references: [id])
-  plan            SubscriptionPlan  @relation(fields: [planId], references: [id])
+  id             String             @id @default(uuid())
+  merchantId     String
+  planId         String
+  startDate      DateTime
+  endDate        DateTime
+  status         SubscriptionStatus @default(active)
+  gracePeriodEnd DateTime?
+  autoRenew      Boolean            @default(false)
+  paymentRef     String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  merchant       Merchant           @relation(fields: [merchantId], references: [id])
+  plan           SubscriptionPlan   @relation(fields: [planId], references: [id])
 
   @@index([merchantId])
   @@index([status])
@@ -379,24 +349,18 @@ model ChatLog {
   @@index([matched])
 }
 
-enum TopUpStatus {
-  pending
-  confirmed
-  rejected
-}
-
 model PointsTopUp {
-  id               String       @id @default(uuid())
-  merchantId       String
-  packageName      String
-  amountPaid       Float
-  pointsToCredit   Int
-  screenshotPath   String?
-  status           TopUpStatus  @default(pending)
-  confirmedBy      String?
-  confirmedAt      DateTime?
-  createdAt        DateTime     @default(now())
-  merchant         Merchant     @relation(fields: [merchantId], references: [id])
+  id             String      @id @default(uuid())
+  merchantId     String
+  packageName    String
+  amountPaid     Float
+  pointsToCredit Int
+  screenshotPath String?
+  status         TopUpStatus @default(pending)
+  confirmedBy    String?
+  confirmedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  merchant       Merchant    @relation(fields: [merchantId], references: [id])
 
   @@index([merchantId])
   @@index([status])
@@ -404,15 +368,15 @@ model PointsTopUp {
 }
 
 model MerchantReferral {
-  id                  String   @id @default(uuid())
-  referrerMerchantId  String
-  referredMerchantId  String
-  status              String   @default("pending")
-  holdUntilDate       DateTime
-  instantRewardPaid   Boolean  @default(false)
-  monthsTrickled      Int      @default(0)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  referrerMerchantId String
+  referredMerchantId String
+  status             String   @default("pending")
+  holdUntilDate      DateTime
+  instantRewardPaid  Boolean  @default(false)
+  monthsTrickled     Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([referrerMerchantId])
   @@index([referredMerchantId])
@@ -431,4 +395,42 @@ model MerchantNotification {
   @@index([merchantId])
   @@index([merchantId, isRead])
   @@index([createdAt])
+}
+
+enum TransactionType {
+  earn
+  redeem
+  reversal
+  adjustment
+  transfer
+}
+
+enum TransactionStatus {
+  completed
+  pending
+  failed
+  reversed
+}
+
+enum MerchantStatus {
+  active
+  suspended
+  deactivated
+  pending
+  approved
+  payment_pending
+  rejected
+}
+
+enum SubscriptionStatus {
+  active
+  grace_period
+  expired
+  cancelled
+}
+
+enum TopUpStatus {
+  pending
+  confirmed
+  rejected
 }

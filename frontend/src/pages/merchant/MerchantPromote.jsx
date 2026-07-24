@@ -19,15 +19,21 @@ export default function MerchantPromote() {
   const [myAds, setMyAds] = useState([]);
   const [adTitle, setAdTitle] = useState('');
   const [adDescription, setAdDescription] = useState('');
-  const [adImageUrl, setAdImageUrl] = useState('');
+  const [adImageFile, setAdImageFile] = useState(null);
+  const [adImagePreview, setAdImagePreview] = useState('');
+  const [adSlide2ImageFile, setAdSlide2ImageFile] = useState(null);
+  const [adSlide2ImagePreview, setAdSlide2ImagePreview] = useState('');
   const [adCtaText, setAdCtaText] = useState('Learn More');
   const [adCtaLink, setAdCtaLink] = useState('');
   const [adPackage, setAdPackage] = useState('starter');
   const [adShowDirections, setAdShowDirections] = useState(true);
   const [adTheme, setAdTheme] = useState('green');
   const [adIcon, setAdIcon] = useState('store');
+  const [adTrustText, setAdTrustText] = useState('');
+  const [adSlide2Caption, setAdSlide2Caption] = useState('');
   const [submittingAd, setSubmittingAd] = useState(false);
   const [fileKey, setFileKey] = useState(Date.now());
+  const [slide2FileKey, setSlide2FileKey] = useState(Date.now());
   const [editingAdId, setEditingAdId] = useState(null);
 
   // Ad Payment States
@@ -97,9 +103,38 @@ export default function MerchantPromote() {
       return;
     }
 
+    setAdImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setAdImageUrl(reader.result);
+      setAdImagePreview(reader.result);
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSlide2FileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Only JPG and PNG images are allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size must be less than 2MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setAdSlide2ImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAdSlide2ImagePreview(reader.result);
     };
     reader.onerror = () => {
       toast.error('Failed to read file.');
@@ -110,7 +145,10 @@ export default function MerchantPromote() {
   const handleEditAd = (ad) => {
     setAdTitle(ad.title);
     setAdDescription(ad.description || '');
-    setAdImageUrl(ad.imageUrl || '');
+    setAdImageFile(null);
+    setAdImagePreview(ad.imageUrl || '');
+    setAdSlide2ImageFile(null);
+    setAdSlide2ImagePreview(ad.slide2ImageUrl || '');
     setAdCtaText(ad.ctaText || 'Learn More');
     setAdCtaLink(ad.ctaLink || '');
     setAdPackage(ad.package);
@@ -118,6 +156,8 @@ export default function MerchantPromote() {
     const matchedTheme = Object.keys(THEMES).find(k => THEMES[k].bg === ad.bg);
     setAdTheme(matchedTheme || 'green');
     setAdIcon(ad.icon || 'store');
+    setAdTrustText(ad.trustText || '');
+    setAdSlide2Caption(ad.slide2Caption || '');
     setEditingAdId(ad.id);
     const formEl = document.getElementById('ad-form-container');
     if (formEl) {
@@ -142,7 +182,10 @@ export default function MerchantPromote() {
   const handleRepostAd = (ad) => {
     setAdTitle(ad.title);
     setAdDescription(ad.description || '');
-    setAdImageUrl(ad.imageUrl || '');
+    setAdImageFile(null);
+    setAdImagePreview(ad.imageUrl || '');
+    setAdSlide2ImageFile(null);
+    setAdSlide2ImagePreview(ad.slide2ImageUrl || '');
     setAdCtaText(ad.ctaText || 'Learn More');
     setAdCtaLink(ad.ctaLink || '');
     setAdPackage(ad.package);
@@ -150,6 +193,8 @@ export default function MerchantPromote() {
     const matchedTheme = Object.keys(THEMES).find(k => THEMES[k].bg === ad.bg);
     setAdTheme(matchedTheme || 'green');
     setAdIcon(ad.icon || 'store');
+    setAdTrustText(ad.trustText || '');
+    setAdSlide2Caption(ad.slide2Caption || '');
     setEditingAdId(null);
     toast.success('Ad details loaded. Submit below to create a new campaign.');
     const formEl = document.getElementById('ad-form-container');
@@ -161,14 +206,20 @@ export default function MerchantPromote() {
   const handleCancelEdit = () => {
     setAdTitle('');
     setAdDescription('');
-    setAdImageUrl('');
+    setAdImageFile(null);
+    setAdImagePreview('');
+    setAdSlide2ImageFile(null);
+    setAdSlide2ImagePreview('');
     setAdCtaText('Learn More');
     setFileKey(Date.now());
+    setSlide2FileKey(Date.now());
     setAdCtaLink('');
     setAdPackage('starter');
     setAdShowDirections(true);
     setAdTheme('green');
     setAdIcon('store');
+    setAdTrustText('');
+    setAdSlide2Caption('');
     setEditingAdId(null);
   };
 
@@ -228,39 +279,56 @@ export default function MerchantPromote() {
 
     setSubmittingAd(true);
     try {
-      const payload = {
-        title: adTitle,
-        description: adDescription,
-        imageUrl: adImageUrl,
-        ctaText: adCtaText,
-        ctaLink: adCtaLink,
-        package: adPackage,
-        showDirections: adShowDirections,
-        bg: THEMES[adTheme].bg,
-        accent: THEMES[adTheme].accent,
-        icon: adIcon
-      };
+      const formData = new FormData();
+      formData.append('title', adTitle);
+      formData.append('description', adDescription);
+      formData.append('ctaText', adCtaText);
+      formData.append('ctaLink', adCtaLink);
+      formData.append('package', adPackage);
+      formData.append('showDirections', adShowDirections);
+      formData.append('bg', THEMES[adTheme].bg);
+      formData.append('accent', THEMES[adTheme].accent);
+      formData.append('icon', adIcon);
+      formData.append('trustText', adTrustText);
+      formData.append('slide2Caption', adSlide2Caption);
+
+      if (adImageFile) {
+        formData.append('image', adImageFile);
+      }
+      if (adSlide2ImageFile) {
+        formData.append('slide2Image', adSlide2ImageFile);
+      }
 
       if (editingAdId) {
-        const res = await api.put(`/api/merchant/ads/${editingAdId}`, payload);
+        const res = await api.put(`/api/merchant/ads/${editingAdId}`, formData, {
+          headers: { 'Content-Type': undefined }
+        });
         toast.success(res.data.message || 'Advertisement updated successfully.');
         setEditingAdId(null);
       } else {
-        const res = await api.post('/api/merchant/ads', payload);
+        const res = await api.post('/api/merchant/ads', formData, {
+          headers: { 'Content-Type': undefined }
+        });
         toast.success(res.data.message || "Ad submitted for approval. We'll review within 24 hours.");
       }
       
       // Clear form fields
       setAdTitle('');
       setAdDescription('');
-      setAdImageUrl('');
+      setAdImageFile(null);
+      setAdImagePreview('');
+      setAdSlide2ImageFile(null);
+      setAdSlide2ImagePreview('');
       setAdCtaText('Learn More');
       setFileKey(Date.now());
+      setSlide2FileKey(Date.now());
       setAdCtaLink('');
       setAdPackage('starter');
       setAdShowDirections(true);
       setAdTheme('green');
       setAdIcon('store');
+      setAdTrustText('');
+      setAdSlide2Caption('');
 
       // Refresh ad listings
       await fetchMyAds();
@@ -428,10 +496,14 @@ export default function MerchantPromote() {
                   bg: THEMES[adTheme]?.bg,
                   accent: THEMES[adTheme]?.accent,
                   icon: adIcon,
-                  imageUrl: adImageUrl || undefined,
+                  imageUrl: adImagePreview || undefined,
+                  slide2ImageUrl: adSlide2ImagePreview || undefined,
+                  slide2Caption: adSlide2Caption || undefined,
+                  trustText: adTrustText || undefined,
                   title: adTitle || 'Your Ad Headline',
                   description: adDescription || undefined,
                   ctaText: adCtaText || 'Learn More',
+                  showDirections: adShowDirections,
                   merchant: {
                     businessName: merchantProfile?.businessName || 'Your Business Name',
                     address: merchantProfile?.address || merchantProfile?.city || 'Location not set',
@@ -439,7 +511,7 @@ export default function MerchantPromote() {
                   },
                 }}
                 showArrows={false}
-                style={{ height: 160 }}
+                style={{ height: 262 }}
               />
             </div>
           </div>
@@ -471,17 +543,18 @@ export default function MerchantPromote() {
                 onChange={handleFileChange}
                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
               />
-              {adImageUrl && (
+              {adImagePreview && (
                 <div className="mt-3 relative inline-block">
                   <img
-                    src={adImageUrl}
+                    src={adImagePreview}
                     alt="Banner Preview"
                     className="max-h-28 rounded-xl object-cover border border-slate-200 dark:border-dark-border shadow-sm"
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      setAdImageUrl('');
+                      setAdImageFile(null);
+                      setAdImagePreview('');
                       setFileKey(Date.now());
                     }}
                     className="absolute -top-2 -right-2 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-md btn-press"
@@ -502,6 +575,61 @@ export default function MerchantPromote() {
                 onChange={(e) => setAdCtaText(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Product Showcase Image (Optional, JPG/PNG, Max 2MB)</label>
+              <input
+                key={slide2FileKey}
+                type="file"
+                accept="image/jpeg,image/png,image/jpg"
+                onChange={handleSlide2FileChange}
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+              />
+              {adSlide2ImagePreview && (
+                <div className="mt-3 relative inline-block">
+                  <img
+                    src={adSlide2ImagePreview}
+                    alt="Slide 2 Preview"
+                    className="max-h-28 rounded-xl object-cover border border-slate-200 dark:border-dark-border shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdSlide2ImageFile(null);
+                      setAdSlide2ImagePreview('');
+                      setSlide2FileKey(Date.now());
+                    }}
+                    className="absolute -top-2 -right-2 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-md btn-press"
+                    title="Remove image"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Slide 2 Caption (Optional)</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
+                placeholder="e.g. Our best-selling products"
+                value={adSlide2Caption}
+                onChange={(e) => setAdSlide2Caption(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Trust Text (Optional)</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
+              placeholder="e.g. Trusted by 200+ customers nearby"
+              value={adTrustText}
+              onChange={(e) => setAdTrustText(e.target.value)}
+            />
           </div>
 
           <div>
