@@ -165,3 +165,18 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+/* ScrollFade gradient colors — matches page background */
+:root {
+  --scroll-fade-bg: #F8FAFC;
+}
+html.dark {
+  --scroll-fade-bg: #0F172A;
+}
+
+.scroll-fade-left {
+  background: linear-gradient(to right, var(--scroll-fade-bg), transparent);
+}
+.scroll-fade-right {
+  background: linear-gradient(to left, var(--scroll-fade-bg), transparent);
+}

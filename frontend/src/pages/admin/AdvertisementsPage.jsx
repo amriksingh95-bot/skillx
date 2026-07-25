@@ -393,7 +393,23 @@ export default function AdvertisementsPage() {
           <Megaphone className="w-4 h-4 text-primary" />
           Filter by Status
         </div>
-        <div className="flex gap-2 border-b border-slate-100 dark:border-dark-border pb-4 overflow-x-auto scrollbar-none">
+        {/* Mobile: dropdown */}
+        <div className="block md:hidden relative">
+          <select
+            value={activeTab}
+            onChange={(e) => { setActiveTab(e.target.value); setPage(1); }}
+            className="w-full px-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
+          >
+            {tabs.map((tab) => (
+              <option key={tab} value={tab} className="text-slate-900">{tab}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        {/* Desktop: pill tabs */}
+        <div className="hidden md:flex gap-2 border-b border-slate-100 dark:border-dark-border pb-4 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => (
             <button
               key={tab}

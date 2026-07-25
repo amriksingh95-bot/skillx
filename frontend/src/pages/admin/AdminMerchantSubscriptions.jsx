@@ -524,27 +524,48 @@ const handleOpenAdd = () => {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none">
-        {[
-          { value: '', label: 'All' },
-          { value: 'payment_pending', label: 'Pending Payment' },
-          { value: 'active', label: 'Active' },
-          { value: 'grace_period', label: 'Grace Period' },
-          { value: 'expired', label: 'Expired' },
-          { value: 'cancelled', label: 'Cancelled' }
-        ].map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => { setStatusFilter(tab.value); setPage(1); }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-              statusFilter === tab.value
-                ? 'bg-primary text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
-            } btn-press`}
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-2">
+        {/* Mobile: dropdown */}
+        <div className="block md:hidden relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="w-full px-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
           >
-            {tab.label}
-          </button>
-        ))}
+            <option value="" className="text-slate-900">All</option>
+            <option value="payment_pending" className="text-slate-900">Pending Payment</option>
+            <option value="active" className="text-slate-900">Active</option>
+            <option value="grace_period" className="text-slate-900">Grace Period</option>
+            <option value="expired" className="text-slate-900">Expired</option>
+            <option value="cancelled" className="text-slate-900">Cancelled</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        {/* Desktop: pill tabs */}
+        <div className="hidden md:flex items-center gap-2">
+          {[
+            { value: '', label: 'All' },
+            { value: 'payment_pending', label: 'Pending Payment' },
+            { value: 'active', label: 'Active' },
+            { value: 'grace_period', label: 'Grace Period' },
+            { value: 'expired', label: 'Expired' },
+            { value: 'cancelled', label: 'Cancelled' }
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => { setStatusFilter(tab.value); setPage(1); }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                statusFilter === tab.value
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+              } btn-press`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Subscriptions Table */}

@@ -158,21 +158,43 @@ export default function MerchantProfile() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            } btn-press`}
+      <div className="mb-6 border-b border-slate-200 dark:border-slate-700">
+        <div className="block md:hidden relative">
+          {(() => {
+            const activeIcon = tabs.find(t => t.id === activeTab)?.icon;
+            return activeIcon ? (
+              <activeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" />
+            ) : null;
+          })()}
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
           >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+            {tabs.map(tab => (
+              <option key={tab.id} value={tab.id} className="text-slate-900">{tab.label}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        <div className="hidden md:flex gap-2">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${
+                activeTab === tab.id
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              } btn-press`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <form onSubmit={handleSave}>

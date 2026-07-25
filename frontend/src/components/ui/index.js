@@ -5,3 +5,4 @@ export { Tabs, TabList, Tab, TabPanel } from './Tabs';
 export { default as Skeleton } from './Skeleton';
 export { SkeletonCard, SkeletonTable, SkeletonStats, SkeletonText } from './Skeleton';
 export { default as Dropdown, DropdownItem, DropdownSeparator, DropdownLabel, DropdownCheckbox } from './Dropdown';
+export { default as ScrollFade } from './ScrollFade';

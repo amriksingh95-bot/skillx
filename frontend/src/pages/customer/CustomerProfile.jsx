@@ -414,25 +414,55 @@ export default function CustomerProfile() {
       {/* SECTION 3 — EDIT PROFILE FORM & TABS */}
       <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl overflow-hidden shadow-sm">
         {/* Tab Header Strip */}
-        <div className="flex border-b border-slate-200 dark:border-slate-700 overflow-x-auto scrollbar-none bg-slate-50 dark:bg-slate-900/30">
-          {[
-            { id: 'personal', label: '👤 Personal Information' },
-            { id: 'location', label: '📍 Location' },
-            { id: 'preferences', label: '❤️ Preferences' },
-            { id: 'security', label: '🛡️ Account & Security' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 text-xs font-black tracking-wide border-b-2 whitespace-nowrap transition-all ${
-                activeTab === tab.id
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-              } btn-press`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
+          {(() => {
+            const customerTabs = [
+              { id: 'personal', label: 'Personal Information', Icon: User },
+              { id: 'location', label: 'Location', Icon: MapPin },
+              { id: 'preferences', label: 'Preferences', Icon: Heart },
+              { id: 'security', label: 'Account & Security', Icon: Shield },
+            ];
+            const activeTabData = customerTabs.find(t => t.id === activeTab);
+            return (
+              <div className="block md:hidden relative mx-4 my-3">
+                {activeTabData && (
+                  <activeTabData.Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" />
+                )}
+                <select
+                  value={activeTab}
+                  onChange={(e) => setActiveTab(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
+                >
+                  {customerTabs.map(tab => (
+                    <option key={tab.id} value={tab.id} className="text-slate-900">{tab.label}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            );
+          })()}
+          <div className="hidden md:flex overflow-x-auto scrollbar-none">
+            {[
+              { id: 'personal', label: '👤 Personal Information' },
+              { id: 'location', label: '📍 Location' },
+              { id: 'preferences', label: '❤️ Preferences' },
+              { id: 'security', label: '🛡️ Account & Security' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-4 text-xs font-black tracking-wide border-b-2 whitespace-nowrap transition-all ${
+                  activeTab === tab.id
+                    ? 'border-primary text-primary bg-primary/5'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                } btn-press`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Body Contents */}

@@ -188,32 +188,50 @@ export default function FindPartners() {
         </div>
       )}
 
-      {/* SECTION 2 — CATEGORY FILTER PILLS */}
-      <div 
-        className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none"
-        style={{
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
-          scrollbarWidth: 'none'
-        }}
-      >
-        {categoryPills.map((pill) => {
-          const isActive = selectedCategory === pill.id;
-          return (
-            <button
-              key={pill.id}
-              onClick={() => setSelectedCategory(pill.id)}
-              className={`px-4 py-2 text-xs font-bold rounded-full border shrink-0 transition-all ${
-                isActive
-                  ? 'bg-primary text-white border-primary shadow-md shadow-primary/10'
-                  : 'bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-              } btn-press`}
-            >
-              <pill.Icon className="w-3.5 h-3.5 shrink-0" />
-              {pill.label}
-            </button>
-          );
-        })}
+      {/* SECTION 2 — CATEGORY FILTER */}
+      <div className="relative">
+        {/* Mobile: dropdown */}
+        <div className="block md:hidden relative">
+          {(() => {
+            const activePill = categoryPills.find(p => p.id === selectedCategory);
+            return activePill ? (
+              <activePill.Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white pointer-events-none" />
+            ) : null;
+          })()}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
+          >
+            {categoryPills.map((pill) => (
+              <option key={pill.id} value={pill.id} className="text-slate-900">{pill.label}</option>
+            ))}
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+
+        {/* Desktop: pill row */}
+        <div className="hidden md:flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categoryPills.map((pill) => {
+            const isActive = selectedCategory === pill.id;
+            return (
+              <button
+                key={pill.id}
+                onClick={() => setSelectedCategory(pill.id)}
+                className={`px-4 py-2 text-xs font-bold rounded-full border shrink-0 transition-all ${
+                  isActive
+                    ? 'bg-primary text-white border-primary shadow-md shadow-primary/10'
+                    : 'bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                } btn-press`}
+              >
+                <pill.Icon className="w-3.5 h-3.5 shrink-0" />
+                {pill.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* SECTION 3 — RESULTS COUNT + SORT */}
