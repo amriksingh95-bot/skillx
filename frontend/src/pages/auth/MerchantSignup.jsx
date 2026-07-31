@@ -11,6 +11,7 @@ export default function MerchantSignup() {
   const [formData, setFormData] = useState({
     businessName: '',
     ownerName: '',
+    email: '',
     mobile: '',
     password: '',
     confirmPassword: '',
@@ -64,6 +65,12 @@ export default function MerchantSignup() {
 
     if (!formData.ownerName.trim()) {
       newErrors.ownerName = 'Owner name is required.';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Enter a valid email address.';
     }
 
     if (!formData.mobile) {
@@ -160,9 +167,10 @@ export default function MerchantSignup() {
     try {
       await api.post('/api/auth/request-otp', {
         mobile: formData.mobile,
+        email: formData.email,
         purpose: 'register_merchant'
       });
-      toast.success('OTP sent to your mobile number.');
+      toast.success('OTP sent to your email address.');
       setStep(2);
       setAttemptsRemaining(null);
       setOtpArray(['', '', '', '', '', '']);
@@ -271,7 +279,9 @@ export default function MerchantSignup() {
         businessName: formData.businessName,
         ownerName: formData.ownerName,
         mobile: formData.mobile,
+        email: formData.email,
         password: formData.password,
+        otp,
         category: formData.category,
         city: formData.city,
         address: formData.address || undefined,
@@ -428,6 +438,28 @@ export default function MerchantSignup() {
                 />
               </div>
               {errors.ownerName && <p className="text-xs text-red-400 mt-1">{errors.ownerName}</p>}
+            </div>
+
+            {/* Email Address */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                Email Address *
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className={`w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold ${errors.email ? 'border-red-500' : 'border-slate-700'}`}
+                  placeholder="you@business.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              {errors.email && <p className="text-xs text-red-400 mt-1">{errors.email}</p>}
             </div>
 
             {/* Mobile Number */}
@@ -652,9 +684,9 @@ export default function MerchantSignup() {
               <div className="inline-flex p-3 bg-[#38bdf8]/10 text-[#38bdf8] rounded-full border border-[#38bdf8]/20">
                 <ShieldCheck className="w-8 h-8" />
               </div>
-              <h3 className="font-extrabold text-base text-white">Verify Your Mobile</h3>
+              <h3 className="font-extrabold text-base text-white">Verify Your Email</h3>
               <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                Enter the 6-digit code sent to <span className="font-bold text-white">{formData.mobile}</span>
+                Enter the 6-digit code sent to <span className="font-bold text-white">{formData.email}</span>
               </p>
             </div>
 

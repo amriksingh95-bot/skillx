@@ -398,8 +398,8 @@ const handleOpenAdd = () => {
                 <div className="flex-1">
                   <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{merchant.businessName}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{merchant.user?.email} — {merchant.user?.mobile}</p>
-                  <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${merchant.status === 'payment_pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                    {merchant.status === 'payment_pending' ? <span className="inline-flex items-center gap-1"><Image className="w-3.5 h-3.5" /> Screenshot uploaded</span> : <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Awaiting payment</span>}
+                  <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${merchant.status === 'payment_pending' && merchant.paymentScreenshot ? 'bg-amber-100 text-amber-700' : merchant.status === 'payment_pending' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {merchant.status === 'payment_pending' && merchant.paymentScreenshot ? <span className="inline-flex items-center gap-1"><Image className="w-3.5 h-3.5" /> Screenshot uploaded</span> : merchant.status === 'payment_pending' ? <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> No screenshot</span> : <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Awaiting payment</span>}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -462,8 +462,12 @@ const handleOpenAdd = () => {
               </button>
               <button
                 onClick={() => handleConfirmPayment(screenshotModal.merchantId)}
-                disabled={confirmingPayment}
-                className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 btn-press"
+                disabled={confirmingPayment || !screenshotModal.url}
+                className={`flex-1 px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 btn-press ${
+                  screenshotModal.url
+                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-slate-400 cursor-not-allowed'
+                }`}
               >
                 {confirmingPayment ? 'Confirming...' : '? Confirm Payment'}
               </button>

@@ -17,6 +17,10 @@ jest.mock('../src/services/emailService', () => ({
   sendOTPEmail: jest.fn().mockResolvedValue(true)
 }));
 
+jest.mock('../src/services/whatsappService', () => ({
+  sendWhatsAppOTP: jest.fn().mockResolvedValue({ success: true })
+}));
+
 const { generateAndSendOTP, verifyOTP } = require('../src/services/otpService');
 const prisma = require('../src/lib/prisma');
 const bcrypt = require('bcrypt');

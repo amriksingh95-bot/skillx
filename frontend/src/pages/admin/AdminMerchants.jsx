@@ -627,6 +627,7 @@ export default function AdminMerchants() {
           accessor: 'id',
           render: (row) => (
             <button
+              disabled={!row.paymentScreenshot}
               onClick={async () => {
                 try {
                   await api.patch(`/api/admin/merchants/${row.id}/confirm-payment`);
@@ -636,9 +637,13 @@ export default function AdminMerchants() {
                   toast.error(err.response?.data?.message || 'Failed to confirm payment.');
                 }
               }}
-              className="px-3 py-1.5 text-xs font-extrabold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-500/20 transition-colors btn-press"
+              className={`px-3 py-1.5 text-xs font-extrabold rounded-lg text-white shadow-sm transition-colors btn-press ${
+                row.paymentScreenshot
+                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                  : 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed opacity-60'
+              }`}
             >
-              Confirm Payment
+              {row.paymentScreenshot ? 'Confirm Payment' : 'No Screenshot'}
             </button>
           )
         }

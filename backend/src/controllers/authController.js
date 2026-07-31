@@ -322,10 +322,23 @@ async function login(req, res, next) {
     // Prepare response data
     let name = 'System Administrator';
     let profileId = null;
+    let merchantStatus = null;
+    let merchantStatusCode = null;
 
     if (user.role === 'merchant' && user.merchant) {
       name = user.merchant.businessName;
       profileId = user.merchant.id;
+      merchantStatus = user.merchant.status;
+      if (user.merchant.status !== 'active') {
+        const statusToCode = {
+          pending: 'ACCOUNT_PENDING',
+          approved: 'PAYMENT_REQUIRED',
+          payment_pending: 'PAYMENT_UNDER_VERIFICATION',
+          suspended: 'ACCOUNT_SUSPENDED',
+          deactivated: 'ACCOUNT_DEACTIVATED'
+        };
+        merchantStatusCode = statusToCode[user.merchant.status] || null;
+      }
     } else if (user.role === 'customer' && user.customer) {
       name = user.customer.name;
       profileId = user.customer.id;
@@ -343,7 +356,9 @@ async function login(req, res, next) {
           email: user.email,
           mobile: user.mobile,
           role: user.role,
-          name
+          name,
+          ...(merchantStatus ? { merchantStatus } : {}),
+          ...(merchantStatusCode ? { merchantStatusCode } : {})
         }
       }
     });
@@ -738,8 +753,8 @@ async function registerMerchantSelf(req, res, next) {
   const ipAddress = req.ip;
 
   try {
-    if (!businessName || !mobile || !password) {
-      const err = new Error('businessName, mobile, and password are required.');
+    if (!businessName || !mobile || !email || !password) {
+      const err = new Error('businessName, mobile, email, and password are required.');
       err.status = 400;
       err.code = 'VALIDATION_ERROR';
       return next(err);

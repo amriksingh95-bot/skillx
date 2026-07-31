@@ -24,5 +24,10 @@ export default function RoleGuard({ allowedRoles, children }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Merchant-specific: if status is not active, redirect to /suspended
+  if (user.role === 'merchant' && user.merchantStatusCode) {
+    return <Navigate to={`/suspended?code=${user.merchantStatusCode}`} replace />;
+  }
+
   return children;
 }

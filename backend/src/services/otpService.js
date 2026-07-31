@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const bcrypt = require('bcrypt');
 const { sendOTPEmail } = require('./emailService');
+const { sendWhatsAppOTP } = require('./whatsappService');
 
 const VALID_PURPOSES = ['register', 'register_merchant', 'reset', 'change_mobile'];
 
@@ -10,12 +11,14 @@ const VALID_PURPOSES = ['register', 'register_merchant', 'reset', 'change_mobile
  * @param {string} mobile - 10 digit phone number
  * @param {string} otp - OTP to send
  */
+/*
 async function sendSMS(mobile, otp) {
   // ==========================================
   // PLUG SMS GATEWAY HERE (Twilio/MSG91 etc.)
   // ==========================================
   return true;
 }
+*/
 
 /**
  * Generates OTP and stores it in the database.
@@ -61,10 +64,16 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
     }
   }
 
-  // 5. Call the external mock SMS gateway with raw OTP code
-  await sendSMS(mobile, otp);
+  // 5. Send OTP via WhatsApp Cloud API
+  const whatsappResult = await sendWhatsAppOTP(mobile, otp, purpose);
+  if (!whatsappResult.success) {
+    console.warn(`[OTP Service]: WhatsApp OTP delivery failed for mobile: ${whatsappResult.reason}`);
+  }
 
-  return { verification };
+  // Keep old sendSMS mock call commented out:
+  // await sendSMS(mobile, otp);
+
+  return { verification, otp };
 }
 
 /**

@@ -1,6 +1,6 @@
-import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React, { Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth, setAppNavigate } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MerchantSubscriptionProvider } from './context/MerchantSubscriptionContext';
 import Layout from './components/Layout';
@@ -57,9 +57,19 @@ function DashboardRedirect() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'super_admin') return <Navigate to="/admin/dashboard" replace />;
-  if (user.role === 'merchant') return <Navigate to="/merchant/dashboard" replace />;
+  if (user.role === 'merchant') {
+    if (user.merchantStatusCode) return <Navigate to={`/suspended?code=${user.merchantStatusCode}`} replace />;
+    return <Navigate to="/merchant/dashboard" replace />;
+  }
   if (user.role === 'customer') return <Navigate to="/customer/dashboard" replace />;
   return <Navigate to="/login" replace />;
+}
+
+// Bridge: give AuthContext access to React Router's navigate
+function NavigateSetter() {
+  const nav = useNavigate();
+  useEffect(() => { setAppNavigate(nav); }, [nav]);
+  return null;
 }
 
 export default function App() {
@@ -68,6 +78,7 @@ export default function App() {
       <ThemeProvider>
         <AuthProvider>
         <Router>
+          <NavigateSetter />
           <Suspense fallback={<LoadingSpinner fullPage />}>
           <Routes>
 {/* Public Auth Routes */}

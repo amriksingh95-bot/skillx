@@ -22,7 +22,9 @@ import {
   X,
   Copy,
   CreditCard,
-  Bell
+  Bell,
+  SwitchCamera,
+  ImagePlus
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import Badge from '../../components/Badge';
@@ -59,6 +61,10 @@ export default function MerchantDashboard() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(true);
   const [mockQr, setMockQr] = useState('');
+  const [cameraFacing, setCameraFacing] = useState('environment');
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 8 });
@@ -179,6 +185,25 @@ export default function MerchantDashboard() {
   const handleQrScanSuccessRef = useRef(handleQrScanSuccess);
   handleQrScanSuccessRef.current = handleQrScanSuccess;
 
+  const handleFlipCamera = async () => {
+    setCameraFacing((prev) => (prev === 'environment' ? 'user' : 'environment'));
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode');
+      const tempScanner = new Html5Qrcode('qr-reader-temp');
+      const result = await tempScanner.scanFile(file, true);
+      tempScanner.clear();
+      handleQrScanSuccessRef.current(result);
+    } catch (err) {
+      toast.error('No QR code found in the selected image.');
+    }
+    e.target.value = '';
+  };
+
   useEffect(() => {
     let scanner = null;
     let cancelled = false;
@@ -186,22 +211,28 @@ export default function MerchantDashboard() {
       const timer = setTimeout(async () => {
         if (cancelled) return;
         try {
-          const { Html5QrcodeScanner: Html5QrcodeScannerCls } = await import('html5-qrcode');
+          const { Html5Qrcode: Html5QrcodeCls } = await import('html5-qrcode');
           if (cancelled) return;
-          scanner = new Html5QrcodeScannerCls(
-            'merchant-transfer-qr-reader',
+          scanner = new Html5QrcodeCls('merchant-transfer-qr-reader');
+          scannerRef.current = scanner;
+
+          scanner.start(
+            { facingMode: cameraFacing },
             { fps: 10, qrbox: 250 },
-            /* verbose= */ false
-          );
-          scanner.render(
             (text) => {
-              scanner.clear();
-              handleQrScanSuccessRef.current(text);
+              scanner.stop().then(() => {
+                scanner.clear();
+                setIsScanning(false);
+                handleQrScanSuccessRef.current(text);
+              }).catch(() => {});
             },
-            (err) => {
-              console.warn('QR scan error:', err);
-            }
-          );
+            () => {}
+          ).then(() => {
+            if (!cancelled) setIsScanning(true);
+          }).catch((err) => {
+            console.warn('QR camera start failed:', err);
+            toast.error('Could not start camera. Try uploading from gallery.');
+          });
         } catch (e) {
           console.warn('QR init error:', e);
         }
@@ -211,11 +242,14 @@ export default function MerchantDashboard() {
         cancelled = true;
         clearTimeout(timer);
         if (scanner) {
-          scanner.clear().catch(() => {});
+          try { scanner.stop(); } catch (_) {}
+          try { scanner.clear(); } catch (_) {}
+          scannerRef.current = null;
+          setIsScanning(false);
         }
       };
     }
-  }, [isTransferModalOpen, showScanner, transferStep]);
+  }, [isTransferModalOpen, showScanner, transferStep, cameraFacing]);
 
   const lookupCustomerByQR = async (qrString) => {
     setTransferLoading(true);
@@ -850,12 +884,56 @@ export default function MerchantDashboard() {
               ) : (
                 <div className="space-y-6">
                   {showScanner && (
-                    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-slate-50 dark:bg-slate-900/40">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                         <Camera className="w-4 h-4 text-emerald-600" />
                         Live Camera View
                       </div>
-                      <div id="merchant-transfer-qr-reader" className="w-full max-w-sm mx-auto overflow-hidden rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 shadow-sm" />
+                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
+                        <div
+                          id="merchant-transfer-qr-reader"
+                          className="w-full max-w-sm mx-auto aspect-square cursor-pointer"
+                          onClick={() => {
+                            if (!isScanning && scannerRef.current) {
+                              scannerRef.current.start(
+                                { facingMode: cameraFacing },
+                                { fps: 10, qrbox: 250 },
+                                (text) => {
+                                  scannerRef.current.stop().then(() => {
+                                    scannerRef.current.clear();
+                                    setIsScanning(false);
+                                    handleQrScanSuccessRef.current(text);
+                                  }).catch(() => {});
+                                },
+                                () => {}
+                              ).then(() => setIsScanning(true)).catch(() => {});
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleFlipCamera}
+                          className="absolute top-3 right-3 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                        >
+                          <SwitchCamera className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <ImagePlus className="w-4 h-4" />
+                        Upload from gallery
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleGalleryUpload}
+                      />
+                      <div id="qr-reader-temp" className="hidden" />
                     </div>
                   )}
 

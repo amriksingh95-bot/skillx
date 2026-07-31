@@ -101,7 +101,11 @@ export default function Login() {
         toast.error('This account is not registered as a Merchant.');
         return;
       }
-      navigate('/merchant/dashboard');
+      if (loggedUser.merchantStatusCode) {
+        navigate(`/suspended?code=${loggedUser.merchantStatusCode}`);
+      } else {
+        navigate('/merchant/dashboard');
+      }
     } catch (err) {
       console.error('Merchant login error:', err);
       toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');

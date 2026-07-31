@@ -92,7 +92,7 @@ router.post(
 router.post(
   '/reset-password',
   [
-    validateMobile,
+    validateLoginIdentifier,
     body('otp').notEmpty().withMessage('OTP is required.'),
     validateNewPassword
   ],
@@ -106,7 +106,7 @@ router.post(
     body('businessName').trim().notEmpty().withMessage('Business name is required.'),
     body('ownerName').trim().notEmpty().withMessage('Owner name is required.'),
     validateMobile,
-    validateEmail,
+    body('email').trim().notEmpty().withMessage('Email address is required.').isEmail().withMessage('Enter a valid email address.').normalizeEmail(),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.'),
     body('otp').notEmpty().withMessage('OTP verification is required.'),
     body('category').optional().trim(),

@@ -1,5 +1,6 @@
 import React from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { AlertOctagon, Mail, Home, RefreshCw } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -46,6 +47,13 @@ export default function Suspended() {
   const [searchParams] = useSearchParams();
   const code = searchParams.get('code');
   const config = STATUS_CONFIG[code] || DEFAULT_CONFIG;
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGoToLogin = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 text-center">
@@ -80,7 +88,7 @@ export default function Suspended() {
             </a>
           )}
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={handleGoToLogin}
             className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 hover:border-slate-500 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 btn-press"
           >
             <Home className="w-4 h-4" />

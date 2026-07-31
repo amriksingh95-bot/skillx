@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -6,6 +6,13 @@ import toast from 'react-hot-toast';
 const AuthContext = createContext();
 
 let isLoggingOut = false;
+
+// Generation counter — login() increments, initAuth() bails if it changed
+const _authGeneration = { current: 0 };
+
+// Module-level navigate function — set by <NavigateSetter /> inside Router
+let _navigate = null;
+export function setAppNavigate(fn) { _navigate = fn; }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
@@ -39,43 +46,67 @@ export function AuthProvider({ children }) {
     let cancelled = false;
 
     const initAuth = async () => {
-      const storedRefreshToken = localStorage.getItem('refreshToken');
+      const genAtStart = _authGeneration.current;
+      try {
+        const storedRefreshToken = localStorage.getItem('refreshToken');
 
-      if (storedRefreshToken) {
-        try {
-          // Validate refresh token BEFORE setting user
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
-            refreshToken: storedRefreshToken
-          });
+        if (storedRefreshToken) {
+          try {
+            const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
+              refreshToken: storedRefreshToken
+            });
 
-          // If user already logged in via login() during the refresh, skip setting user
-          if (cancelled) return;
-          if (!localStorage.getItem('refreshToken')) return;
+            if (cancelled) return;
+            if (_authGeneration.current !== genAtStart) return;
+            if (!localStorage.getItem('refreshToken')) return;
 
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
-          setAccessToken(newAccessToken);
-          if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken);
-          }
-          api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+            setAccessToken(newAccessToken);
+            if (newRefreshToken) {
+              localStorage.setItem('refreshToken', newRefreshToken);
+            }
+            api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
-          // Decode JWT to get fresh role — never trust stale localStorage user data
-          const payload = decodeAccessToken(newAccessToken);
-          if (payload && payload.userId && payload.role) {
-            setUser({ id: payload.userId, role: payload.role, name: payload.name });
-          }
-        } catch (error) {
-          // Token refresh failed — silently clear user, do NOT call logout()
-          if (!cancelled) {
-            setUser(null);
-            setAccessToken(null);
-            delete api.defaults.headers.common['Authorization'];
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
+            const payload = decodeAccessToken(newAccessToken);
+            if (payload && payload.userId && payload.role) {
+              const userData = { id: payload.userId, role: payload.role, name: payload.name };
+
+              if (payload.role === 'merchant') {
+                try {
+                  const profileRes = await api.get('/api/merchant/profile');
+                  const merchant = profileRes.data?.data;
+                  if (merchant && merchant.status && merchant.status !== 'active') {
+                    const statusToCode = {
+                      pending: 'ACCOUNT_PENDING',
+                      approved: 'PAYMENT_REQUIRED',
+                      payment_pending: 'PAYMENT_UNDER_VERIFICATION',
+                      suspended: 'ACCOUNT_SUSPENDED',
+                      deactivated: 'ACCOUNT_DEACTIVATED'
+                    };
+                    userData.merchantStatus = merchant.status;
+                    userData.merchantStatusCode = statusToCode[merchant.status] || null;
+                  }
+                } catch {
+                  // Profile fetch failed — proceed without status
+                }
+              }
+
+              if (_authGeneration.current !== genAtStart) return;
+              setUser(userData);
+            }
+          } catch (error) {
+            if (!cancelled && _authGeneration.current === genAtStart) {
+              setUser(null);
+              setAccessToken(null);
+              delete api.defaults.headers.common['Authorization'];
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('user');
+            }
           }
         }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
@@ -107,7 +138,11 @@ export function AuthProvider({ children }) {
           (error.response.data.code === 'ACCOUNT_SUSPENDED' || error.response.data.code === 'ACCOUNT_DEACTIVATED')
         ) {
           handleLogoutLocal();
-          window.location.href = `/suspended?code=${error.response.data.code}`;
+          if (_navigate) {
+            _navigate(`/suspended?code=${error.response.data.code}`);
+          } else {
+            window.location.href = `/suspended?code=${error.response.data.code}`;
+          }
           return Promise.reject(error);
         }
 
@@ -116,7 +151,11 @@ export function AuthProvider({ children }) {
           error.response.data &&
           (error.response.data.code === 'ACCOUNT_PENDING' || error.response.data.code === 'PAYMENT_REQUIRED' || error.response.data.code === 'PAYMENT_UNDER_VERIFICATION')
         ) {
-          window.location.href = `/suspended?code=${error.response.data.code}`;
+          if (_navigate) {
+            _navigate(`/suspended?code=${error.response.data.code}`);
+          } else {
+            window.location.href = `/suspended?code=${error.response.data.code}`;
+          }
           return Promise.reject(error);
         }
 
@@ -169,6 +208,9 @@ export function AuthProvider({ children }) {
   // Login handler
   const login = async (identifier, password) => {
     try {
+      // Increment generation to abort any in-flight initAuth() from overwriting
+      _authGeneration.current++;
+
       // Clear stale localStorage data to prevent initAuth from overwriting with old role
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
@@ -194,6 +236,9 @@ export function AuthProvider({ children }) {
     if (isLoggingOut) return;
     isLoggingOut = true;
     setLoggingOut(true);
+
+    // Increment generation to abort any in-flight initAuth()
+    _authGeneration.current++;
 
     const storedRefreshToken = localStorage.getItem('refreshToken');
     handleLogoutLocal();

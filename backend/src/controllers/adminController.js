@@ -2696,9 +2696,16 @@ async function confirmMerchantPayment(req, res, next) {
     }
 
     if (merchant.status !== 'payment_pending') {
-      const err = new Error('No payment screenshot uploaded yet.');
+      const err = new Error('Merchant is not awaiting payment verification.');
       err.status = 400;
       err.code = 'INVALID_STATUS';
+      return next(err);
+    }
+
+    if (!merchant.paymentScreenshot) {
+      const err = new Error('No payment screenshot found for this merchant — cannot confirm payment.');
+      err.status = 400;
+      err.code = 'NO_SCREENSHOT';
       return next(err);
     }
 
@@ -2817,6 +2824,13 @@ async function confirmRenewalPayment(req, res, next) {
       const err = new Error('Merchant is not awaiting payment verification.');
       err.status = 400;
       err.code = 'INVALID_STATUS';
+      return next(err);
+    }
+
+    if (!merchant.paymentScreenshot) {
+      const err = new Error('No payment screenshot found for this merchant — cannot confirm renewal.');
+      err.status = 400;
+      err.code = 'NO_SCREENSHOT';
       return next(err);
     }
 

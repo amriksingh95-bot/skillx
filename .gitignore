@@ -50,3 +50,5 @@ backend/src/utils/testTelegram.js
 # Test coverage
 coverage/
 .nyc_output/
+temp_pg_test.js 
+vite.config.js.timestamp-*.mjs 
