@@ -141,13 +141,13 @@ export default function Register() {
     if (!/^\d{10}$/.test(mobile)) {
       return toast.error('Mobile number must be exactly 10 digits.');
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return toast.error('Enter a valid email address.');
     }
 
     setIsLoading(true);
     try {
-      const response = await api.post('/api/auth/request-otp', { mobile, email: email || null });
+      const response = await api.post('/api/auth/request-otp', { mobile, email });
       toast.success(response.data.message || 'OTP sent successfully.');
       setStep(2);
       setAttemptsRemaining(null);
@@ -293,10 +293,11 @@ export default function Register() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-2">
-                Email Address (Optional)
+                Email Address
               </label>
               <input
                 type="email"
+                required
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 placeholder="customer@domain.com"
                 value={email}
