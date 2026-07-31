@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { QRCodeSVG } from 'qrcode.react';
@@ -12,26 +12,18 @@ import {
   RefreshCw,
   Wallet,
   QrCode,
-  Camera,
-  CheckCircle2,
   AlertCircle,
-  ArrowRight,
-  User,
-  Mail,
   MessageSquare,
   X,
   Copy,
   CreditCard,
-  Bell,
-  SwitchCamera,
-  ImagePlus
+  Bell
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import Badge from '../../components/Badge';
 import DataTable from '../../components/DataTable';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-import Modal from '../../components/Modal';
 import AdBanner from '../../components/AdBanner';
 import ComplaintModal from '../../components/ComplaintModal';
 
@@ -49,23 +41,11 @@ export default function MerchantDashboard() {
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [dismissedExpiryBanner, setDismissedExpiryBanner] = useState(false);
 
-  // Transfer Flow States
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  // Complaint Modal
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
-  const [transferStep, setTransferStep] = useState(1);
 
   // Ecosystem Stats
   const [ecosystemStats, setEcosystemStats] = useState(null);
-  const [scannedCustomer, setScannedCustomer] = useState(null);
-  const [pointsToTransfer, setPointsToTransfer] = useState('');
-  const [transferLoading, setTransferLoading] = useState(false);
-  const [showScanner, setShowScanner] = useState(true);
-  const [mockQr, setMockQr] = useState('');
-  const [cameraFacing, setCameraFacing] = useState('environment');
-  const [isScanning, setIsScanning] = useState(false);
-  const [scannerError, setScannerError] = useState(false);
-  const scannerRef = useRef(null);
-  const fileInputRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 8 });
@@ -176,187 +156,6 @@ export default function MerchantDashboard() {
       window.removeEventListener('resize', close);
     };
   }, [showNotifications]);
-
-  const handleQrScanSuccess = async (decodedText) => {
-    setShowScanner(false);
-    await lookupCustomerByQR(decodedText);
-  };
-
-  // HTML5 QR Scanner Effect
-  const handleQrScanSuccessRef = useRef(handleQrScanSuccess);
-  handleQrScanSuccessRef.current = handleQrScanSuccess;
-
-  const handleFlipCamera = async () => {
-    setCameraFacing((prev) => (prev === 'environment' ? 'user' : 'environment'));
-  };
-
-  const handleGalleryUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const { Html5Qrcode } = await import('html5-qrcode');
-      const tempScanner = new Html5Qrcode('qr-reader-temp');
-      const result = await tempScanner.scanFile(file, true);
-      tempScanner.clear();
-      handleQrScanSuccessRef.current(result);
-    } catch (err) {
-      toast.error('No QR code found in the selected image.');
-    }
-    e.target.value = '';
-  };
-
-  useEffect(() => {
-    let scanner = null;
-    let cancelled = false;
-    let pollId = null;
-    let elapsed = 0;
-
-    if (isTransferModalOpen && showScanner && transferStep === 1) {
-      setScannerError(false);
-
-      const startScanner = async () => {
-        if (cancelled) return;
-        try {
-          const { Html5Qrcode: Html5QrcodeCls } = await import('html5-qrcode');
-          if (cancelled) return;
-          scanner = new Html5QrcodeCls('merchant-transfer-qr-reader');
-          scannerRef.current = scanner;
-
-          scanner.start(
-            { facingMode: cameraFacing },
-            { fps: 10, qrbox: 250 },
-            (text) => {
-              scanner.stop().then(() => {
-                scanner.clear();
-                setIsScanning(false);
-                handleQrScanSuccessRef.current(text);
-              }).catch(() => {});
-            },
-            () => {}
-          ).then(() => {
-            if (!cancelled) {
-              setIsScanning(true);
-              setScannerError(false);
-            }
-          }).catch((err) => {
-            console.warn('QR camera start failed:', err);
-            if (!cancelled) setScannerError(true);
-          });
-        } catch (e) {
-          console.warn('QR init error:', e);
-          if (!cancelled) setScannerError(true);
-        }
-      };
-
-      const poll = () => {
-        if (cancelled) return;
-        const el = document.getElementById('merchant-transfer-qr-reader');
-        if (el) {
-          startScanner();
-        } else if (elapsed < 50) {
-          elapsed++;
-          pollId = requestAnimationFrame(poll);
-        } else {
-          if (!cancelled) setScannerError(true);
-        }
-      };
-
-      pollId = requestAnimationFrame(poll);
-
-      return () => {
-        cancelled = true;
-        if (pollId) cancelAnimationFrame(pollId);
-        if (scanner) {
-          try { scanner.stop(); } catch (_) {}
-          try { scanner.clear(); } catch (_) {}
-          scannerRef.current = null;
-          setIsScanning(false);
-        }
-      };
-    }
-  }, [isTransferModalOpen, showScanner, transferStep, cameraFacing]);
-
-  const lookupCustomerByQR = async (qrString) => {
-    setTransferLoading(true);
-    try {
-      const res = await api.get(`/api/merchant/customer-by-qr/${qrString}`);
-      // Now also fetch the customer's current points balance using the scanner endpoint or identifier lookup
-      const balanceRes = await api.get(`/api/merchant/customer/${res.data.data.id}`);
-      setScannedCustomer({
-        ...res.data.data,
-        balance: balanceRes.data.data.balance
-      });
-      setTransferStep(2);
-      toast.success(`Customer found: ${res.data.data.name}`);
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Customer not found.';
-      toast.error(msg);
-      setShowScanner(true);
-    } finally {
-      setTransferLoading(false);
-    }
-  };
-
-  const handleMockScanSubmit = (e) => {
-    e.preventDefault();
-    if (!mockQr) return toast.error('Paste a QR string first.');
-    handleQrScanSuccess(mockQr);
-  };
-
-  const handleTransferSubmit = async (e) => {
-    e.preventDefault();
-    if (!scannedCustomer) return;
-    const pointsInt = parseInt(pointsToTransfer);
-    if (isNaN(pointsInt) || pointsInt <= 0) {
-      return toast.error('Please enter a valid points amount.');
-    }
-    if (pointsInt > (stats?.pointsBalance || 0)) {
-      return toast.error('Insufficient points in your merchant wallet.');
-    }
-
-    setTransferLoading(true);
-    try {
-      await api.post('/api/merchant/transfer-points', {
-        customerId: scannedCustomer.id,
-        points: pointsInt
-      });
-      // Refresh dashboard stats
-      await fetchDashboardData();
-      setTransferStep(3);
-      toast.success(`Successfully transferred ${pointsInt} points!`);
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to transfer points.';
-      toast.error(msg);
-    } finally {
-      setTransferLoading(false);
-    }
-  };
-
-  const handleResetTransfer = () => {
-    setScannedCustomer(null);
-    setPointsToTransfer('');
-    setMockQr('');
-    setTransferStep(1);
-    setShowScanner(true);
-    setScannerError(false);
-  };
-
-  const handleRetryCamera = () => {
-    setScannerError(false);
-    setIsScanning(false);
-    if (scannerRef.current) {
-      try { scannerRef.current.stop(); } catch (_) {}
-      try { scannerRef.current.clear(); } catch (_) {}
-      scannerRef.current = null;
-    }
-    setShowScanner(false);
-    setTimeout(() => setShowScanner(true), 50);
-  };
-
-  const handleCloseTransferModal = () => {
-    setIsTransferModalOpen(false);
-    handleResetTransfer();
-  };
 
   if (loading) return <LoadingSpinner size="large" fullPage />;
 
@@ -603,11 +402,7 @@ export default function MerchantDashboard() {
             </p>
           </div>
           <button
-            onClick={() => {
-              setIsTransferModalOpen(true);
-              setTransferStep(1);
-              setShowScanner(true);
-            }}
+            onClick={() => navigate('/merchant/add-points')}
             className="mt-6 w-full py-2.5 bg-white hover:bg-emerald-50 hover:bg-opacity-90 text-emerald-800 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 text-xs font-black btn-press"
           >
             <QrCode className="w-4 h-4" />
@@ -866,305 +661,6 @@ export default function MerchantDashboard() {
           data={recentTransactions}
         />
       </div>
-
-      {/* Transfer Points Modal */}
-      <Modal
-        isOpen={isTransferModalOpen}
-        onClose={handleCloseTransferModal}
-        title="Wallet-to-Wallet Points Transfer"
-      >
-        <div className="space-y-6">
-          {/* Step Progress Bar */}
-          <div className="flex items-center justify-between border border-slate-200 dark:border-slate-700 rounded-2xl p-3 md:p-4 bg-slate-50 dark:bg-slate-900/20 shadow-sm mb-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm ${
-                transferStep === 1 ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
-              }`}>
-                {transferStep > 1 ? <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> : '1'}
-              </span>
-              <span className={`text-xs md:text-sm font-bold ${transferStep === 1 ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>Scan</span>
-            </div>
-            <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-slate-300 shrink-0" />
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm ${
-                transferStep === 2 ? 'bg-emerald-600 text-white' : transferStep === 3 ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-              }`}>
-                {transferStep > 2 ? <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" /> : '2'}
-              </span>
-              <span className={`text-xs md:text-sm font-bold ${transferStep === 2 ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>Amount</span>
-            </div>
-            <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-slate-300 shrink-0" />
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs md:text-sm ${
-                transferStep === 3 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400 dark:bg-slate-800'
-              }`}>
-                3
-              </span>
-              <span className={`text-xs md:text-sm font-bold ${transferStep === 3 ? 'text-slate-800 dark:text-white' : 'text-slate-400'}`}>Status</span>
-            </div>
-          </div>
-
-          {/* STEP 1: Scan View */}
-          {transferStep === 1 && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Scan Customer QR Code</h3>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Scan the unique QR code on the customer's dashboard to automatically load their profile and balance.
-                </p>
-              </div>
-
-              {transferLoading ? (
-                <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                  <RefreshCw className="w-10 h-10 text-emerald-600 animate-spin" />
-                  <p className="text-xs font-bold text-slate-400">Identifying customer wallet...</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {showScanner && (
-                    <div className="space-y-3">
-                      {scannerError ? (
-                        <div className="flex flex-col items-center justify-center py-10 space-y-4 rounded-2xl border border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20">
-                          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-                            <Camera className="w-8 h-8 text-red-500" />
-                          </div>
-                          <div className="text-center space-y-1">
-                            <p className="text-sm font-bold text-red-700 dark:text-red-400">Camera failed to start</p>
-                            <p className="text-xs text-red-500/80 dark:text-red-400/60">Grant camera permission and try again</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleRetryCamera}
-                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 btn-press"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                            Retry camera
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                            <Camera className="w-4 h-4 text-emerald-600" />
-                            Live Camera View
-                          </div>
-                          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
-                            <div
-                              id="merchant-transfer-qr-reader"
-                              className="w-full max-w-sm mx-auto aspect-square cursor-pointer"
-                              onClick={() => {
-                                if (!isScanning && scannerRef.current) {
-                                  scannerRef.current.start(
-                                    { facingMode: cameraFacing },
-                                    { fps: 10, qrbox: 250 },
-                                    (text) => {
-                                      scannerRef.current.stop().then(() => {
-                                        scannerRef.current.clear();
-                                        setIsScanning(false);
-                                        handleQrScanSuccessRef.current(text);
-                                      }).catch(() => {});
-                                    },
-                                    () => {}
-                                  ).then(() => setIsScanning(true)).catch(() => {});
-                                }
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={handleFlipCamera}
-                              className="absolute top-3 right-3 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
-                            >
-                              <SwitchCamera className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <ImagePlus className="w-4 h-4" />
-                        Upload from gallery
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleGalleryUpload}
-                      />
-                      <div id="qr-reader-temp" className="hidden" />
-                    </div>
-                  )}
-
-                  {/* Virtual testing input */}
-                  <div className="pt-4 border-t border-dashed border-slate-200 dark:border-dark-border">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-                      <AlertCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Virtual Testing Mode</span>
-                    </div>
-                    <form onSubmit={handleMockScanSubmit} className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Paste QR code string (e.g. SKILLXT-8000000001)"
-                        className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm placeholder-slate-400 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        value={mockQr}
-                        onChange={(e) => setMockQr(e.target.value)}
-                      />
-                      <button
-                        type="submit"
-                        className="px-5 py-2.5 bg-slate-900 hover:bg-slate-900 text-white dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition-all btn-press"
-                      >
-                        Mock Scan
-                      </button>
-                    </form>
-                    <p className="text-[10px] text-slate-400 mt-2">
-                      Use a seeded QR string (e.g. <code>SKILLXT-[CUSTOMER_UUID]</code> or copy the QR code string shown on the Customer Dashboard).
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: Details & Input View */}
-          {transferStep === 2 && scannedCustomer && (
-            <div className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-extrabold text-base text-slate-800 dark:text-white">Customer Identified</h3>
-                <p className="text-xs text-slate-400">
-                  Review the customer wallet details and specify points to transfer.
-                </p>
-              </div>
-
-              {/* Customer Info Card */}
-              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 p-5 rounded-2xl space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="block text-sm font-black text-slate-900 dark:text-white">{scannedCustomer.name}</span>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>{scannedCustomer.email || 'No email associated'}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="h-px bg-slate-200 dark:bg-slate-800" />
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400 font-semibold">Current Balance:</span>
-                  <span className="font-black text-slate-800 dark:text-white">{(scannedCustomer.balance || 0).toLocaleString('en-IN')} pts</span>
-                </div>
-              </div>
-
-              {/* Transfer Form */}
-              <form onSubmit={handleTransferSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                    Points to Transfer
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    max={stats?.pointsBalance || 999999}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-lg text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold"
-                    placeholder="Enter amount of points"
-                    value={pointsToTransfer}
-                    onChange={(e) => setPointsToTransfer(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400 mt-2 px-1">
-                    <span>Your available balance: {(stats?.pointsBalance || 0).toLocaleString('en-IN')} pts</span>
-                    {parseInt(pointsToTransfer) > 0 && (
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        New Merchant Balance: {((stats?.pointsBalance || 0) - parseInt(pointsToTransfer)).toLocaleString('en-IN')} pts
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={handleResetTransfer}
-                    className="flex-1 py-3 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all btn-press"
-                  >
-                    Back to Scan
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={transferLoading || !pointsToTransfer || parseInt(pointsToTransfer) <= 0 || parseInt(pointsToTransfer) > (stats?.pointsBalance || 0)}
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all focus:outline-none flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
-                  >
-                    {transferLoading ? (
-                      <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" />
-                    ) : (
-                      <CheckCircle2 className="w-4 h-4" />
-                    )}
-                    Confirm & Transfer
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* STEP 3: Success View */}
-          {transferStep === 3 && (
-            <div className="text-center space-y-6 py-4 animate-scaleUp">
-              <div className="inline-flex p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500 rounded-full border border-emerald-100 dark:border-emerald-900/30">
-                <CheckCircle2 className="w-16 h-16" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-extrabold text-xl text-slate-800 dark:text-white">Points Transferred Successfully!</h3>
-                <p className="text-sm text-slate-400">
-                  The customer has received their points in real time.
-                </p>
-              </div>
-
-              {/* Receipt summary */}
-              <div className="bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 p-6 rounded-2xl max-w-xs mx-auto text-left space-y-4">
-                <div className="flex justify-between items-center text-xs text-slate-400">
-                  <span>Customer Name</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-200">{scannedCustomer?.name}</span>
-                </div>
-                <div className="h-px bg-slate-200 dark:bg-slate-800" />
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-400">Points Transferred</span>
-                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-lg flex items-center gap-1">
-                    +{pointsToTransfer} pts
-                  </span>
-                </div>
-                <div className="h-px bg-slate-200 dark:bg-slate-800" />
-                <div className="flex justify-between items-center text-xs text-slate-400">
-                  <span>New Merchant Balance</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-200">{(stats?.pointsBalance || 0).toLocaleString('en-IN')} pts</span>
-                </div>
-              </div>
-
-              <div className="flex gap-4 max-w-xs mx-auto pt-4">
-                <button
-                  type="button"
-                  onClick={handleResetTransfer}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all focus:outline-none btn-press"
-                >
-                  Transfer Again
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCloseTransferModal}
-                  className="flex-1 py-3 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all btn-press"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Modal>
 
       {/* COMPLAINT MODAL */}
       <ComplaintModal
