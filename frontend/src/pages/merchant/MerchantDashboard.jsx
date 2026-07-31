@@ -592,7 +592,7 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Merchant Wallet Card */}
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-3xl p-6 shadow-lg shadow-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between">
-          <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-6 translate-y-6">
+          <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-6 translate-y-6 pointer-events-none">
             <Wallet className="w-48 h-48" />
           </div>
           <div>
