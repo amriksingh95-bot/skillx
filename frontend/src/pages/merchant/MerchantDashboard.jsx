@@ -63,6 +63,7 @@ export default function MerchantDashboard() {
   const [mockQr, setMockQr] = useState('');
   const [cameraFacing, setCameraFacing] = useState('environment');
   const [isScanning, setIsScanning] = useState(false);
+  const [scannerError, setScannerError] = useState(false);
   const scannerRef = useRef(null);
   const fileInputRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
@@ -207,8 +208,13 @@ export default function MerchantDashboard() {
   useEffect(() => {
     let scanner = null;
     let cancelled = false;
+    let pollId = null;
+    let elapsed = 0;
+
     if (isTransferModalOpen && showScanner && transferStep === 1) {
-      const timer = setTimeout(async () => {
+      setScannerError(false);
+
+      const startScanner = async () => {
         if (cancelled) return;
         try {
           const { Html5Qrcode: Html5QrcodeCls } = await import('html5-qrcode');
@@ -228,19 +234,38 @@ export default function MerchantDashboard() {
             },
             () => {}
           ).then(() => {
-            if (!cancelled) setIsScanning(true);
+            if (!cancelled) {
+              setIsScanning(true);
+              setScannerError(false);
+            }
           }).catch((err) => {
             console.warn('QR camera start failed:', err);
-            toast.error('Could not start camera. Try uploading from gallery.');
+            if (!cancelled) setScannerError(true);
           });
         } catch (e) {
           console.warn('QR init error:', e);
+          if (!cancelled) setScannerError(true);
         }
-      }, 300);
+      };
+
+      const poll = () => {
+        if (cancelled) return;
+        const el = document.getElementById('merchant-transfer-qr-reader');
+        if (el) {
+          startScanner();
+        } else if (elapsed < 50) {
+          elapsed++;
+          pollId = requestAnimationFrame(poll);
+        } else {
+          if (!cancelled) setScannerError(true);
+        }
+      };
+
+      pollId = requestAnimationFrame(poll);
 
       return () => {
         cancelled = true;
-        clearTimeout(timer);
+        if (pollId) cancelAnimationFrame(pollId);
         if (scanner) {
           try { scanner.stop(); } catch (_) {}
           try { scanner.clear(); } catch (_) {}
@@ -313,6 +338,19 @@ export default function MerchantDashboard() {
     setMockQr('');
     setTransferStep(1);
     setShowScanner(true);
+    setScannerError(false);
+  };
+
+  const handleRetryCamera = () => {
+    setScannerError(false);
+    setIsScanning(false);
+    if (scannerRef.current) {
+      try { scannerRef.current.stop(); } catch (_) {}
+      try { scannerRef.current.clear(); } catch (_) {}
+      scannerRef.current = null;
+    }
+    setShowScanner(false);
+    setTimeout(() => setShowScanner(true), 50);
   };
 
   const handleCloseTransferModal = () => {
@@ -885,39 +923,61 @@ export default function MerchantDashboard() {
                 <div className="space-y-6">
                   {showScanner && (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <Camera className="w-4 h-4 text-emerald-600" />
-                        Live Camera View
-                      </div>
-                      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
-                        <div
-                          id="merchant-transfer-qr-reader"
-                          className="w-full max-w-sm mx-auto aspect-square cursor-pointer"
-                          onClick={() => {
-                            if (!isScanning && scannerRef.current) {
-                              scannerRef.current.start(
-                                { facingMode: cameraFacing },
-                                { fps: 10, qrbox: 250 },
-                                (text) => {
-                                  scannerRef.current.stop().then(() => {
-                                    scannerRef.current.clear();
-                                    setIsScanning(false);
-                                    handleQrScanSuccessRef.current(text);
-                                  }).catch(() => {});
-                                },
-                                () => {}
-                              ).then(() => setIsScanning(true)).catch(() => {});
-                            }
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleFlipCamera}
-                          className="absolute top-3 right-3 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
-                        >
-                          <SwitchCamera className="w-5 h-5" />
-                        </button>
-                      </div>
+                      {scannerError ? (
+                        <div className="flex flex-col items-center justify-center py-10 space-y-4 rounded-2xl border border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20">
+                          <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                            <Camera className="w-8 h-8 text-red-500" />
+                          </div>
+                          <div className="text-center space-y-1">
+                            <p className="text-sm font-bold text-red-700 dark:text-red-400">Camera failed to start</p>
+                            <p className="text-xs text-red-500/80 dark:text-red-400/60">Grant camera permission and try again</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRetryCamera}
+                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 btn-press"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Retry camera
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                            <Camera className="w-4 h-4 text-emerald-600" />
+                            Live Camera View
+                          </div>
+                          <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-black">
+                            <div
+                              id="merchant-transfer-qr-reader"
+                              className="w-full max-w-sm mx-auto aspect-square cursor-pointer"
+                              onClick={() => {
+                                if (!isScanning && scannerRef.current) {
+                                  scannerRef.current.start(
+                                    { facingMode: cameraFacing },
+                                    { fps: 10, qrbox: 250 },
+                                    (text) => {
+                                      scannerRef.current.stop().then(() => {
+                                        scannerRef.current.clear();
+                                        setIsScanning(false);
+                                        handleQrScanSuccessRef.current(text);
+                                      }).catch(() => {});
+                                    },
+                                    () => {}
+                                  ).then(() => setIsScanning(true)).catch(() => {});
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleFlipCamera}
+                              className="absolute top-3 right-3 z-10 w-12 h-12 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                            >
+                              <SwitchCamera className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
