@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const requiredEnvVars = [
   'DATABASE_URL', 'JWT_SECRET', 'PORT', 'FRONTEND_URL',
   'JWT_REFRESH_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'SUPABASE_BUCKET',
-  'GMAIL_USER', 'GMAIL_APP_PASSWORD', 'GEMINI_API_KEY', 'UPI_ID',
+  'RESEND_API_KEY', 'GEMINI_API_KEY', 'UPI_ID',
   'API_URL', 'BACKEND_URL'
 ];
 const missingVars = requiredEnvVars.filter(envVar => !process.env[envVar]);

@@ -1,25 +1,26 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD
+let resend = null;
+
+function getResendClient() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
   }
-});
+  return resend;
+}
+
+const FROM_EMAIL = 'SkillXT Rewards <otp@skillxt.in>';
 
 function isEmailConfigured() {
   return !!(
-    process.env.GMAIL_USER &&
-    !process.env.GMAIL_USER.includes('your_gmail_address') &&
-    process.env.GMAIL_APP_PASSWORD &&
-    !process.env.GMAIL_APP_PASSWORD.includes('your_16_char_app_password')
+    process.env.RESEND_API_KEY &&
+    process.env.RESEND_API_KEY.length > 10
   );
 }
 
 async function sendOTPEmail(toEmail, otp, purpose) {
   if (!isEmailConfigured()) {
-    return { success: false, reason: 'Email service not configured' };
+    return { success: false, reason: 'Email service not configured (RESEND_API_KEY missing)' };
   }
 
   const subjects = {
@@ -86,32 +87,33 @@ async function sendOTPEmail(toEmail, otp, purpose) {
   `;
 
   try {
-    await transporter.sendMail({
-      from: `"SkillXT Rewards" <${process.env.GMAIL_USER || 'no-reply@skillxt.com'}>`,
-      to: toEmail,
+    const client = getResendClient();
+    const { data, error } = await client.emails.send({
+      from: FROM_EMAIL,
+      to: [toEmail],
       subject: subject,
       html: html
     });
+
+    if (error) {
+      console.error(`[Email Service]: Resend API error: ${error.message}`);
+      return { success: false, reason: error.message };
+    }
+
     return { success: true };
   } catch (error) {
-    console.warn(`[Email Service Warning]: Gmail SMTP failed to send email: ${error.message}`);
+    console.error(`[Email Service]: Resend send failed: ${error.message}`);
     return { success: false, reason: error.message };
   }
 }
 
 async function verifyTransporter() {
   if (!isEmailConfigured()) {
-    console.warn('[Email Service]: Gmail SMTP not configured. Set GMAIL_USER and GMAIL_APP_PASSWORD in .env');
+    console.warn('[Email Service]: RESEND_API_KEY not configured. Set RESEND_API_KEY in .env');
     return false;
   }
-  try {
-    await transporter.verify();
-    console.log('[Email Service]: Gmail SMTP connection verified successfully.');
-    return true;
-  } catch (error) {
-    console.warn(`[Email Service]: Gmail SMTP verification failed: ${error.message}`);
-    return false;
-  }
+  console.log('[Email Service]: Resend API key detected. Email sending via Resend HTTP API.');
+  return true;
 }
 
 module.exports = { sendOTPEmail, verifyTransporter, isEmailConfigured };
