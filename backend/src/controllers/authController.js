@@ -20,7 +20,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
  * Register a new customer.
  */
 async function register(req, res, next) {
-  const { name, mobile, email, password, otp, referralCode, merchantCode } = req.body;
+  let { name, mobile, email, password, otp, referralCode, merchantCode } = req.body;
   const ipAddress = req.ip;
 
   try {
@@ -55,6 +55,25 @@ async function register(req, res, next) {
       err.status = 400;
       err.code = 'DUPLICATE_MOBILE';
       return next(err);
+    }
+
+    // Blacklist duplicate identifier check (salted SHA-256)
+    const crypto = require('crypto');
+    const referralSalt = process.env.REFERRAL_HASH_SALT || '';
+    const mobileHash = crypto.createHash('sha256').update(mobile.trim() + referralSalt).digest('hex');
+    const emailHash = email ? crypto.createHash('sha256').update(email.trim().toLowerCase() + referralSalt).digest('hex') : null;
+
+    const isBlacklisted = await prisma.usedReferralIdentifier.findFirst({
+      where: {
+        OR: [
+          { mobileHash },
+          ...(emailHash ? [{ emailHash }] : [])
+        ]
+      }
+    });
+
+    if (isBlacklisted) {
+      referralCode = null;
     }
 
     // Check if referral code is provided and valid
@@ -141,86 +160,21 @@ async function register(req, res, next) {
             where: {
               referredBy: referrer.id,
               id: { not: customer.id },
-              createdAt: {
-                gte: startOfMonth,
-                lte: endOfMonth
+              transactions: {
+                some: {
+                  type: 'earn',
+                  status: 'completed',
+                  purchaseAmount: { not: null },
+                  createdAt: {
+                    gte: startOfMonth,
+                    lte: endOfMonth
+                  }
+                }
               }
             }
           });
 
-          if (count < 10) {
-            const activeMerchant = await tx.merchant.findFirst({
-              where: { isActive: true }
-            });
-            if (activeMerchant) {
-              // Calculate expiry for referral bonus points
-              const settings = await tx.rewardSettings.findFirst({ orderBy: { updatedAt: 'desc' } });
-              const { calculateExpiryDate } = require('../services/pointsService');
-              const expiresAt = settings ? calculateExpiryDate(settings) : new Date(Date.now() + 365 * 86400000);
-
-              // Referrer bonus
-              const referrerTx = await tx.transaction.create({
-                data: {
-                  customerId: referrer.id,
-                  merchantId: activeMerchant.id,
-                  type: 'earn',
-                  purchaseAmount: null,
-                  points: 20,
-                  remarks: `Referral Bonus (Referrer): Referred ${name}`,
-                  status: 'completed'
-                }
-              });
-
-              const currentReferrerBalance = await getCustomerBalance(referrer.id, tx);
-              const newReferrerBalance = currentReferrerBalance + 20;
-
-              await tx.pointsLedger.create({
-                data: {
-                  customerId: referrer.id,
-                  transactionId: referrerTx.id,
-                  pointsChange: 20,
-                  balanceAfter: newReferrerBalance,
-                  expiresAt
-                }
-              });
-
-              // Referee bonus
-              const customerTx = await tx.transaction.create({
-                data: {
-                  customerId: customer.id,
-                  merchantId: activeMerchant.id,
-                  type: 'earn',
-                  purchaseAmount: null,
-                  points: 20,
-                  remarks: `Referral Bonus (Referee): Referred by ${referrer.name}`,
-                  status: 'completed'
-                }
-              });
-
-              const currentCustomerBalance = await getCustomerBalance(customer.id, tx);
-              const newCustomerBalance = currentCustomerBalance + 20;
-
-              await tx.pointsLedger.create({
-                data: {
-                  customerId: customer.id,
-                  transactionId: customerTx.id,
-                  pointsChange: 20,
-                  balanceAfter: newCustomerBalance,
-                  expiresAt
-                }
-              });
-
-              await tx.customer.update({
-                where: { id: customer.id },
-                data: { referralPointsEarned: { increment: 20 } }
-              });
-
-              await tx.customer.update({
-                where: { id: referrer.id },
-                data: { referralPointsEarned: { increment: 20 } }
-              });
-            }
-          }
+          // Do NOT create the referral bonus Transaction records at signup.
         }
       }
 

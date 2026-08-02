@@ -3,6 +3,7 @@
  */
 function errorHandler(err, req, res, next) {
 
+
   let status = err.status || 500;
   let code = err.code || 'INTERNAL_SERVER_ERROR';
   let message = err.message || 'An unexpected error occurred.';

@@ -21,6 +21,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const prisma = new PrismaClient();
@@ -300,6 +301,17 @@ async function main() {
     results.otpAttempts = await tx.oTPAttempt.deleteMany({ where: { mobile: user.mobile } });
     results.chatLogs = await tx.chatLog.deleteMany({ where: { userId: user.id } });
     results.auditLogs = await tx.auditLog.deleteMany({ where: { userId: user.id } });
+
+    // Hash original mobile/email (salted) and add to UsedReferralIdentifier
+    const referralSalt = process.env.REFERRAL_HASH_SALT || '';
+    const mobileHash = crypto.createHash('sha256').update(user.mobile.trim() + referralSalt).digest('hex');
+    const emailHash = user.email ? crypto.createHash('sha256').update(user.email.trim().toLowerCase() + referralSalt).digest('hex') : null;
+    await tx.usedReferralIdentifier.create({
+      data: {
+        mobileHash,
+        emailHash
+      }
+    });
 
     return results;
   });

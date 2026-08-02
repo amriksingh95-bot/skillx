@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { getCustomerBalance, processEarn, processRedeem, processTransfer } = require('../services/pointsService');
+const { getCustomerBalance, processEarn, processRedeem, processTransfer, calculateExpiryDate } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const { pauseExistingLiveAds } = require('../services/adService');
 const notificationService = require('../services/notificationService');
@@ -151,7 +151,141 @@ async function earn(req, res, next) {
 
     // Call service to run transaction
     const transaction = await processEarn(customer.id, merchantId, purchaseAmount);
-    
+
+    // Referral bonus checks and award (delayed to first real transaction)
+    try {
+      if (customer.referredBy) {
+        // 1. Check if this is the customer's FIRST real earn transaction
+        const earnCount = await prisma.transaction.count({
+          where: {
+            customerId: customer.id,
+            type: 'earn',
+            status: 'completed',
+            purchaseAmount: { not: null }
+          }
+        });
+
+        if (earnCount === 1) {
+          // 2. Check if a referral bonus has already been awarded
+          const bonusAlreadyAwarded = await prisma.transaction.findFirst({
+            where: {
+              customerId: customer.id,
+              type: 'earn',
+              status: 'completed',
+              remarks: { startsWith: 'Referral Bonus' }
+            }
+          });
+
+          if (!bonusAlreadyAwarded) {
+            // 3. Check referrer monthly cap
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+            const referrerCount = await prisma.customer.count({
+              where: {
+                referredBy: customer.referredBy,
+                id: { not: customer.id },
+                transactions: {
+                  some: {
+                    type: 'earn',
+                    status: 'completed',
+                    purchaseAmount: { not: null },
+                    createdAt: {
+                      gte: startOfMonth,
+                      lte: endOfMonth
+                    }
+                  }
+                }
+              }
+            });
+
+            if (referrerCount < 10) {
+              const referrer = await prisma.customer.findUnique({
+                where: { id: customer.referredBy }
+              });
+              const activeMerchant = await prisma.merchant.findFirst({
+                where: { isActive: true }
+              });
+
+              if (referrer && activeMerchant) {
+                const settings = await prisma.rewardSettings.findFirst({
+                  orderBy: { updatedAt: 'desc' }
+                });
+                const expiresAt = settings ? calculateExpiryDate(settings) : new Date(Date.now() + 365 * 86400000);
+
+                await prisma.$transaction(async (tx) => {
+                  // Referrer bonus
+                  const referrerTx = await tx.transaction.create({
+                    data: {
+                      customerId: referrer.id,
+                      merchantId: activeMerchant.id,
+                      type: 'earn',
+                      purchaseAmount: null,
+                      points: 20,
+                      remarks: `Referral Bonus (Referrer): Referred ${customer.name}`,
+                      status: 'completed'
+                    }
+                  });
+
+                  const currentReferrerBalance = await getCustomerBalance(referrer.id, tx);
+                  const newReferrerBalance = currentReferrerBalance + 20;
+
+                  await tx.pointsLedger.create({
+                    data: {
+                      customerId: referrer.id,
+                      transactionId: referrerTx.id,
+                      pointsChange: 20,
+                      balanceAfter: newReferrerBalance,
+                      expiresAt
+                    }
+                  });
+
+                  // Referee bonus
+                  const customerTx = await tx.transaction.create({
+                    data: {
+                      customerId: customer.id,
+                      merchantId: activeMerchant.id,
+                      type: 'earn',
+                      purchaseAmount: null,
+                      points: 20,
+                      remarks: `Referral Bonus (Referee): Referred by ${referrer.name}`,
+                      status: 'completed'
+                    }
+                  });
+
+                  const currentCustomerBalance = await getCustomerBalance(customer.id, tx);
+                  const newCustomerBalance = currentCustomerBalance + 20;
+
+                  await tx.pointsLedger.create({
+                    data: {
+                      customerId: customer.id,
+                      transactionId: customerTx.id,
+                      pointsChange: 20,
+                      balanceAfter: newCustomerBalance,
+                      expiresAt
+                    }
+                  });
+
+                  await tx.customer.update({
+                    where: { id: customer.id },
+                    data: { referralPointsEarned: { increment: 20 } }
+                  });
+
+                  await tx.customer.update({
+                    where: { id: referrer.id },
+                    data: { referralPointsEarned: { increment: 20 } }
+                  });
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (refErr) {
+      console.error('[ERROR] Failed to award referral bonus:', refErr);
+    }
+
     // Log audit log
     await createAuditLog(
       req.user.id,

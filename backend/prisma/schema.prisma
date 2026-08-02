@@ -434,3 +434,13 @@ enum TopUpStatus {
   confirmed
   rejected
 }
+
+model UsedReferralIdentifier {
+  id         String   @id @default(uuid())
+  mobileHash String
+  emailHash  String?
+  usedAt     DateTime @default(now())
+
+  @@index([mobileHash])
+  @@index([emailHash])
+}
