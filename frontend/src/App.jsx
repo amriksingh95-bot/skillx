@@ -9,7 +9,7 @@ import RoleGuard from './components/RoleGuard';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/LoadingSpinner';
 import FloatingChatbot from './components/FloatingChatbot';
-import InstallPWABanner from './components/InstallPWABanner';
+
 
 // Auth Pages — lazy-loaded
 const Login = React.lazy(() => import('./pages/Login'));
@@ -334,7 +334,6 @@ export default function App() {
           </Routes>
           </Suspense>
           <FloatingChatbot />
-          <InstallPWABanner />
           </Router>
         </PWAInstallProvider>
         </AuthProvider>
