@@ -22,9 +22,11 @@ import {
   ChevronDown,
   ChevronRight,
   Wallet,
-  HelpCircle
+  HelpCircle,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePWAInstallContext } from '../context/PWAInstallContext';
 
 const adminSections = [
   {
@@ -88,6 +90,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const { user } = useAuth();
   const [collapsedSections, setCollapsedSections] = useState({});
   const location = useLocation();
+  const { canInstall, promptInstall } = usePWAInstallContext();
 
   if (!user) return null;
 
@@ -251,6 +254,15 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-border dark:border-dark-border space-y-2">
+        {canInstall && (
+          <button
+            onClick={promptInstall}
+            className="flex items-center gap-3 px-3 py-2 text-xs text-text-tertiary dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 w-full"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            <span className="truncate">Install App</span>
+          </button>
+        )}
         <NavLink
           to="/privacy-policy"
           className="flex items-center gap-3 px-3 py-2 text-xs text-text-tertiary dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50"

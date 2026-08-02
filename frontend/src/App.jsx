@@ -3,11 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { AuthProvider, useAuth, setAppNavigate } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MerchantSubscriptionProvider } from './context/MerchantSubscriptionContext';
+import { PWAInstallProvider } from './context/PWAInstallContext';
 import Layout from './components/Layout';
 import RoleGuard from './components/RoleGuard';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/LoadingSpinner';
 import FloatingChatbot from './components/FloatingChatbot';
+import InstallPWABanner from './components/InstallPWABanner';
 
 // Auth Pages — lazy-loaded
 const Login = React.lazy(() => import('./pages/Login'));
@@ -77,6 +79,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
+        <PWAInstallProvider>
         <Router>
           <NavigateSetter />
           <Suspense fallback={<LoadingSpinner fullPage />}>
@@ -331,7 +334,9 @@ export default function App() {
           </Routes>
           </Suspense>
           <FloatingChatbot />
+          <InstallPWABanner />
           </Router>
+        </PWAInstallProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
