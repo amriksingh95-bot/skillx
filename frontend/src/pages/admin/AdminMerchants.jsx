@@ -4,7 +4,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // --- Predefined categories (must match your original dropdown list) -----------
@@ -73,6 +73,10 @@ export default function AdminMerchants() {
   const [merchantToReject, setMerchantToReject] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
+
+  // Screenshot Viewer Modal State (payment confirmation)
+  const [screenshotModal, setScreenshotModal] = useState({ open: false, url: null, merchantId: null, merchantName: '' });
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   // Form Fields
   const [businessName, setBusinessName] = useState('');
@@ -147,6 +151,20 @@ export default function AdminMerchants() {
       toast.error('Failed to load pending payments.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async (merchantId) => {
+    try {
+      setConfirmingPayment(true);
+      await api.patch(`/api/admin/merchants/${merchantId}/confirm-payment`);
+      setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' });
+      fetchPendingPayments();
+      toast.success('Payment confirmed! Merchant is now active.');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to confirm payment.');
+    } finally {
+      setConfirmingPayment(false);
     }
   };
 
@@ -628,22 +646,14 @@ export default function AdminMerchants() {
           render: (row) => (
             <button
               disabled={!row.paymentScreenshot}
-              onClick={async () => {
-                try {
-                  await api.patch(`/api/admin/merchants/${row.id}/confirm-payment`);
-                  toast.success('Payment confirmed');
-                  fetchPendingPayments();
-                } catch (err) {
-                  toast.error(err.response?.data?.message || 'Failed to confirm payment.');
-                }
-              }}
+              onClick={() => setScreenshotModal({ open: true, url: row.paymentScreenshot, merchantId: row.id, merchantName: row.businessName })}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-lg text-white shadow-sm transition-colors btn-press ${
                 row.paymentScreenshot
                   ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
                   : 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed opacity-60'
               }`}
             >
-              {row.paymentScreenshot ? 'Confirm Payment' : 'No Screenshot'}
+              {row.paymentScreenshot ? 'Verify Payment' : 'No Screenshot'}
             </button>
           )
         }
@@ -1359,6 +1369,55 @@ export default function AdminMerchants() {
           </div>
         </div>
       </Modal>
+
+      {/* Payment Screenshot Viewer Modal */}
+      {screenshotModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-100">Payment Screenshot</h3>
+              <button onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })} className="text-slate-400 hover:text-slate-600 text-xl btn-press"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-sm text-slate-500">{screenshotModal.merchantName}</p>
+            {screenshotModal.url && screenshotModal.url.toLowerCase().endsWith('.pdf') ? (
+              <a
+                href={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-8 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 transition"
+              >
+                <ExternalLink className="w-5 h-5" />
+                <span className="text-sm font-medium">Open PDF in new tab</span>
+              </a>
+            ) : (
+              <img
+                src={screenshotModal.url.startsWith('http') ? screenshotModal.url : `${api.defaults.baseURL}${screenshotModal.url}`}
+                alt="Payment Screenshot"
+                className="w-full rounded-xl border border-slate-200 object-contain max-h-80"
+              />
+            )}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setScreenshotModal({ open: false, url: null, merchantId: null, merchantName: '' })}
+                className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50 btn-press"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleConfirmPayment(screenshotModal.merchantId)}
+                disabled={confirmingPayment || !screenshotModal.url}
+                className={`flex-1 px-4 py-2 text-white rounded-lg text-sm font-medium disabled:opacity-50 btn-press ${
+                  screenshotModal.url
+                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-slate-400 cursor-not-allowed'
+                }`}
+              >
+                {confirmingPayment ? 'Confirming...' : 'Confirm & Activate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
