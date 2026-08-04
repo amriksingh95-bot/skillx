@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { Award, Smartphone, ShieldCheck, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Smartphone, ShieldCheck, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import SkillXTLogo from '../components/SkillXTLogo';
 import toast from 'react-hot-toast';
 
 export default function ForgotPassword() {
@@ -169,8 +170,8 @@ export default function ForgotPassword() {
         
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="p-3 bg-primary text-white rounded-2xl mb-4">
-            <Award className="w-7 h-7" />
+          <div className="mb-4">
+            <SkillXTLogo size="lg" iconOnly />
           </div>
           <h1 className="text-xl font-black text-slate-800 dark:text-white">Reset Password</h1>
           <p className="text-sm text-slate-400 dark:text-slate-400 mt-1">

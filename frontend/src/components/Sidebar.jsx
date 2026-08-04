@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import SkillXTLogo from './SkillXTLogo';
 import {
   LayoutDashboard,
   Store,
@@ -11,7 +12,6 @@ import {
   Shield,
   PlusCircle,
   Gift,
-  Award,
   MapPin,
   User,
   UserCheck,
@@ -238,9 +238,7 @@ export default function Sidebar({ isOpen, onClose }) {
     <div className="flex flex-col h-full bg-white dark:bg-dark-card border-r border-border dark:border-dark-border w-64 text-text-primary dark:text-slate-100">
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border dark:border-dark-border">
-        <div className="p-2 bg-primary text-white rounded-xl">
-          <Award className="w-5 h-5" />
-        </div>
+        <SkillXTLogo size="sm" iconOnly />
         <div>
           <h1 className="font-bold text-base leading-none tracking-tight">SkillXT</h1>
           <span className="text-2xs uppercase font-bold text-text-tertiary dark:text-slate-500 tracking-wider">Rewards Platform</span>

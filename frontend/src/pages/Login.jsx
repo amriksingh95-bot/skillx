@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Award, Lock, Smartphone, Mail, Store, Shield, Eye, EyeOff, Wallet, User, ArrowLeft } from 'lucide-react';
+import { Lock, Smartphone, Mail, Store, Shield, Eye, EyeOff, Wallet, User, ArrowLeft } from 'lucide-react';
+import SkillXTLogo from '../components/SkillXTLogo';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -162,8 +163,8 @@ export default function Login() {
 
         <div className="w-full max-w-md flex flex-col items-center text-center space-y-8 relative z-10 animate-screen">
           {/* Large SkillXT shield/badge logo icon */}
-          <div className="p-6 bg-gradient-to-br from-[#38bdf8] to-blue-600 text-white rounded-3xl shadow-xl shadow-cyan-500/20 border border-white/10 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-            <Award className="w-20 h-20 text-white" />
+          <div className="p-6 rounded-3xl shadow-xl shadow-cyan-500/20 border border-white/10 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+            <SkillXTLogo size="xl" iconOnly />
           </div>
 
           <div className="space-y-4">
@@ -217,14 +218,7 @@ export default function Login() {
 
         <div className="w-full max-w-md flex flex-col items-center space-y-8 relative z-10 animate-screen">
           {/* Small SkillXT logo at top */}
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-[#38bdf8] to-blue-600 text-white rounded-xl shadow-md flex items-center justify-center">
-              <Award className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              SkillXT
-            </span>
-          </div>
+          <SkillXTLogo size="md" />
 
           <h2 className="text-2xl font-black text-white text-center">
             Choose your role to continue
@@ -342,14 +336,7 @@ export default function Login() {
         
         {/* Header: Small logo + "SkillXT Loyalty Program" */}
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-[#38bdf8] to-blue-600 text-white rounded-xl shadow-md flex items-center justify-center">
-              <Award className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              SkillXT
-            </span>
-          </div>
+          <SkillXTLogo size="md" />
           <h1 className="text-3xl font-black tracking-tight text-white drop-shadow-md">
             SkillXT Loyalty Program
           </h1>
