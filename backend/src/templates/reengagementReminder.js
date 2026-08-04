@@ -102,7 +102,7 @@ function generateReengagementEmail({ customerName, daysInactive, currentBalance,
                 </tr>
               </table>
               <p style="font-size:13px;color:#9CA3AF;margin:0;">
-                Need help? Contact us at support@skillxt.com
+                Need help? Contact us at operations.skillxt@gmail.com
               </p>
             </td>
           </tr>

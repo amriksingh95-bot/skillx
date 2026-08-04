@@ -131,7 +131,7 @@ export default function Suspended() {
           ) : (
             <>
               <a
-                href="https://wa.me/917508009001?text=Hi%20SkillXT%20Support%2C%20I%20need%20help%20with%20my%20account%20status."
+                href="https://wa.me/917508009001?text=Hi%2C%20I%20need%20help%20with%20my%20SkillXT%20merchant%20account"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
@@ -140,7 +140,7 @@ export default function Suspended() {
                 Chat on WhatsApp
               </a>
               <a
-                href="mailto:support@skillxt.com?subject=Merchant%20Account%20Status%20Inquiry"
+                href="mailto:operations.skillxt@gmail.com"
                 className="w-full py-2.5 border border-slate-600 hover:border-slate-500 text-slate-400 hover:text-slate-300 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <Mail className="w-3.5 h-3.5" />
