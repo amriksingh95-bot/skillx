@@ -12,6 +12,7 @@ import {
   Shield,
   PlusCircle,
   Gift,
+  Award,
   MapPin,
   User,
   UserCheck,
