@@ -60,6 +60,12 @@ export default function Login() {
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [isAdminLoading, setAdminLoading] = useState(false);
 
+  const getLoginErrorMessage = (err) => {
+    if (err.code === 'ECONNABORTED') return 'Server is waking up, please try again in a few seconds.';
+    if (!err.response) return 'Server is waking up, please try again in a few seconds.';
+    return err.response?.data?.message || 'Login failed. Please check credentials.';
+  };
+
   const handleCustomerSubmit = async (e) => {
     e.preventDefault();
     if (!custMobile || !custPassword) {
@@ -78,7 +84,7 @@ export default function Login() {
       navigate('/customer/dashboard');
     } catch (err) {
       console.error('Customer login error:', err);
-      toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(getLoginErrorMessage(err));
     } finally {
       setCustLoading(false);
     }
@@ -108,7 +114,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error('Merchant login error:', err);
-      toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(getLoginErrorMessage(err));
     } finally {
       setMerchantLoading(false);
     }
@@ -129,7 +135,7 @@ export default function Login() {
       navigate('/admin/dashboard');
     } catch (err) {
       console.error('Admin login error:', err);
-      toast.error(err.response?.data?.message || 'Login failed. Please check credentials.');
+      toast.error(getLoginErrorMessage(err));
     } finally {
       setAdminLoading(false);
     }

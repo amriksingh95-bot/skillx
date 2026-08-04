@@ -164,8 +164,18 @@ async function cleanupRefreshTokens() {
   }
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`[Server]: Server successfully started on port ${PORT}`);
+
+  // Eagerly connect to database at startup so cold-start errors surface immediately
+  // in Railway logs instead of failing on the first user request
+  try {
+    await prisma.$connect();
+    console.log('[Server]: Database connection established successfully.');
+  } catch (error) {
+    console.error('[Server]: FATAL — Database connection failed at startup:', error.message);
+  }
+
   // Run cleanup on startup
   cleanupRefreshTokens();
   // Run cleanup periodically every 24 hours
