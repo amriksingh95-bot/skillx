@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { getCustomerBalance, processReversal } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const { pauseExistingLiveAds } = require('../services/adService');
-const { GRACE_PERIOD_DAYS, getBonusForPosition } = require('../services/subscriptionService');
+const { GRACE_PERIOD_DAYS, getBonusForPosition, createMerchantSubscriptionRecord } = require('../services/subscriptionService');
 const { processReferralOnFirstPayment, processReferralOnRenewal } = require('../services/merchantReferralService');
 
 // ── In-memory cache for AdminDashboard (shared, single-entry) ──
@@ -2716,24 +2716,37 @@ async function confirmMerchantPayment(req, res, next) {
 
     const isFirstActivation = !previousSubscription;
 
-    const updateData = {
-      status: 'active'
-    };
+    // Look up the monthly plan (₹399, 30 days) — do not hardcode an ID
+    const monthlyPlan = await prisma.subscriptionPlan.findFirst({
+      where: { name: 'monthly' }
+    });
 
-    if (isFirstActivation) {
-      updateData.pointsBalance = {
-        increment: getBonusForPosition(0)
-      };
+    if (!monthlyPlan) {
+      const err = new Error('Monthly subscription plan not found in database.');
+      err.status = 500;
+      err.code = 'PLAN_NOT_FOUND';
+      return next(err);
     }
 
+    // Activate merchant
     const updated = await prisma.merchant.update({
       where: { id: merchantId },
-      data: updateData
+      data: { status: 'active' }
     });
+
+    // Create MerchantSubscription row (planId, startDate, endDate, gracePeriodEnd)
+    // and award tapered welcome bonus points
+    // paymentRef = screenshot URL, consistent with renewal flow
+    const subscription = await createMerchantSubscriptionRecord(
+      merchantId,
+      monthlyPlan,
+      merchant.paymentScreenshot
+    );
 
     await createAuditLog(req.user.id, 'MERCHANT_PAYMENT_CONFIRMED', 'Merchant', merchantId, {
       businessName: merchant.businessName,
-      welcomeBonus: isFirstActivation
+      welcomeBonus: isFirstActivation,
+      subscriptionId: subscription.id
     }, req.ip);
 
     if (isFirstActivation) {
@@ -2749,6 +2762,7 @@ async function confirmMerchantPayment(req, res, next) {
       message: 'Payment confirmed. Merchant activated.',
       data: {
         merchantId,
+        subscriptionId: subscription.id,
         welcomeBonus: isFirstActivation,
         newPointsBalance: updated.pointsBalance
       }

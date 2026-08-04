@@ -4,13 +4,13 @@ const GRACE_PERIOD_DAYS = 15;
 
 /**
  * Return activation/renewal bonus points for a given position.
- *   0 = first activation → 1500
+ *   0 = first activation → 1000
  *   1 = renewal 1       → 500
  *   2 = renewal 2       → 500
  *   3+                  → 0
  */
 function getBonusForPosition(position) {
-  if (position <= 0) return 1500;
+  if (position <= 0) return 1000;
   if (position <= 2) return 500;
   return 0;
 }

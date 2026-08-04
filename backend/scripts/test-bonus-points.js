@@ -52,7 +52,7 @@ async function main() {
   }
 
   console.log('\n=== Summary of expected values ===');
-  console.log('  Activation (position 0): 1500 pts');
+  console.log('  Activation (position 0): 1000 pts');
   console.log('  Renewal 1   (position 1):  500 pts');
   console.log('  Renewal 2   (position 2):  500 pts');
   console.log('  Renewal 3+  (position 3+):    0 pts');
