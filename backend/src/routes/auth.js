@@ -11,6 +11,7 @@ const {
 } = require('../middleware/validators');
 const { authLimiter } = require('../middleware/rateLimiter');
 const authController = require('../controllers/authController');
+const { CATEGORY_CODES, normalizeCategory } = require('../constants/categories');
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ router.post(
     body('email').trim().notEmpty().withMessage('Email address is required.').isEmail().withMessage('Enter a valid email address.').normalizeEmail(),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.'),
     body('otp').notEmpty().withMessage('OTP verification is required.'),
-    body('category').optional().trim(),
+    body('category').optional({ checkFalsy: true }).trim().customSanitizer(v => normalizeCategory(v)).isIn(CATEGORY_CODES).withMessage('Invalid category.'),
     body('address').optional().trim(),
     body('city').optional().trim()
   ],

@@ -4,6 +4,7 @@ import { Store, User, Smartphone, Lock, CheckCircle, ArrowLeft, Eye, EyeOff, Nav
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import SkillXTLogo from '../../components/SkillXTLogo';
+import { CATEGORIES } from '../../constants/categories';
 
 export default function MerchantSignup() {
   const navigate = useNavigate();
@@ -561,9 +562,9 @@ export default function MerchantSignup() {
                   onChange={handleChange}
                 >
                   <option value="">Select category</option>
-                  <option value="everyday">Everyday (Grocery, Food, Pharmacy)</option>
-                  <option value="lifestyle">Lifestyle (Salon, Gym, Clothing)</option>
-                  <option value="premium">Premium (Jewellery, Electronics)</option>
+                  {CATEGORIES.filter(c => c.code !== 'other').map(({ code, label }) => (
+                    <option key={code} value={code}>{label}</option>
+                  ))}
                 </select>
               </div>
               {errors.category && <p className="text-xs text-red-400 mt-1">{errors.category}</p>}

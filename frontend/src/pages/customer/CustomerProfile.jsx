@@ -11,6 +11,7 @@ import Badge from '../../components/Badge';
 import { copyReferralCode, buildReferralUrl } from '../../services/referral';
 import Modal from '../../components/Modal';
 import { QRCodeSVG } from 'qrcode.react';
+import { CATEGORIES } from '../../constants/categories';
 
 export default function CustomerProfile() {
   const { user } = useAuth();

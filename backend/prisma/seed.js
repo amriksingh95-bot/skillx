@@ -87,13 +87,13 @@ async function main() {
   const merchantPassword = await bcrypt.hash('dummy@123', 10);
 
   const merchantData = [
-    { business: 'FreshMart Grocery', owner: 'Amrik Singh', email: 'freshmartgrocery@skillxt.com', mobile: '9000000001', category: 'Grocery' },
-    { business: 'MediPlus Pharmacy', owner: 'Rahul Sharma', email: 'medipluspharmacy@skillxt.com', mobile: '9000000002', category: 'Pharmacy' },
-    { business: 'BrewBeans Cafe', owner: 'Priya Singh', email: 'brewbeanscafe@skillxt.com', mobile: '9000000003', category: 'Cafe' },
-    { business: 'Dr. Sharma Clinic', owner: 'Dr. Sharma', email: 'drsharmaclinic@skillxt.com', mobile: '9000000004', category: 'Clinic' },
-    { business: 'TechZone Electronics', owner: 'Vikram Patel', email: 'techzoneelectronics@skillxt.com', mobile: '9000000005', category: 'Electronics' },
-    { business: 'StyleHub Fashion', owner: 'Neha Gupta', email: 'stylehubfashion@skillxt.com', mobile: '9000000006', category: 'Fashion' },
-    { business: 'QuickStop General', owner: 'Suresh Kumar', email: 'quickstopgeneral@skillxt.com', mobile: '9000000007', category: 'General' },
+    { business: 'FreshMart Grocery', owner: 'Amrik Singh', email: 'freshmartgrocery@skillxt.com', mobile: '9000000001', category: 'grocery' },
+    { business: 'MediPlus Pharmacy', owner: 'Rahul Sharma', email: 'medipluspharmacy@skillxt.com', mobile: '9000000002', category: 'medical' },
+    { business: 'BrewBeans Cafe', owner: 'Priya Singh', email: 'brewbeanscafe@skillxt.com', mobile: '9000000003', category: 'cafe' },
+    { business: 'Dr. Sharma Clinic', owner: 'Dr. Sharma', email: 'drsharmaclinic@skillxt.com', mobile: '9000000004', category: 'doctor' },
+    { business: 'TechZone Electronics', owner: 'Vikram Patel', email: 'techzoneelectronics@skillxt.com', mobile: '9000000005', category: 'electronics' },
+    { business: 'StyleHub Fashion', owner: 'Neha Gupta', email: 'stylehubfashion@skillxt.com', mobile: '9000000006', category: 'fashion' },
+    { business: 'QuickStop General', owner: 'Suresh Kumar', email: 'quickstopgeneral@skillxt.com', mobile: '9000000007', category: 'other' },
   ];
 
   for (const m of merchantData) {

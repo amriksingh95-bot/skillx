@@ -5,6 +5,7 @@ const { pauseExistingLiveAds } = require('../services/adService');
 const notificationService = require('../services/notificationService');
 const { classifyStatus } = require('../services/inactivityService');
 const { sendWhatsAppAlert, sendTelegramAlert } = require('../utils/whatsappNotify');
+const { normalizeCategory } = require('../constants/categories');
 
 /**
  * Get merchant dashboard stats for the current day.
@@ -1437,7 +1438,7 @@ async function updateMerchantProfile(req, res, next) {
         ...(openingTime !== undefined && { openingTime }),
         ...(closingTime !== undefined && { closingTime }),
         ...(workingDays !== undefined && { workingDays }),
-        ...(category && { category }),
+        ...(category && { category: normalizeCategory(category) }),
         ...(alternativePhone !== undefined && { alternativePhone }),
       }
     });

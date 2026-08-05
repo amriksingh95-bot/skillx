@@ -6,9 +6,10 @@ import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
 import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
 
 // --- Predefined categories (must match your original dropdown list) -----------
-const predefinedCategories = ['grocery', 'medical', 'doctor', 'cafe', 'electronics', 'fashion', 'beauty', 'stationery', 'gym', 'hotel', 'education'];
+const predefinedCategories = CATEGORY_CODES.filter(c => c !== 'other');
 
 function generateRandomPassword() {
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
@@ -978,9 +979,9 @@ export default function AdminMerchants() {
                   setCustomCategory('');
                 }}
               >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {CATEGORIES.map(({ code, label }) => (
+                  <option key={code} value={code}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -1125,9 +1126,9 @@ export default function AdminMerchants() {
                       if (e.target.value !== 'other') setCustomCategory('');
                     }}
                   >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    {CATEGORIES.map(({ code, label }) => (
+                      <option key={code} value={code}>
+                        {label}
                       </option>
                     ))}
                   </select>

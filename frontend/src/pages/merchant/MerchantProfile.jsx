@@ -3,6 +3,7 @@ import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff } from 'lucid
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
+import { CATEGORIES, normalizeCategory } from '../../constants/categories';
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
@@ -57,7 +58,7 @@ export default function MerchantProfile() {
         openingTime: data.openingTime || '',
         closingTime: data.closingTime || '',
         workingDays: data.workingDays || '',
-        category: data.category || '',
+        category: normalizeCategory(data.category || ''),
       };
       setFormData(form);
       setOriginalData(form);
@@ -221,8 +222,8 @@ export default function MerchantProfile() {
               <label className={labelClass}>Category</label>
               <select name="category" value={formData.category} onChange={handleChange} className={inputClass}>
                 <option value="">Select category</option>
-                {['Grocery','Pharmacy','Cafe','Restaurant','Electronics','Fashion','Clinic','Salon','Boutique','Stationery','General','Departmental Store','Other'].map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {CATEGORIES.map(({ code, label }) => (
+                  <option key={code} value={code}>{label}</option>
                 ))}
               </select>
             </div>

@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { CATEGORY_CODES, CATEGORY_LABEL_MAP } = require('../constants/categories');
 
 const MONTHLY_REFERRAL_CAP = 5;
 const HOLD_DAYS = 15;
@@ -6,10 +7,7 @@ const INITIAL_REWARD_POINTS = 2000;
 const RENEWAL_REWARD_POINTS = 500;
 const MAX_RENEWAL_MONTHS = 3;
 
-const REFERRAL_CATEGORIES = [
-  'grocery', 'cafe', 'beauty', 'doctor', 'pharmacy',
-  'fashion', 'stationery', 'gym', 'electronics', 'hotel', 'education'
-];
+const REFERRAL_CATEGORIES = CATEGORY_CODES.filter(c => c !== 'other');
 
 function getMonthlyCapStatus(merchantId) {
   const now = new Date();
@@ -266,20 +264,7 @@ async function getNearbyBusinessesToInvite(merchantId) {
     return [];
   }
 
-  const CATEGORY_LABELS = {
-    grocery: 'Grocery',
-    cafe: 'Cafe',
-    beauty: 'Salon',
-    gym: 'Gym',
-    fashion: 'Boutique',
-    pharmacy: 'Pharmacy',
-    medical: 'Pharmacy',
-    doctor: 'Clinic',
-    stationery: 'Stationery',
-    electronics: 'Electronics',
-    hotel: 'Hotel',
-    education: 'Education'
-  };
+  const CATEGORY_LABELS = CATEGORY_LABEL_MAP;
 
   const ownCategory = (merchant.category || '').toLowerCase();
 

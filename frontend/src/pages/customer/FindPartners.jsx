@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
+import { CATEGORIES } from '../../constants/categories';
 
 export default function FindPartners() {
   const [merchants, setMerchants] = useState([]);

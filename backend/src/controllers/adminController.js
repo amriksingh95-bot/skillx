@@ -7,6 +7,7 @@ const { createAuditLog } = require('../services/auditLogService');
 const { pauseExistingLiveAds } = require('../services/adService');
 const { GRACE_PERIOD_DAYS, getBonusForPosition, createMerchantSubscriptionRecord } = require('../services/subscriptionService');
 const { processReferralOnFirstPayment, processReferralOnRenewal } = require('../services/merchantReferralService');
+const { CATEGORY_CODES } = require('../constants/categories');
 
 // ── In-memory cache for AdminDashboard (shared, single-entry) ──
 const DASHBOARD_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -409,8 +410,7 @@ async function getMerchants(req, res, next) {
     } : {};
 
     // Check if category matches enum, otherwise avoid Category field crash
-    const categories = ['grocery', 'medical', 'doctor', 'cafe', 'electronics', 'fashion', 'other'];
-    if (search && !categories.includes(search.toLowerCase())) {
+    if (search && !CATEGORY_CODES.includes(search.toLowerCase())) {
       // If search query is not a valid category, remove Category exact filter from OR conditions
       whereCondition.OR = whereCondition.OR.filter(cond => !cond.category);
     }
