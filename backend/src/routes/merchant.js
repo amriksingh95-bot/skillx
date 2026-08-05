@@ -10,7 +10,7 @@ const topUpController = require('../controllers/topUpController');
 const adPaymentController = require('../controllers/adPaymentController');
 const prisma = require('../lib/prisma');
 const { getMyReferrals, getLeaderboard, getNearbyBusinessesToInvite, getMerchantNotifications, markNotificationRead, getMonthlyCapStatus } = require('../services/merchantReferralService');
-const { CATEGORY_CODES, normalizeCategory } = require('../constants/categories');
+const { CATEGORY_CODES } = require('../constants/categories');
 
 const router = express.Router();
 
@@ -86,7 +86,11 @@ router.put(
     body('closingTime').optional({ checkFalsy: true }).matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Closing time must be in HH:MM format (24-hour).'),
     body('workingDays').optional({ checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Working days must be at most 100 characters.'),
     body('googleMapsUrl').optional({ checkFalsy: true }).isURL().withMessage('Google Maps URL must be a valid link.'),
-    body('category').optional({ checkFalsy: true }).trim().customSanitizer(v => normalizeCategory(v)).isIn(CATEGORY_CODES).withMessage('Invalid category.'),
+    body('category').optional({ checkFalsy: true }).trim().custom((value) => {
+      if (!value || value.length > 100) throw new Error('Category must be a non-empty string of at most 100 characters.');
+      if (CATEGORY_CODES.includes(value)) return true;
+      return true;
+    }),
     body('alternativePhone').optional({ checkFalsy: true }).matches(/^[6-9]\d{9}$/).withMessage('Alternative phone must be a valid 10-digit Indian mobile number.'),
   ],
   validate,

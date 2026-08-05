@@ -3,7 +3,7 @@ import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff } from 'lucid
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
-import { CATEGORIES, normalizeCategory } from '../../constants/categories';
+import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
@@ -18,6 +18,7 @@ export default function MerchantProfile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
 
   const [formData, setFormData] = useState({
     businessName: '',
@@ -35,6 +36,7 @@ export default function MerchantProfile() {
   });
 
   const [originalData, setOriginalData] = useState({});
+  const [originalCustomCategory, setOriginalCustomCategory] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -46,6 +48,9 @@ export default function MerchantProfile() {
       const res = await api.get('/api/merchant/profile');
       const data = res.data.data;
       setProfile(data);
+      const rawCategory = data.category || '';
+      const normalized = normalizeCategory(rawCategory);
+      const isKnownCode = CATEGORY_CODES.includes(normalized);
       const form = {
         businessName: data.businessName || '',
         ownerName: data.ownerName || '',
@@ -58,8 +63,10 @@ export default function MerchantProfile() {
         openingTime: data.openingTime || '',
         closingTime: data.closingTime || '',
         workingDays: data.workingDays || '',
-        category: normalizeCategory(data.category || ''),
+        category: isKnownCode ? normalized : 'other',
       };
+      setCustomCategory(isKnownCode ? '' : rawCategory.trim());
+      setOriginalCustomCategory(isKnownCode ? '' : rawCategory.trim());
       setFormData(form);
       setOriginalData(form);
     } catch (err) {
@@ -76,14 +83,20 @@ export default function MerchantProfile() {
 
   const modifiedCount = Object.keys(formData).filter(
     key => formData[key] !== originalData[key]
-  ).length;
+  ).length + (formData.category === 'other' && customCategory !== originalCustomCategory ? 1 : 0);
 
   const handleSave = async (e) => {
     e.preventDefault();
     if (modifiedCount === 0) return;
     try {
       setIsSaving(true);
-      await api.put('/api/merchant/profile', formData);
+      const payload = {
+        ...formData,
+        category: formData.category === 'other'
+          ? customCategory.trim().toLowerCase()
+          : formData.category,
+      };
+      await api.put('/api/merchant/profile', payload);
       toast.success('Profile updated successfully!');
       setOriginalData(formData);
       fetchProfile();
@@ -96,6 +109,7 @@ export default function MerchantProfile() {
 
   const handleReset = () => {
     setFormData(originalData);
+    setCustomCategory(originalCustomCategory);
   };
 
   const handlePasswordChange = async (e) => {
@@ -220,12 +234,34 @@ export default function MerchantProfile() {
             </div>
             <div>
               <label className={labelClass}>Category</label>
-              <select name="category" value={formData.category} onChange={handleChange} className={inputClass}>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, category: e.target.value }));
+                  if (e.target.value !== 'other') setCustomCategory('');
+                }}
+                className={inputClass}
+              >
                 <option value="">Select category</option>
                 {CATEGORIES.map(({ code, label }) => (
                   <option key={code} value={code}>{label}</option>
                 ))}
               </select>
+              {formData.category === 'other' && (
+                <div className="mt-3">
+                  <label className={labelClass}>Custom Category Name</label>
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. bakery, hardware, salon…"
+                    maxLength={100}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">This will be saved as your business category.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
