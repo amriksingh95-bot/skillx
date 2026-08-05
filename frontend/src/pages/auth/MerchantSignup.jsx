@@ -5,6 +5,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import SkillXTLogo from '../../components/SkillXTLogo';
 import { CATEGORIES } from '../../constants/categories';
+import { CITIES } from '../../constants/cities';
 
 export default function MerchantSignup() {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ export default function MerchantSignup() {
       newErrors.category = 'Category is required.';
     }
 
-    if (!formData.city.trim()) {
+    if (!formData.city) {
       newErrors.city = 'City is required.';
     }
 
@@ -130,18 +131,10 @@ export default function MerchantSignup() {
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
           );
           const data = await response.json();
-          if (data.address?.city) {
-            setFormData(prev => ({ ...prev, city: data.address.city }));
-          } else if (data.address?.town) {
-            setFormData(prev => ({ ...prev, city: data.address.town }));
-          } else if (data.address?.village) {
-            setFormData(prev => ({ ...prev, city: data.address.village }));
-          } else if (data.display_name) {
-            const cityPart = data.display_name.split(',')[0];
-            setFormData(prev => ({ ...prev, city: cityPart }));
-          }
+          const displayAddress = data.display_name || '';
+          setFormData(prev => ({ ...prev, address: displayAddress }));
         } catch (err) {
-          setLocationError('Could not determine city name. Please enter manually.');
+          setLocationError('Could not determine address. Please fill in manually.');
         } finally {
           setIsDetectingLocation(false);
         }
@@ -580,15 +573,18 @@ export default function MerchantSignup() {
                   <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   </span>
-                  <input
-                    type="text"
+                  <select
                     name="city"
                     required
-                    className={`w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold ${errors.city ? 'border-red-500' : 'border-slate-700'}`}
-                    placeholder="e.g. Ludhiana"
+                    className={`w-full pl-10 pr-4 py-2.5 bg-[#0a0f1e] border rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-[#16a34a] transition-all font-semibold appearance-none ${errors.city ? 'border-red-500' : 'border-slate-700'}`}
                     value={formData.city}
                     onChange={handleChange}
-                  />
+                  >
+                    <option value="">Select city</option>
+                    {CITIES.map((city) => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
                 </div>
                 <button
                   type="button"

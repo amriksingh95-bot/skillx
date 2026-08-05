@@ -4,6 +4,7 @@ import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
+import { CITIES } from '../../constants/cities';
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
@@ -57,7 +58,7 @@ export default function MerchantProfile() {
         email: data.email || '',
         alternativePhone: data.alternativePhone || '',
         address: data.address || '',
-        city: data.city || '',
+        city: CITIES.includes(data.city) ? data.city : '',
         landmark: data.landmark || '',
         googleMapsUrl: data.googleMapsUrl || '',
         openingTime: data.openingTime || '',
@@ -286,7 +287,12 @@ export default function MerchantProfile() {
             </div>
             <div>
               <label className={labelClass}>City</label>
-              <input name="city" value={formData.city} onChange={handleChange} className={inputClass} placeholder="City" />
+              <select name="city" value={formData.city} onChange={handleChange} className={inputClass}>
+                <option value="">Select city</option>
+                {CITIES.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Landmark</label>

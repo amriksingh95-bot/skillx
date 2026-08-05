@@ -11,6 +11,7 @@ const adPaymentController = require('../controllers/adPaymentController');
 const prisma = require('../lib/prisma');
 const { getMyReferrals, getLeaderboard, getNearbyBusinessesToInvite, getMerchantNotifications, markNotificationRead, getMonthlyCapStatus } = require('../services/merchantReferralService');
 const { CATEGORY_CODES } = require('../constants/categories');
+const { CITY_VALUES } = require('../constants/cities');
 
 const router = express.Router();
 
@@ -92,6 +93,7 @@ router.put(
       if (CATEGORY_CODES.includes(value)) return true;
       return true;
     }),
+    body('city').optional({ checkFalsy: true }).trim().isIn(CITY_VALUES).withMessage('City must be one of the allowed values.'),
     body('alternativePhone').optional({ checkFalsy: true }).matches(/^[6-9]\d{9}$/).withMessage('Alternative phone must be a valid 10-digit Indian mobile number.'),
   ],
   validate,

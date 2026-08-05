@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
 import { CATEGORIES } from '../../constants/categories';
+import { CITIES } from '../../constants/cities';
 
 export default function FindPartners() {
   const [merchants, setMerchants] = useState([]);
@@ -47,8 +48,8 @@ export default function FindPartners() {
     { id: 'education', label: 'Education', Icon: GraduationCap }
   ];
 
-  // Extract unique cities from merchants
-  const uniqueCities = [...new Set(merchants.map(m => m.city).filter(Boolean))].sort();
+  // Fixed city list from constants (no garbage values from merchant data)
+  const uniqueCities = CITIES;
 
   const getCategoryIcon = (cat) => {
     const c = cat.toLowerCase();
@@ -173,21 +174,19 @@ export default function FindPartners() {
       </div>
 
       {/* SECTION 1.5 — CITY FILTER DROPDOWN */}
-      {uniqueCities.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">City:</span>
-          <select
-            className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-primary text-xs font-bold"
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-          >
-            <option value="all">All Cities</option>
-            {uniqueCities.map((city) => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">City:</span>
+        <select
+          className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl px-3 py-1.5 focus:outline-none focus:border-primary text-xs font-bold"
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+        >
+          <option value="all">All Cities</option>
+          {uniqueCities.map((city) => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </select>
+      </div>
 
       {/* SECTION 2 — CATEGORY FILTER */}
       <div className="relative">
