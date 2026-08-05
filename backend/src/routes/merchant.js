@@ -61,7 +61,8 @@ router.get('/profile', async (req, res, next) => {
         workingDays: true,
         alternativePhone: true,
         paymentScreenshot: true,
-        createdAt: true
+        createdAt: true,
+        user: { select: { mobile: true } }
       }
     });
 

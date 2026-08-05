@@ -233,6 +233,17 @@ export default function MerchantProfile() {
               <input name="alternativePhone" value={formData.alternativePhone} onChange={handleChange} className={inputClass} placeholder="Alternative contact number" maxLength={10} />
             </div>
             <div>
+              <label className={labelClass}>Registered Mobile Number</label>
+              <input
+                type="text"
+                value={profile?.user?.mobile || ''}
+                readOnly
+                className={`${inputClass} bg-slate-50 dark:bg-slate-800 cursor-not-allowed`}
+                placeholder="Not available"
+              />
+              <p className="text-xs text-slate-400 mt-1">Visible to customers — contact admin to change</p>
+            </div>
+            <div>
               <label className={labelClass}>Category</label>
               <select
                 name="category"
@@ -333,7 +344,8 @@ export default function MerchantProfile() {
             </div>
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
               <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Mobile Number</p>
-              <p className="text-xs text-slate-500 mt-0.5">Contact admin to change your registered mobile number</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{profile?.user?.mobile || '—'}</p>
+              <p className="text-xs text-slate-500 mt-1">Contact admin to change your registered mobile number</p>
             </div>
           </div>
         )}
