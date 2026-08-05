@@ -185,7 +185,7 @@ export default function MerchantDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">Merchant Station</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">{merchantProfile?.businessName || 'Merchant Station'}</h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Track customer transactions and manage point allocations.
           </p>
