@@ -170,6 +170,14 @@ export default function Suspended() {
                 alt="GPay QR Code"
                 className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
               />
+              {upiId && (
+                <a
+                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+                >
+                  Pay now
+                </a>
+              )}
               <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">UPI ID</span>

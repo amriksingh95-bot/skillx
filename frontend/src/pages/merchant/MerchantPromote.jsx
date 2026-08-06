@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { Megaphone, X, Copy, Check, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import AdStepper from '../../components/AdStepper';
@@ -11,6 +12,7 @@ import { THEMES, ICONS } from '../../constants/adThemes';
 import gpayQR from '../../assets/gpay-qr.png';
 
 export default function MerchantPromote() {
+  const { user } = useAuth();
   // Loading state
   const [loading, setLoading] = useState(true);
   const [merchantProfile, setMerchantProfile] = useState(null);
@@ -907,6 +909,14 @@ export default function MerchantPromote() {
               alt="GPay QR Code"
               className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
             />
+            {adPaymentUpiId && adPaymentAmount > 0 && (
+              <a
+                href={`upi://pay?pa=${encodeURIComponent(adPaymentUpiId)}&pn=${encodeURIComponent(merchantProfile?.ownerName || 'Amrik Singh')}&am=${adPaymentAmount}&cu=INR&tn=${encodeURIComponent('SkillXT Ad Payment ' + (user?.id || ''))}`}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+              >
+                Pay now
+              </a>
+            )}
             <p className="text-xs text-slate-400">Scan QR code to pay ₹{adPaymentAmount.toLocaleString('en-IN')}</p>
           </div>
 

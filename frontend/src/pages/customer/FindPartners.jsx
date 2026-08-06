@@ -190,8 +190,9 @@ export default function FindPartners() {
 
       {/* SECTION 2 — CATEGORY FILTER */}
       <div className="relative">
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Category:</span>
         {/* Mobile: dropdown */}
-        <div className="block md:hidden relative">
+        <div className="block md:hidden relative mt-1.5">
           {(() => {
             const activePill = categoryPills.find(p => p.id === selectedCategory);
             return activePill ? (
@@ -204,7 +205,7 @@ export default function FindPartners() {
             className="w-full pl-9 pr-4 py-2.5 bg-primary border border-primary rounded-xl text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-white/50 appearance-none cursor-pointer"
           >
             {categoryPills.map((pill) => (
-              <option key={pill.id} value={pill.id} className="text-slate-900">{pill.label}</option>
+              <option key={pill.id} value={pill.id} className="text-slate-900">{pill.id === 'all' ? 'All categories' : pill.label}</option>
             ))}
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">

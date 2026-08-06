@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon, Copy, Check } from 'lucide-react';
 import Modal from '../../components/Modal';
 import gpayQR from '../../assets/gpay-qr.png';
@@ -12,6 +13,7 @@ const PACKAGES = {
 };
 
 export default function TopUp() {
+  const { user } = useAuth();
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
@@ -271,6 +273,15 @@ export default function TopUp() {
               className="w-48 h-48 rounded-xl border border-slate-200 object-contain"
             />
           </div>
+
+          {upiId && selectedPackage && (
+            <a
+              href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${PACKAGES[selectedPackage].amount}&cu=INR&tn=${encodeURIComponent('SkillXT TopUp ' + (user?.id || ''))}`}
+              className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+            >
+              Pay now
+            </a>
+          )}
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
             <p className="text-xs text-slate-400">UPI ID</p>

@@ -16,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { useAuth } from '../../context/AuthContext';
 import gpayQR from '../../assets/gpay-qr.png';
 
 const statusConfig = {
@@ -42,6 +43,7 @@ function daysUntil(dateStr) {
 }
 
 export default function MerchantSubscription() {
+  const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
   const [history, setHistory] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -341,6 +343,14 @@ export default function MerchantSubscription() {
               alt="GPay QR Code"
               className="w-48 h-48 mx-auto rounded-lg border border-slate-200 object-contain"
             />
+            {subscriptionUpiId && (
+              <a
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                className="mt-3 inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+              >
+                Pay now
+              </a>
+            )}
             <div className="mt-3 bg-slate-50 rounded-lg px-4 py-2 inline-block">
               <p className="text-xs text-slate-500">UPI ID</p>
               <p className="text-sm font-bold text-slate-800 select-all">{subscriptionUpiId}</p>
@@ -578,6 +588,14 @@ export default function MerchantSubscription() {
               alt="GPay QR Code"
               className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
             />
+            {subscriptionUpiId && selectedPlan && (
+              <a
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+              >
+                Pay now
+              </a>
+            )}
             <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Pay to</span>
@@ -589,7 +607,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Amount</span>
-                <span className="text-sm font-bold text-emerald-600">₹399</span>
+                <span className="text-sm font-bold text-emerald-600">₹{selectedPlan.price}</span>
               </div>
             </div>
             <p className="text-xs text-amber-600 font-medium">Note: After paying, scroll down to upload your payment screenshot</p>
@@ -639,6 +657,14 @@ export default function MerchantSubscription() {
               alt="GPay QR Code"
               className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
             />
+            {subscriptionUpiId && (
+              <a
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
+              >
+                Pay now
+              </a>
+            )}
             <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Pay to</span>
