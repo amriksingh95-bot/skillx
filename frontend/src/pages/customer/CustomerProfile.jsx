@@ -850,14 +850,14 @@ export default function CustomerProfile() {
             </h3>
             
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              For security, verification is required first. An OTP code will be sent to your current connection.
+              For security, verification is required first. An OTP code will be sent to your WhatsApp number and email on file (if available). You can enter the code from either channel.
             </p>
 
             {!otpSent ? (
               <div className="space-y-4">
                 <div className="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-900 rounded-xl flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                  <span>Request will trigger SMS to: +91 {profile.mobile}</span>
+                  <span>OTP will be sent to WhatsApp: +91 {profile.mobile}{profile.email ? ` and email: ${profile.email}` : ''}</span>
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button

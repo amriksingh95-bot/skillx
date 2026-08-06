@@ -618,19 +618,25 @@ async function requestMobileOTP(req, res, next) {
     }
 
     const hasEmail = customer.email && customer.email.trim().length > 0;
-    await generateAndSendOTP(customer.user.mobile, hasEmail ? customer.email : null, 'change_mobile');
+    const { whatsappSent, emailSent } = await generateAndSendOTP(customer.user.mobile, hasEmail ? customer.email : null, 'change_mobile');
 
-    if (hasEmail) {
-      res.status(200).json({
-        success: true,
-        message: 'OTP sent to your email address.'
-      });
-    } else {
-      const err = new Error('No email address on file. Please contact admin to add your email before changing mobile.');
-      err.status = 400;
-      err.code = 'NO_EMAIL';
+    if (!whatsappSent && !emailSent) {
+      const err = new Error('Failed to send OTP. Please try again later.');
+      err.status = 500;
+      err.code = 'OTP_DELIVERY_FAILED';
       return next(err);
     }
+
+    let message;
+    if (whatsappSent && emailSent) {
+      message = 'OTP sent via WhatsApp and email.';
+    } else if (whatsappSent) {
+      message = 'OTP sent via WhatsApp.';
+    } else {
+      message = 'OTP sent via email.';
+    }
+
+    res.status(200).json({ success: true, message });
   } catch (error) {
     next(error);
   }

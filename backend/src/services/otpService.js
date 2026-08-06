@@ -57,8 +57,10 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
   });
 
   // 4. Send email with ORIGINAL (unhashed) OTP
+  let emailSent = false;
   if (email) {
     const emailResult = await sendOTPEmail(email, otp, purpose);
+    emailSent = emailResult.success;
     if (!emailResult.success) {
       console.warn(`[OTP Service]: Email delivery failed for masked user: ${emailResult.reason}`);
     }
@@ -66,6 +68,7 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
 
   // 5. Send OTP via WhatsApp Cloud API
   const whatsappResult = await sendWhatsAppOTP(mobile, otp, purpose);
+  const whatsappSent = whatsappResult.success;
   if (!whatsappResult.success) {
     console.warn(`[OTP Service]: WhatsApp OTP delivery failed for mobile: ${whatsappResult.reason}`);
   }
@@ -73,7 +76,7 @@ async function generateAndSendOTP(mobile, email = null, purpose) {
   // Keep old sendSMS mock call commented out:
   // await sendSMS(mobile, otp);
 
-  return { verification, otp };
+  return { verification, otp, whatsappSent, emailSent };
 }
 
 /**
