@@ -80,7 +80,7 @@ export default function Suspended() {
       const res = await api.get('/api/merchant/profile');
       const merchant = res.data?.data;
       if (merchant && (!merchant.status || merchant.status === 'active')) {
-        navigate('/merchant/dashboard', { replace: true });
+        window.location.reload();
       } else {
         window.location.reload();
       }
