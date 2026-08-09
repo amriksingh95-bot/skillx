@@ -96,9 +96,10 @@ async function register(req, res, next) {
       const merchant = await prisma.merchant.findUnique({
         where: { merchantCode }
       });
-      if (merchant) {
-        signedUpViaMerchantId = merchant.id;
+      if (!merchant) {
+        return res.status(400).json({ message: 'Invalid merchant code. Please check the code and try again.' });
       }
+      signedUpViaMerchantId = merchant.id;
     }
 
     // 3. Hash Password
@@ -703,7 +704,8 @@ async function getPublicStats(req, res, next) {
  * Public merchant self-signup.
  */
 async function registerMerchantSelf(req, res, next) {
-  const { businessName, ownerName, mobile, email, password, category, address, city, latitude, longitude, referredByMerchantCode } = req.body;
+  let { businessName, ownerName, mobile, email, password, category, address, city, latitude, longitude, referredByMerchantCode } = req.body;
+  if (referredByMerchantCode) referredByMerchantCode = referredByMerchantCode.trim();
   const ipAddress = req.ip;
 
   try {

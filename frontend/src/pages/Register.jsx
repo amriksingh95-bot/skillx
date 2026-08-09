@@ -498,7 +498,12 @@ export default function Register() {
               </label>
               <input
                 type="text"
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                readOnly={hasMcodeFromUrl}
+                className={`w-full px-4 py-3 border rounded-xl text-sm transition-all ${
+                  hasMcodeFromUrl
+                    ? 'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-dark-border text-slate-500 dark:text-slate-400 cursor-not-allowed'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-dark-border text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary'
+                }`}
                 placeholder="Enter merchant onboarding code"
                 value={merchantCode}
                 onChange={(e) => setMerchantCode(e.target.value)}
