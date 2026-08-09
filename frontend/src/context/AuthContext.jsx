@@ -159,6 +159,21 @@ export function AuthProvider({ children }) {
           return Promise.reject(error);
         }
 
+        // Retry once on 401 if a valid accessToken exists but wasn't attached
+        // (covers the interceptor eject/reattach gap when accessToken first resolves)
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          error.response.data &&
+          error.response.data.code === 'UNAUTHORIZED' &&
+          accessToken &&
+          !originalRequest._retryRace
+        ) {
+          originalRequest._retryRace = true;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return api(originalRequest);
+        }
+
         if (
           error.response &&
           error.response.status === 401 &&
