@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
-import { Megaphone, X, Copy, Check, AlertCircle } from 'lucide-react';
+import { Megaphone, X, Copy, Check, AlertCircle, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
@@ -43,6 +43,7 @@ export default function MerchantPromote() {
   const [payingAdId, setPayingAdId] = useState(null);
   const [adPaymentId, setAdPaymentId] = useState(null);
   const [adScreenshot, setAdScreenshot] = useState(null);
+  const [adScreenshotKey, setAdScreenshotKey] = useState(Date.now());
   const [adPaymentSubmitting, setAdPaymentSubmitting] = useState(false);
   const [adPaymentUpiId, setAdPaymentUpiId] = useState('');
   const [adPaymentAmount, setAdPaymentAmount] = useState(0);
@@ -99,13 +100,6 @@ export default function MerchantPromote() {
       return;
     }
 
-    // Validate size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB.');
-      e.target.value = '';
-      return;
-    }
-
     setAdImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -124,12 +118,6 @@ export default function MerchantPromote() {
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       toast.error('Only JPG and PNG images are allowed.');
-      e.target.value = '';
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB.');
       e.target.value = '';
       return;
     }
@@ -309,6 +297,11 @@ export default function MerchantPromote() {
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        if (compressedImage.size > 2 * 1024 * 1024) {
+          toast.error('Banner image is still too large after compression. Try a simpler image.');
+          setSubmittingAd(false);
+          return;
+        }
         formData.append('image', compressedImage);
       }
       if (adSlide2ImageFile) {
@@ -317,6 +310,11 @@ export default function MerchantPromote() {
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        if (compressedSlide2.size > 2 * 1024 * 1024) {
+          toast.error('Showcase image is still too large after compression. Try a simpler image.');
+          setSubmittingAd(false);
+          return;
+        }
         formData.append('slide2Image', compressedSlide2);
       }
 
@@ -564,6 +562,23 @@ export default function MerchantPromote() {
                 onChange={handleFileChange}
                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
               />
+              <input
+                key={`cam-${fileKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+                id="ad-banner-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('ad-banner-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
               {adImagePreview && (
                 <div className="mt-3 relative inline-block">
                   <img
@@ -608,6 +623,23 @@ export default function MerchantPromote() {
                 onChange={handleSlide2FileChange}
                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
               />
+              <input
+                key={`cam-${slide2FileKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleSlide2FileChange}
+                className="hidden"
+                id="ad-slide2-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('ad-slide2-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
               {adSlide2ImagePreview && (
                 <div className="mt-3 relative inline-block">
                   <img
@@ -974,6 +1006,7 @@ export default function MerchantPromote() {
                 Payment Screenshot
               </label>
               <input
+                key={adScreenshotKey}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => setAdScreenshot(e.target.files[0])}
@@ -981,9 +1014,34 @@ export default function MerchantPromote() {
               />
               {adScreenshot && (
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                  {adScreenshot.name}
+                  <span className="flex-1 truncate">{adScreenshot.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setAdScreenshot(null); setAdScreenshotKey(Date.now()); }}
+                    className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                    title="Remove file"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               )}
+              <input
+                key={`cam-${adScreenshotKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setAdScreenshot(e.target.files[0])}
+                className="hidden"
+                id="ad-payment-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('ad-payment-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
             </div>
             <div className="flex gap-3">
               <button

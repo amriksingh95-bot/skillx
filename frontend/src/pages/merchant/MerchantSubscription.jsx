@@ -11,7 +11,9 @@ import {
   Package,
   Zap,
   Star,
-  Upload
+  Upload,
+  X,
+  Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
@@ -61,6 +63,8 @@ export default function MerchantSubscription() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [renewalScreenshotFile, setRenewalScreenshotFile] = useState(null);
   const [isRenewalUploading, setIsRenewalUploading] = useState(false);
+  const [screenshotFileKey, setScreenshotFileKey] = useState(Date.now());
+  const [renewalFileKey, setRenewalFileKey] = useState(Date.now());
 
   const fetchSubscription = async () => {
     try {
@@ -381,14 +385,42 @@ export default function MerchantSubscription() {
                 Upload Payment Screenshot
               </label>
               <input
+                key={screenshotFileKey}
                 type="file"
                 accept="image/*"
                 onChange={(e) => setScreenshotFile(e.target.files[0])}
                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {screenshotFile && (
-                <p className="text-xs text-slate-500 mt-1">{screenshotFile.name}</p>
+                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                  <span className="flex-1 truncate">{screenshotFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setScreenshotFile(null); setScreenshotFileKey(Date.now()); }}
+                    className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                    title="Remove file"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               )}
+              <input
+                key={`cam-${screenshotFileKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setScreenshotFile(e.target.files[0])}
+                className="hidden"
+                id="sub-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('sub-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
             </div>
 
             <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3">
@@ -704,14 +736,42 @@ export default function MerchantSubscription() {
               Upload Payment Screenshot
             </label>
             <input
+              key={renewalFileKey}
               type="file"
               accept="image/*"
               onChange={(e) => setRenewalScreenshotFile(e.target.files[0])}
               className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
             {renewalScreenshotFile && (
-              <p className="text-xs text-slate-500 mt-1">{renewalScreenshotFile.name}</p>
+              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <span className="flex-1 truncate">{renewalScreenshotFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => { setRenewalScreenshotFile(null); setRenewalFileKey(Date.now()); }}
+                  className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                  title="Remove file"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             )}
+            <input
+              key={`cam-${renewalFileKey}`}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => setRenewalScreenshotFile(e.target.files[0])}
+              className="hidden"
+              id="renewal-camera-input"
+            />
+            <button
+              type="button"
+              onClick={() => document.getElementById('renewal-camera-input').click()}
+              className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              Take Photo
+            </button>
           </div>
 
           <div className="flex gap-3 pt-2">

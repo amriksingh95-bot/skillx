@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon, Copy, Check, X, Camera } from 'lucide-react';
 import Modal from '../../components/Modal';
 import imageCompression from 'browser-image-compression';
 import gpayQR from '../../assets/gpay-qr.png';
@@ -26,6 +26,7 @@ export default function TopUp() {
   const [topUpId, setTopUpId] = useState(null);
   const [upiId, setUpiId] = useState('');
   const [upiCopied, setUpiCopied] = useState(false);
+  const [screenshotFileKey, setScreenshotFileKey] = useState(Date.now());
 
   useEffect(() => {
     fetchBalance();
@@ -205,6 +206,7 @@ export default function TopUp() {
               </label>
               <div className="relative">
                 <input
+                  key={screenshotFileKey}
                   type="file"
                   accept="image/*"
                   onChange={(e) => setScreenshot(e.target.files[0])}
@@ -214,9 +216,34 @@ export default function TopUp() {
               {screenshot && (
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                   <ImageIcon className="w-4 h-4" />
-                  {screenshot.name}
+                  <span className="flex-1 truncate">{screenshot.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setScreenshot(null); setScreenshotFileKey(Date.now()); }}
+                    className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                    title="Remove file"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               )}
+              <input
+                key={`cam-${screenshotFileKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setScreenshot(e.target.files[0])}
+                className="hidden"
+                id="topup-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('topup-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
             </div>
 
             <button
