@@ -4,7 +4,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink } from 'lucide-react';
+import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
 
@@ -78,6 +78,9 @@ export default function AdminMerchants() {
   // Screenshot Viewer Modal State (payment confirmation)
   const [screenshotModal, setScreenshotModal] = useState({ open: false, url: null, merchantId: null, merchantName: '' });
   const [confirmingPayment, setConfirmingPayment] = useState(false);
+
+  // Poster Download
+  const [posterLoadingIds, setPosterLoadingIds] = useState(new Set());
 
   // Form Fields
   const [businessName, setBusinessName] = useState('');
@@ -166,6 +169,31 @@ export default function AdminMerchants() {
       toast.error(err.response?.data?.message || 'Failed to confirm payment.');
     } finally {
       setConfirmingPayment(false);
+    }
+  };
+
+  const handleDownloadPoster = async (merchant) => {
+    const id = merchant.id;
+    try {
+      setPosterLoadingIds(prev => new Set(prev).add(id));
+      const res = await api.get(`/api/admin/merchants/${id}/poster`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `skillxt-poster-${merchant.merchantCode || id}.png`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Poster downloaded!');
+    } catch (err) {
+      toast.error('Failed to download poster.');
+    } finally {
+      setPosterLoadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -738,6 +766,18 @@ export default function AdminMerchants() {
             >
               <Lock className="w-3.5 h-3.5" />
             </button>
+            <button
+              onClick={() => handleDownloadPoster(row)}
+              disabled={posterLoadingIds.has(row.id)}
+              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors btn-press disabled:opacity-50"
+              title="Download Poster"
+            >
+              {posterLoadingIds.has(row.id) ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
         )
       }
@@ -911,7 +951,16 @@ export default function AdminMerchants() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Category</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Category</span>
+                  <button
+                    onClick={() => { setIsDetailOpen(false); handleOpenEdit(selectedMerchant); }}
+                    className="p-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-slate-500 dark:text-slate-300 transition-colors"
+                    title="Edit Merchant"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                </div>
                 <span className="text-sm font-bold text-slate-800 dark:text-white block mt-1 capitalize">{selectedMerchant.category}</span>
               </div>
               <div className="p-4 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-2xl">

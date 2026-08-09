@@ -17,7 +17,8 @@ import {
   X,
   Copy,
   CreditCard,
-  Bell
+  Bell,
+  Download
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import Badge from '../../components/Badge';
@@ -40,6 +41,9 @@ export default function MerchantDashboard() {
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [dismissedExpiryBanner, setDismissedExpiryBanner] = useState(false);
+
+  // Poster Download
+  const [posterLoading, setPosterLoading] = useState(false);
 
   // Complaint Modal
   const [isComplaintModalOpen, setIsComplaintModalOpen] = useState(false);
@@ -97,6 +101,27 @@ export default function MerchantDashboard() {
       setNotifications(res.data.data?.notifications || []);
     } catch (err) {
       // Silent fail — notifications are non-critical
+    }
+  };
+
+  const handleDownloadPoster = async () => {
+    if (!stats?.merchantCode) return;
+    try {
+      setPosterLoading(true);
+      const res = await api.get('/api/merchant/poster', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `skillxt-poster-${stats.merchantCode}.png`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Poster downloaded!');
+    } catch (err) {
+      toast.error('Failed to download poster.');
+    } finally {
+      setPosterLoading(false);
     }
   };
 
@@ -487,6 +512,18 @@ export default function MerchantDashboard() {
             >
               <Copy className="w-3.5 h-3.5" />
               Copy Onboarding Link
+            </button>
+            <button
+              onClick={handleDownloadPoster}
+              disabled={!stats?.merchantCode || posterLoading}
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 btn-press"
+            >
+              {posterLoading ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              {posterLoading ? 'Generating...' : 'Download Poster'}
             </button>
           </div>
         </div>

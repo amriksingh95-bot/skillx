@@ -507,4 +507,29 @@ router.post(
   adPaymentController.uploadAdPaymentScreenshot
 );
 
+router.get('/poster', async (req, res, next) => {
+  try {
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: req.user.merchantId },
+      select: { businessName: true, merchantCode: true }
+    });
+
+    if (!merchant) {
+      const err = new Error('Merchant not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    const { generatePosterBuffer } = require('../services/posterService');
+    const buffer = await generatePosterBuffer(merchant);
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="skillxt-poster-${merchant.merchantCode}.png"`);
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

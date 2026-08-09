@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff } from 'lucide-react';
+import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff, Download, RefreshCw } from 'lucide-react';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -19,6 +19,7 @@ export default function MerchantProfile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [posterLoading, setPosterLoading] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
 
   const [formData, setFormData] = useState({
@@ -80,6 +81,27 @@ export default function MerchantProfile() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDownloadPoster = async () => {
+    if (!profile?.merchantCode) return;
+    try {
+      setPosterLoading(true);
+      const res = await api.get('/api/merchant/poster', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `skillxt-poster-${profile.merchantCode}.png`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Poster downloaded!');
+    } catch (err) {
+      toast.error('Failed to download poster.');
+    } finally {
+      setPosterLoading(false);
+    }
   };
 
   const modifiedCount = Object.keys(formData).filter(
@@ -172,6 +194,19 @@ export default function MerchantProfile() {
           </span>
         </div>
       </div>
+
+      <button
+        onClick={handleDownloadPoster}
+        disabled={!profile?.merchantCode || posterLoading}
+        className="w-full py-2.5 mb-6 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50 btn-press"
+      >
+        {posterLoading ? (
+          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Download className="w-3.5 h-3.5" />
+        )}
+        {posterLoading ? 'Generating...' : 'Download Poster'}
+      </button>
 
       {/* Tabs */}
       <div className="mb-6 border-b border-slate-200 dark:border-slate-700">

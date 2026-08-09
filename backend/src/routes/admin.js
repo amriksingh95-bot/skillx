@@ -6,6 +6,7 @@ const { validateMobile, validateEmail, handleValidationErrors } = require('../mi
 const adminController = require('../controllers/adminController');
 const subscriptionController = require('../controllers/subscriptionController');
 const adminTopUpController = require('../controllers/adminTopUpController');
+const prisma = require('../lib/prisma');
 
 const router = express.Router();
 
@@ -399,6 +400,36 @@ router.patch(
   [param('topUpId').isUUID().withMessage('Invalid ID format.')],
   validate,
   adminTopUpController.rejectTopUp
+);
+
+router.get(
+  '/merchants/:id/poster',
+  [param('id').isUUID().withMessage('Invalid ID format.')],
+  validate,
+  async (req, res, next) => {
+    try {
+      const merchant = await prisma.merchant.findUnique({
+        where: { id: req.params.id },
+        select: { businessName: true, merchantCode: true }
+      });
+
+      if (!merchant) {
+        const err = new Error('Merchant not found.');
+        err.status = 404;
+        err.code = 'NOT_FOUND';
+        return next(err);
+      }
+
+      const { generatePosterBuffer } = require('../services/posterService');
+      const buffer = await generatePosterBuffer(merchant);
+
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="skillxt-poster-${merchant.merchantCode}.png"`);
+      res.send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 module.exports = router;
