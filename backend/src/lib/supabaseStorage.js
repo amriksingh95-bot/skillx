@@ -39,4 +39,57 @@ async function uploadBuffer(buffer, folder, filename, mimetype) {
   return urlData.publicUrl;
 }
 
-module.exports = { uploadBuffer };
+/**
+ * List all files in a storage folder (paginated).
+ * @param {string} folder - Subfolder name
+ * @returns {Promise<Array<{name: string, id: string, metadata: object}>>}
+ */
+async function listFiles(folder) {
+  const allFiles = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (true) {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list(folder, { limit, offset, sortBy: { column: 'name', order: 'asc' } });
+
+    if (error) throw new Error(`Supabase list failed: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    allFiles.push(...data);
+    if (data.length < limit) break;
+    offset += limit;
+  }
+
+  return allFiles;
+}
+
+/**
+ * Delete files from storage in batches.
+ * @param {string[]} paths - Full storage paths (e.g. 'ad-images/ad-123.png')
+ * @returns {Promise<{deleted: number, failed: number, errors: string[]}>}
+ */
+async function deleteFiles(paths) {
+  let deleted = 0;
+  let failed = 0;
+  const errors = [];
+
+  for (let i = 0; i < paths.length; i += 50) {
+    const batch = paths.slice(i, i + 50);
+    const { error } = await supabase.storage
+      .from(bucketName)
+      .remove(batch);
+
+    if (error) {
+      failed += batch.length;
+      errors.push(error.message);
+    } else {
+      deleted += batch.length;
+    }
+  }
+
+  return { deleted, failed, errors };
+}
+
+module.exports = { uploadBuffer, listFiles, deleteFiles };

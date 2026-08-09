@@ -432,4 +432,17 @@ router.get(
   }
 );
 
+// ── System Cleanup ──────────────────────────────────────────
+const { runCleanup } = require('../services/cleanupService');
+
+router.post('/cleanup', async (req, res, next) => {
+  try {
+    const { dryRun = true, auditLogDays = 90, orphanedFiles = true } = req.body || {};
+    const result = await runCleanup({ dryRun: Boolean(dryRun), auditLogDays: Number(auditLogDays) || 90, orphanedFiles: Boolean(orphanedFiles) });
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

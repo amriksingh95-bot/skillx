@@ -16,7 +16,8 @@ import {
   Activity,
   Clock,
   Wallet,
-  Megaphone
+  Megaphone,
+  Trash2
 } from 'lucide-react';
 import {
   LineChart,
@@ -30,6 +31,7 @@ import {
 } from 'recharts';
 import StatCard from '../../components/StatCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import AdBanner from '../../components/AdBanner';
 
@@ -40,6 +42,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [pendingAdCount, setPendingAdCount] = useState(0);
+  const [isCleanupOpen, setIsCleanupOpen] = useState(false);
+  const [cleanupPreview, setCleanupPreview] = useState(null);
+  const [cleanupRunning, setCleanupRunning] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -93,6 +98,39 @@ export default function AdminDashboard() {
     toast.success('Admin metrics updated!');
   };
 
+  const handleCleanupPreview = async () => {
+    setCleanupRunning(true);
+    try {
+      const res = await api.post('/api/admin/cleanup', { dryRun: true, auditLogDays: 90, orphanedFiles: true });
+      setCleanupPreview(res.data.data);
+    } catch (err) {
+      toast.error('Failed to fetch cleanup preview.');
+    } finally {
+      setCleanupRunning(false);
+    }
+  };
+
+  const handleCleanupConfirm = async () => {
+    setCleanupRunning(true);
+    try {
+      const res = await api.post('/api/admin/cleanup', { dryRun: false, auditLogDays: 90, orphanedFiles: true });
+      const r = res.data.data;
+      const parts = [];
+      if (r.auditLog) parts.push(`${r.auditLog.deleted} audit log entries`);
+      if (r.orphanedFiles) {
+        const total = Object.values(r.orphanedFiles).reduce((s, f) => s + (f.deleted || 0), 0);
+        if (total > 0) parts.push(`${total} orphaned files`);
+      }
+      toast.success(parts.length > 0 ? `Cleaned: ${parts.join(', ')}` : 'Nothing to clean up.');
+      setIsCleanupOpen(false);
+      setCleanupPreview(null);
+    } catch (err) {
+      toast.error('Cleanup failed.');
+    } finally {
+      setCleanupRunning(false);
+    }
+  };
+
   useEffect(() => {
     const initData = async () => {
       await Promise.all([fetchDashboardData(), fetchTrends(), fetchRetention(), fetchPendingCount(), fetchPendingAdCount()]);
@@ -130,13 +168,22 @@ export default function AdminDashboard() {
             Global system insights, points ledger audit statistics, and network liability.
           </p>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+          <button
+            onClick={() => { setIsCleanupOpen(true); handleCleanupPreview(); }}
+            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
+          >
+            <Trash2 className="w-4 h-4" />
+            Cleanup
+          </button>
+        </div>
       </div>
 
       {/* Cards Grid */}
@@ -473,6 +520,59 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Cleanup Confirmation Modal */}
+      <Modal isOpen={isCleanupOpen} onClose={() => { setIsCleanupOpen(false); setCleanupPreview(null); }} title="System Cleanup">
+        <div className="space-y-4">
+          {cleanupRunning && !cleanupPreview ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner />
+              <span className="ml-3 text-sm text-slate-500">Scanning...</span>
+            </div>
+          ) : cleanupPreview ? (
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-300">This will permanently delete:</p>
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Audit log entries (&gt;{cleanupPreview.auditLog?.total > 0 ? '90' : '0'} days old)</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-white">{cleanupPreview.auditLog?.toDelete ?? 0}</span>
+                </div>
+                {cleanupPreview.auditLog?.keptForSecurity > 0 && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{cleanupPreview.auditLog.keptForSecurity} security-relevant entries will be kept.</p>
+                )}
+                {cleanupPreview.orphanedFiles && Object.entries(cleanupPreview.orphanedFiles).map(([folder, info]) => (
+                  info.orphaned > 0 ? (
+                    <div key={folder} className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Orphaned files ({folder})</span>
+                      <span className="text-sm font-bold text-slate-800 dark:text-white">{info.orphaned}</span>
+                    </div>
+                  ) : null
+                ))}
+              </div>
+              {(cleanupPreview.auditLog?.toDelete ?? 0) === 0 && Object.values(cleanupPreview.orphanedFiles || {}).every(f => f.orphaned === 0) ? (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Nothing to clean up. System is tidy.</p>
+              ) : (
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { setIsCleanupOpen(false); setCleanupPreview(null); }}
+                    className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCleanupConfirm}
+                    disabled={cleanupRunning}
+                    className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
+                  >
+                    {cleanupRunning ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Trash2 className="w-4 h-4" />}
+                    Confirm Delete
+                  </button>
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+      </Modal>
     </div>
   );
 }
