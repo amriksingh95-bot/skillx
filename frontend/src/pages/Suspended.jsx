@@ -52,7 +52,7 @@ export default function Suspended() {
   const [searchParams, setSearchParams] = useSearchParams();
   const code = searchParams.get('code');
   const config = STATUS_CONFIG[code] || DEFAULT_CONFIG;
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -68,6 +68,26 @@ export default function Suspended() {
         .catch(() => {});
     }
   }, [code]);
+
+  useEffect(() => {
+    if (user && !user.merchantStatusCode) {
+      navigate('/merchant/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleRefreshStatus = async () => {
+    try {
+      const res = await api.get('/api/merchant/profile');
+      const merchant = res.data?.data;
+      if (merchant && (!merchant.status || merchant.status === 'active')) {
+        navigate('/merchant/dashboard', { replace: true });
+      } else {
+        window.location.reload();
+      }
+    } catch {
+      window.location.reload();
+    }
+  };
 
   const handleScreenshotUpload = async (e) => {
     e.preventDefault();
@@ -133,7 +153,7 @@ export default function Suspended() {
           )}
           {code !== 'PAYMENT_REQUIRED' && config.showRefresh ? (
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRefreshStatus}
               className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
