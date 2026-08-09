@@ -10,6 +10,7 @@ import AdCard from '../../components/AdCard';
 import Badge from '../../components/Badge';
 import { THEMES, ICONS } from '../../constants/adThemes';
 import gpayQR from '../../assets/gpay-qr.png';
+import imageCompression from 'browser-image-compression';
 
 export default function MerchantPromote() {
   const { user } = useAuth();
@@ -246,8 +247,16 @@ export default function MerchantPromote() {
     if (!adScreenshot || !adPaymentId) return;
     setAdPaymentSubmitting(true);
     try {
+      let fileToUpload = adScreenshot;
+      if (adScreenshot.type !== 'application/pdf') {
+        fileToUpload = await imageCompression(adScreenshot, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      }
       const formData = new FormData();
-      formData.append('screenshot', adScreenshot);
+      formData.append('screenshot', fileToUpload);
       await api.post(`/api/merchant/ad-payment/upload-screenshot/${adPaymentId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -295,10 +304,20 @@ export default function MerchantPromote() {
       formData.append('slide2Caption', adSlide2Caption);
 
       if (adImageFile) {
-        formData.append('image', adImageFile);
+        const compressedImage = await imageCompression(adImageFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+        formData.append('image', compressedImage);
       }
       if (adSlide2ImageFile) {
-        formData.append('slide2Image', adSlide2ImageFile);
+        const compressedSlide2 = await imageCompression(adSlide2ImageFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+        formData.append('slide2Image', compressedSlide2);
       }
 
       if (editingAdId) {

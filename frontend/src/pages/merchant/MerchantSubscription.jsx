@@ -14,6 +14,7 @@ import {
   Upload
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
@@ -123,8 +124,16 @@ export default function MerchantSubscription() {
 
     setIsRenewalUploading(true);
     try {
+      let fileToUpload = renewalScreenshotFile;
+      if (renewalScreenshotFile.type !== 'application/pdf') {
+        fileToUpload = await imageCompression(renewalScreenshotFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      }
       const formData = new FormData();
-      formData.append('screenshot', renewalScreenshotFile);
+      formData.append('screenshot', fileToUpload);
       formData.append('subscriptionId', subscription.id);
 
       await api.post('/api/merchant/subscription/renewal/upload-screenshot', formData, {
@@ -150,8 +159,16 @@ export default function MerchantSubscription() {
 
     setIsUploading(true);
     try {
+      let fileToUpload = screenshotFile;
+      if (screenshotFile.type !== 'application/pdf') {
+        fileToUpload = await imageCompression(screenshotFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      }
       const formData = new FormData();
-      formData.append('screenshot', screenshotFile);
+      formData.append('screenshot', fileToUpload);
 
       await api.post('/api/merchant/subscription/upload-screenshot', formData, {
         headers: {

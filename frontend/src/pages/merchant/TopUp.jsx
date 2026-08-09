@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { Wallet, Upload, CheckCircle, Clock, XCircle, IndianRupee, Image as ImageIcon, Copy, Check } from 'lucide-react';
 import Modal from '../../components/Modal';
+import imageCompression from 'browser-image-compression';
 import gpayQR from '../../assets/gpay-qr.png';
 
 const PACKAGES = {
@@ -82,8 +83,16 @@ export default function TopUp() {
 
     setIsSubmitting(true);
     try {
+      let fileToUpload = screenshot;
+      if (screenshot.type !== 'application/pdf') {
+        fileToUpload = await imageCompression(screenshot, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      }
       const formData = new FormData();
-      formData.append('screenshot', screenshot);
+      formData.append('screenshot', fileToUpload);
       await api.post(`/api/merchant/topup/upload-screenshot/${topUpId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });

@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import Modal from '../components/Modal';
 import { AlertOctagon, Mail, Home, RefreshCw, Upload, MessageSquare } from 'lucide-react';
 import gpayQR from '../assets/gpay-qr.png';
+import imageCompression from 'browser-image-compression';
 
 const STATUS_CONFIG = {
   ACCOUNT_SUSPENDED: {
@@ -73,8 +74,16 @@ export default function Suspended() {
 
     setIsUploading(true);
     try {
+      let fileToUpload = screenshotFile;
+      if (screenshotFile.type !== 'application/pdf') {
+        fileToUpload = await imageCompression(screenshotFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+      }
       const formData = new FormData();
-      formData.append('screenshot', screenshotFile);
+      formData.append('screenshot', fileToUpload);
 
       await api.post('/api/merchant/subscription/upload-screenshot', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
