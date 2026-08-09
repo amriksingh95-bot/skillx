@@ -77,11 +77,12 @@ export default function Suspended() {
     try {
       let fileToUpload = screenshotFile;
       if (screenshotFile.type !== 'application/pdf') {
-        fileToUpload = await imageCompression(screenshotFile, {
+        const compressed = await imageCompression(screenshotFile, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        fileToUpload = new File([compressed], screenshotFile.name, { type: compressed.type });
       }
       const formData = new FormData();
       formData.append('screenshot', fileToUpload);

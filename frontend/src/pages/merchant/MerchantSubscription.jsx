@@ -130,11 +130,12 @@ export default function MerchantSubscription() {
     try {
       let fileToUpload = renewalScreenshotFile;
       if (renewalScreenshotFile.type !== 'application/pdf') {
-        fileToUpload = await imageCompression(renewalScreenshotFile, {
+        const compressed = await imageCompression(renewalScreenshotFile, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        fileToUpload = new File([compressed], renewalScreenshotFile.name, { type: compressed.type });
       }
       const formData = new FormData();
       formData.append('screenshot', fileToUpload);
@@ -165,11 +166,12 @@ export default function MerchantSubscription() {
     try {
       let fileToUpload = screenshotFile;
       if (screenshotFile.type !== 'application/pdf') {
-        fileToUpload = await imageCompression(screenshotFile, {
+        const compressed = await imageCompression(screenshotFile, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        fileToUpload = new File([compressed], screenshotFile.name, { type: compressed.type });
       }
       const formData = new FormData();
       formData.append('screenshot', fileToUpload);

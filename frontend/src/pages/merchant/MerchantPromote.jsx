@@ -237,11 +237,12 @@ export default function MerchantPromote() {
     try {
       let fileToUpload = adScreenshot;
       if (adScreenshot.type !== 'application/pdf') {
-        fileToUpload = await imageCompression(adScreenshot, {
+        const compressed = await imageCompression(adScreenshot, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        fileToUpload = new File([compressed], adScreenshot.name, { type: compressed.type });
       }
       const formData = new FormData();
       formData.append('screenshot', fileToUpload);
@@ -297,12 +298,13 @@ export default function MerchantPromote() {
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
-        if (compressedImage.size > 2 * 1024 * 1024) {
+        const imageFile = new File([compressedImage], adImageFile.name, { type: compressedImage.type });
+        if (imageFile.size > 2 * 1024 * 1024) {
           toast.error('Banner image is still too large after compression. Try a simpler image.');
           setSubmittingAd(false);
           return;
         }
-        formData.append('image', compressedImage);
+        formData.append('image', imageFile);
       }
       if (adSlide2ImageFile) {
         const compressedSlide2 = await imageCompression(adSlide2ImageFile, {
@@ -310,12 +312,13 @@ export default function MerchantPromote() {
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
-        if (compressedSlide2.size > 2 * 1024 * 1024) {
+        const slide2File = new File([compressedSlide2], adSlide2ImageFile.name, { type: compressedSlide2.type });
+        if (slide2File.size > 2 * 1024 * 1024) {
           toast.error('Showcase image is still too large after compression. Try a simpler image.');
           setSubmittingAd(false);
           return;
         }
-        formData.append('slide2Image', compressedSlide2);
+        formData.append('slide2Image', slide2File);
       }
 
       if (editingAdId) {

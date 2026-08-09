@@ -86,11 +86,12 @@ export default function TopUp() {
     try {
       let fileToUpload = screenshot;
       if (screenshot.type !== 'application/pdf') {
-        fileToUpload = await imageCompression(screenshot, {
+        const compressed = await imageCompression(screenshot, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 1600,
           useWebWorker: true,
         });
+        fileToUpload = new File([compressed], screenshot.name, { type: compressed.type });
       }
       const formData = new FormData();
       formData.append('screenshot', fileToUpload);
