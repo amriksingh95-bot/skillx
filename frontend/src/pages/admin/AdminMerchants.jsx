@@ -81,6 +81,8 @@ export default function AdminMerchants() {
 
   // Poster Download
   const [posterLoadingIds, setPosterLoadingIds] = useState(new Set());
+  const [posterPreviewMerchant, setPosterPreviewMerchant] = useState(null);
+  const [posterBlobUrl, setPosterBlobUrl] = useState(null);
 
   // Form Fields
   const [businessName, setBusinessName] = useState('');
@@ -177,23 +179,36 @@ export default function AdminMerchants() {
     try {
       setPosterLoadingIds(prev => new Set(prev).add(id));
       const res = await api.get(`/api/admin/merchants/${id}/poster`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `skillxt-poster-${merchant.merchantCode || id}.png`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Poster downloaded!');
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+      setPosterBlobUrl(blobUrl);
+      setPosterPreviewMerchant(merchant);
     } catch (err) {
-      toast.error('Failed to download poster.');
+      toast.error('Failed to generate poster.');
     } finally {
       setPosterLoadingIds(prev => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
+    }
+  };
+
+  const handlePosterDownload = () => {
+    if (!posterBlobUrl || !posterPreviewMerchant) return;
+    const link = document.createElement('a');
+    link.href = posterBlobUrl;
+    link.setAttribute('download', `skillxt-poster-${posterPreviewMerchant.merchantCode || posterPreviewMerchant.id}.png`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.success('Poster downloaded!');
+  };
+
+  const closePosterModal = () => {
+    setPosterPreviewMerchant(null);
+    if (posterBlobUrl) {
+      window.URL.revokeObjectURL(posterBlobUrl);
+      setPosterBlobUrl(null);
     }
   };
 
@@ -1417,6 +1432,33 @@ export default function AdminMerchants() {
               Reject Merchant
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* POSTER PREVIEW MODAL */}
+      <Modal isOpen={!!posterPreviewMerchant} onClose={closePosterModal} title="Poster Preview" size="lg">
+        {posterBlobUrl && (
+          <img src={posterBlobUrl} alt="Poster Preview" className="w-full rounded-xl border border-slate-200 dark:border-slate-700" />
+        )}
+        {posterPreviewMerchant && (
+          <p className="text-xs text-slate-400 font-semibold mt-3 text-center">
+            {posterPreviewMerchant.businessName} &middot; {posterPreviewMerchant.merchantCode}
+          </p>
+        )}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            onClick={closePosterModal}
+            className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors btn-press"
+          >
+            Close
+          </button>
+          <button
+            onClick={handlePosterDownload}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2 btn-press"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </button>
         </div>
       </Modal>
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff, Download, RefreshCw } from 'lucide-react';
+import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff, Download, RefreshCw, Image } from 'lucide-react';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
 import { CITIES } from '../../constants/cities';
@@ -20,6 +21,8 @@ export default function MerchantProfile() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [posterLoading, setPosterLoading] = useState(false);
+  const [posterModalOpen, setPosterModalOpen] = useState(false);
+  const [posterBlobUrl, setPosterBlobUrl] = useState(null);
   const [customCategory, setCustomCategory] = useState('');
 
   const [formData, setFormData] = useState({
@@ -88,19 +91,32 @@ export default function MerchantProfile() {
     try {
       setPosterLoading(true);
       const res = await api.get('/api/merchant/poster', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `skillxt-poster-${profile.merchantCode}.png`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success('Poster downloaded!');
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'image/png' }));
+      setPosterBlobUrl(blobUrl);
+      setPosterModalOpen(true);
     } catch (err) {
-      toast.error('Failed to download poster.');
+      toast.error('Failed to generate poster.');
     } finally {
       setPosterLoading(false);
+    }
+  };
+
+  const handlePosterDownload = () => {
+    if (!posterBlobUrl || !profile?.merchantCode) return;
+    const link = document.createElement('a');
+    link.href = posterBlobUrl;
+    link.setAttribute('download', `skillxt-poster-${profile.merchantCode}.png`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.success('Poster downloaded!');
+  };
+
+  const closePosterModal = () => {
+    setPosterModalOpen(false);
+    if (posterBlobUrl) {
+      window.URL.revokeObjectURL(posterBlobUrl);
+      setPosterBlobUrl(null);
     }
   };
 
@@ -452,6 +468,28 @@ export default function MerchantProfile() {
           </div>
         </div>
       )}
+
+      {/* POSTER PREVIEW MODAL */}
+      <Modal isOpen={posterModalOpen} onClose={closePosterModal} title="Poster Preview" size="lg">
+        {posterBlobUrl && (
+          <img src={posterBlobUrl} alt="Poster Preview" className="w-full rounded-xl border border-slate-200 dark:border-slate-700" />
+        )}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            onClick={closePosterModal}
+            className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors btn-press"
+          >
+            Close
+          </button>
+          <button
+            onClick={handlePosterDownload}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2 btn-press"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
