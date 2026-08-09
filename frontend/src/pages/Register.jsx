@@ -28,6 +28,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [hasReferralFromUrl, setHasReferralFromUrl] = useState(false);
+  const [hasMcodeFromUrl, setHasMcodeFromUrl] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -39,6 +40,7 @@ export default function Register() {
     const mcode = params.get('mcode');
     if (mcode) {
       setMerchantCode(mcode.toUpperCase());
+      setHasMcodeFromUrl(true);
     }
   }, []);
 
@@ -455,6 +457,7 @@ export default function Register() {
               )}
             </div>
 
+            {!hasMcodeFromUrl && (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-2">
                 Referral Code (optional)
@@ -487,6 +490,7 @@ export default function Register() {
                 </div>
               )}
             </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-2">
