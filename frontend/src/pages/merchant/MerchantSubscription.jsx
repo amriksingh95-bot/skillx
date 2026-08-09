@@ -464,9 +464,9 @@ export default function MerchantSubscription() {
       <div>
         <h2 className="text-lg font-black text-slate-800 dark:text-white mb-4">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.filter(plan => plan.name === 'monthly').map((plan) => {
+          {(plans || []).filter(plan => plan?.name === 'monthly').map((plan) => {
             const isCurrentPlan = subscription?.planId === plan.id && currentStatus === 'active';
-            const pricePerDay = plan.durationDays > 0 ? (plan.price / plan.durationDays).toFixed(2) : '0.00';
+            const pricePerDay = plan.durationDays > 0 ? ((plan.price ?? 0) / plan.durationDays).toFixed(2) : '0.00';
 
             return (
               <div
@@ -497,7 +497,7 @@ export default function MerchantSubscription() {
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Billed monthly. Cancel anytime by contacting admin.</p>
                   )}
                   <div className="mt-2">
-                    <span className="text-3xl font-black text-primary">₹{plan.price}{plan.name === 'monthly' ? '/month' : ''}</span>
+                    <span className="text-3xl font-black text-primary">₹{plan.price ?? '—'}{plan.name === 'monthly' ? '/month' : ''}</span>
                     {plan.name !== 'monthly' && <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">/ {plan.durationDays} days</span>}
                   </div>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">₹{pricePerDay}/day</p>
