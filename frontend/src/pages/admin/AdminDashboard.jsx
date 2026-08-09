@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import {
   Users,
@@ -36,6 +37,7 @@ import toast from 'react-hot-toast';
 import AdBanner from '../../components/AdBanner';
 
 export default function AdminDashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState(null);
   const [trends, setTrends] = useState(null);
   const [retention, setRetention] = useState(null);
@@ -139,6 +141,15 @@ export default function AdminDashboard() {
     initData();
   }, []);
 
+  useEffect(() => {
+    if (searchParams.get('cleanup') === 'true') {
+      setIsCleanupOpen(true);
+      handleCleanupPreview();
+      searchParams.delete('cleanup');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams]);
+
   if (loading) return <LoadingSpinner size="large" fullPage />;
 
   if (!data) {
@@ -168,22 +179,13 @@ export default function AdminDashboard() {
             Global system insights, points ledger audit statistics, and network liability.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleRefresh}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
-          <button
-            onClick={() => { setIsCleanupOpen(true); handleCleanupPreview(); }}
-            className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
-          >
-            <Trash2 className="w-4 h-4" />
-            Cleanup
-          </button>
-        </div>
+        <button
+          onClick={handleRefresh}
+          className="p-3 bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm font-semibold btn-press"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Refresh
+        </button>
       </div>
 
       {/* Cards Grid */}

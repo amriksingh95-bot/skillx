@@ -24,7 +24,8 @@ import {
   ChevronRight,
   Wallet,
   HelpCircle,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePWAInstallContext } from '../context/PWAInstallContext';
@@ -64,6 +65,7 @@ const adminSections = [
       { path: '/admin/inactivity-monitor', label: 'Inactivity Monitor', icon: Activity },
       { path: '/admin/audit-logs', label: 'Audit Logs', icon: ShieldAlert },
       { path: '/admin/chatbot-analytics', label: 'Chatbot Analytics', icon: MessageSquare },
+      { path: '/admin/dashboard?cleanup=true', label: 'System Cleanup', icon: Trash2 },
     ]
   },
 ];
