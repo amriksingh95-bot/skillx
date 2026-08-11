@@ -52,7 +52,7 @@ export default function AdminSubscriptionPlans() {
     setSelectedPlan(plan);
     setPlanName(plan.name);
     setDisplayName(plan.displayName);
-    setPrice(String(plan.price));
+    setPrice(String(plan.price ?? ''));
     setDurationDays(String(plan.durationDays));
     setFeatures(plan.features ? JSON.stringify(plan.features) : '');
     setIsActive(plan.isActive);
@@ -134,6 +134,7 @@ export default function AdminSubscriptionPlans() {
   };
 
   const formatPrice = (price) => {
+    if (price == null) return '₹—';
     return `₹${parseFloat(price).toLocaleString('en-IN')}`;
   };
 

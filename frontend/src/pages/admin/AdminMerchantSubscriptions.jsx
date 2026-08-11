@@ -618,7 +618,7 @@ const handleOpenAdd = () => {
               ) : (
                 plans.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.displayName} - ?{p.price}{!p.isActive ? ' (Inactive)' : ''}
+                    {p.displayName} - ?{p.price ?? '—'}{!p.isActive ? ' (Inactive)' : ''}
                   </option>
                 ))
               )}

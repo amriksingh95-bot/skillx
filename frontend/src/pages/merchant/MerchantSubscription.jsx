@@ -626,7 +626,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Price:</span>
-                <span className="font-bold text-primary">₹{selectedPlan.price}</span>
+                <span className="font-bold text-primary">₹{selectedPlan.price ?? '—'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Duration:</span>
@@ -650,7 +650,7 @@ export default function MerchantSubscription() {
             />
             {subscriptionUpiId && selectedPlan && (
               <a
-                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${selectedPlan.price ?? 0}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                 className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
               >
                 Pay now
@@ -670,7 +670,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Amount</span>
-                <span className="text-sm font-bold text-emerald-600">₹{selectedPlan.price}</span>
+                <span className="text-sm font-bold text-emerald-600">₹{selectedPlan.price ?? '—'}</span>
               </div>
             </div>
             <p className="text-xs text-amber-600 font-medium">Note: After paying, scroll down to upload your payment screenshot</p>

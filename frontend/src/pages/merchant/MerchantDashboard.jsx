@@ -357,7 +357,7 @@ export default function MerchantDashboard() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {subscription.plan?.displayName || 'Subscribe to access full features'}
                   </p>
-                    {subscription.plan?.price && (
+                    {subscription.plan?.price != null && (
                       <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                         ₹{subscription.plan.price}/{subscription.plan.durationDays} days
                     </span>
