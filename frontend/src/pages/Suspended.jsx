@@ -145,9 +145,9 @@ export default function Suspended() {
           {code === 'PAYMENT_REQUIRED' && (
             <button
               onClick={() => setIsPaymentModalOpen(true)}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-base font-extrabold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Upload className="w-4 h-4" />
+              <Upload className="w-5 h-5" />
               Pay ₹399 Now
             </button>
           )}
@@ -161,18 +161,19 @@ export default function Suspended() {
             </button>
           ) : (
             <>
+              <p className="text-xs text-slate-500 text-center">Need help instead?</p>
               <a
                 href="https://wa.me/917508009001?text=Hi%2C%20I%20need%20help%20with%20my%20SkillXT%20merchant%20account"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full py-2 border border-slate-600 hover:border-slate-500 text-slate-400 hover:text-slate-300 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className="w-3.5 h-3.5" />
                 Chat on WhatsApp
               </a>
               <a
                 href="mailto:operations.skillxt@gmail.com"
-                className="w-full py-2.5 border border-slate-600 hover:border-slate-500 text-slate-400 hover:text-slate-300 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
+                className="w-full py-2 border border-slate-600 hover:border-slate-500 text-slate-400 hover:text-slate-300 rounded-xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <Mail className="w-3.5 h-3.5" />
                 Email us
@@ -196,11 +197,24 @@ export default function Suspended() {
           <form onSubmit={handleScreenshotUpload} className="space-y-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4 text-center space-y-3">
               <p className="text-xs font-medium text-slate-500">Scan & pay using any UPI app</p>
-              <img
-                src={gpayQR}
-                alt="GPay QR Code"
-                className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
-              />
+              {upiId ? (
+                <a
+                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                  className="block"
+                >
+                  <img
+                    src={gpayQR}
+                    alt="GPay QR Code – tap to pay"
+                    className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain cursor-pointer active:scale-95 transition-transform"
+                  />
+                </a>
+              ) : (
+                <img
+                  src={gpayQR}
+                  alt="GPay QR Code"
+                  className="w-44 h-44 mx-auto rounded-lg border border-slate-200 object-contain"
+                />
+              )}
               {upiId && (
                 <a
                   href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
@@ -208,6 +222,9 @@ export default function Suspended() {
                 >
                   Pay now
                 </a>
+              )}
+              {upiId && (
+                <p className="text-xs text-slate-400">If nothing opens, use any UPI app and pay to <span className="font-semibold text-slate-500">{upiId}</span></p>
               )}
               <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
                 <div className="flex justify-between items-center">

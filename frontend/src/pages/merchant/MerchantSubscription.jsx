@@ -342,20 +342,26 @@ export default function MerchantSubscription() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <img
-              src="/upi-qr.png"
-              alt="Scan to pay ₹399"
-              className="w-48 h-48 object-contain border border-slate-200 dark:border-dark-border rounded-xl"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div className="hidden w-48 h-48 items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl text-xs text-slate-400 text-center p-4">
-              QR Code placeholder<br />/upi-qr.png
-            </div>
+            {subscriptionUpiId ? (
+              <a
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                className="block"
+              >
+                <img
+                  src={gpayQR}
+                  alt="Scan to pay ₹399 – tap to pay"
+                  className="w-48 h-48 object-contain border border-slate-200 dark:border-dark-border rounded-xl cursor-pointer active:scale-95 transition-transform"
+                />
+              </a>
+            ) : (
+              <img
+                src={gpayQR}
+                alt="Scan to pay ₹399"
+                className="w-48 h-48 object-contain border border-slate-200 dark:border-dark-border rounded-xl"
+              />
+            )}
             <p className="text-xs text-slate-400">Scan QR code to pay ₹399</p>
-            </div>
+          </div>
 
           {/* GPay QR Payment Section */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 text-center">
@@ -373,6 +379,9 @@ export default function MerchantSubscription() {
               >
                 Pay now
               </a>
+            )}
+            {subscriptionUpiId && (
+              <p className="text-xs text-slate-400 mt-2">If nothing opens, use any UPI app and pay to <span className="font-semibold text-slate-500">{subscriptionUpiId}</span></p>
             )}
             <div className="mt-3 bg-slate-50 rounded-lg px-4 py-2 inline-block">
               <p className="text-xs text-slate-500">UPI ID</p>
@@ -647,6 +656,9 @@ export default function MerchantSubscription() {
                 Pay now
               </a>
             )}
+            {subscriptionUpiId && (
+              <p className="text-xs text-slate-400">If nothing opens, use any UPI app and pay to <span className="font-semibold text-slate-500">{subscriptionUpiId}</span></p>
+            )}
             <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Pay to</span>
@@ -715,6 +727,9 @@ export default function MerchantSubscription() {
               >
                 Pay now
               </a>
+            )}
+            {subscriptionUpiId && (
+              <p className="text-xs text-slate-400">If nothing opens, use any UPI app and pay to <span className="font-semibold text-slate-500">{subscriptionUpiId}</span></p>
             )}
             <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
               <div className="flex justify-between items-center">
