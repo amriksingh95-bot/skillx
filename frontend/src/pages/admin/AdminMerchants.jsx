@@ -971,37 +971,30 @@ export default function AdminMerchants() {
                 >
                   Send Notification
                 </button>
-                {(selectedMerchant.status || 'active') === 'active' && (
-                  <>
-                    <button
-                      onClick={() => handleSetStatus(selectedMerchant, 'suspend')}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/10 transition-colors btn-press"
-                    >
-                      Suspend
-                    </button>
-                    <button
-                      onClick={() => handleOpenDeactivateConfirm(selectedMerchant)}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors btn-press"
-                    >
-                      Deactivate
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => {
+                    if (!window.confirm(`Suspend ${selectedMerchant.businessName}? Their account will be temporarily deactivated and they won't be able to access merchant features until reactivated.`)) return;
+                    handleSetStatus(selectedMerchant, 'suspend');
+                  }}
+                  disabled={(selectedMerchant.status || 'active') === 'suspended' || (selectedMerchant.status || 'active') === 'deactivated'}
+                  className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-500/10 transition-colors btn-press disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-amber-600"
+                >
+                  Suspend
+                </button>
+                <button
+                  onClick={() => handleOpenDeactivateConfirm(selectedMerchant)}
+                  disabled={(selectedMerchant.status || 'active') === 'deactivated'}
+                  className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors btn-press disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-rose-600"
+                >
+                  Deactivate
+                </button>
                 {(selectedMerchant.status || 'active') === 'suspended' && (
-                  <>
-                    <button
-                      onClick={() => handleSetStatus(selectedMerchant, 'reactivate')}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 transition-colors btn-press"
-                    >
-                      Reactivate
-                    </button>
-                    <button
-                      onClick={() => handleOpenDeactivateConfirm(selectedMerchant)}
-                      className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-500/10 transition-colors btn-press"
-                    >
-                      Deactivate
-                    </button>
-                  </>
+                  <button
+                    onClick={() => handleSetStatus(selectedMerchant, 'reactivate')}
+                    className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/10 transition-colors btn-press"
+                  >
+                    Reactivate
+                  </button>
                 )}
                 {(selectedMerchant.status || 'active') === 'deactivated' && (
                   <span className="text-xs font-extrabold text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50">
@@ -1527,7 +1520,7 @@ export default function AdminMerchants() {
         {notifyMerchant && (
           <div className="space-y-4">
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Sending to: <span className="font-bold text-slate-700 dark:text-white">{notifyMerchant.businessName}</span>
+              Send a notification to <span className="font-bold text-slate-700 dark:text-white">{notifyMerchant.businessName}</span>? They will see this message in their notification bell.
             </p>
             <textarea
               className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm h-28 resize-none text-slate-800 dark:text-white"
