@@ -180,7 +180,7 @@ async function checkMerchantSubscriptionStatus(merchantId) {
  * @param {string} [paymentRef]
  * @returns {Promise<object>}
  */
-async function createMerchantSubscriptionRecord(merchantId, plan, paymentRef = null) {
+async function createMerchantSubscriptionRecord(merchantId, plan, paymentRef = null, bonusOverride = null) {
   const now = new Date();
   const startDate = now;
   const endDate = new Date(now);
@@ -203,7 +203,7 @@ async function createMerchantSubscriptionRecord(merchantId, plan, paymentRef = n
     const subscriptionCount = await tx.merchantSubscription.count({
       where: { merchantId }
     });
-    const renewalBonus = getBonusForPosition(subscriptionCount);
+    const renewalBonus = bonusOverride !== null ? bonusOverride : getBonusForPosition(subscriptionCount);
 
     // Create new subscription
     const subscription = await tx.merchantSubscription.create({

@@ -504,7 +504,7 @@ async function getPendingAdCount(req, res, next) {
  * Create a new Merchant.
  */
 async function createMerchant(req, res, next) {
-  const { businessName, ownerName, mobile, email, address, category, password } = req.body;
+  const { businessName, ownerName, mobile, email, address, category, password, welcomeBonusPoints } = req.body;
   const ipAddress = req.ip;
 
   try {
@@ -597,6 +597,29 @@ async function createMerchant(req, res, next) {
     });
 
     await createAuditLog(req.user.id, 'MERCHANT_CREATED', 'Merchant', result.id, { businessName }, ipAddress);
+
+    // Activate merchant and create subscription with welcome bonus
+    const monthlyPlan = await prisma.subscriptionPlan.findFirst({
+      where: { name: 'monthly' }
+    });
+
+    if (monthlyPlan) {
+      await prisma.merchant.update({
+        where: { id: result.id },
+        data: { status: 'active' }
+      });
+
+      const subscription = await createMerchantSubscriptionRecord(
+        result.id,
+        monthlyPlan,
+        'admin-provisioned',
+        typeof welcomeBonusPoints === 'number' && welcomeBonusPoints >= 0 ? welcomeBonusPoints : 1000
+      );
+
+      result.status = 'active';
+      result.pointsBalance = (result.pointsBalance || 0) + subscription.renewalBonus;
+      result.subscription = subscription;
+    }
 
     res.status(201).json({
       success: true,

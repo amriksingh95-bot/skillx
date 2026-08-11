@@ -95,6 +95,7 @@ export default function AdminMerchants() {
   const [customCategory, setCustomCategory] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [welcomeBonusPoints, setWelcomeBonusPoints] = useState(1000);
 
   // Edit Track States
   const [isFetching, setIsFetching] = useState(false);
@@ -237,6 +238,7 @@ export default function AdminMerchants() {
     resetCategoryState();
     setPassword(generateRandomPassword());
     setShowPassword(false);
+    setWelcomeBonusPoints(1000);
     setIsAddOpen(true);
   };
 
@@ -357,7 +359,8 @@ export default function AdminMerchants() {
         email,
         address,
         category: resolvedCategory,
-        password
+        password,
+        welcomeBonusPoints: Number(welcomeBonusPoints)
       });
       toast.success(res.data.message || 'Merchant created successfully!');
       setIsAddOpen(false);
@@ -1106,6 +1109,20 @@ export default function AdminMerchants() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Welcome Bonus Points</label>
+            <input
+              type="number" min="0" step="1"
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm text-slate-800 dark:text-white"
+              placeholder="1000"
+              value={welcomeBonusPoints}
+              onChange={(e) => setWelcomeBonusPoints(parseInt(e.target.value, 10) || 0)}
+            />
+            <p className="text-[10px] text-slate-400 mt-1.5 font-medium">
+              Points credited on activation. 30-day subscription starts immediately.
+            </p>
           </div>
 
           <button
