@@ -274,7 +274,7 @@ export default function AdminReports() {
     {
       header: 'Flags',
       render: (row) => {
-        if (row.flags.length === 0) return <span className="text-xs text-emerald-500">None</span>;
+        if (!row.flags?.length) return <span className="text-xs text-emerald-500">None</span>;
         return (
           <div className="space-y-1">
             {row.flags.map((f, i) => (

@@ -193,7 +193,7 @@ export default function AdvertisementsPage() {
       accessor: 'impressions',
       render: (row) => (
         <span className="font-mono text-sm font-semibold">
-          {row.impressions.toLocaleString('en-IN')}
+          {(row.impressions ?? 0).toLocaleString('en-IN')}
         </span>
       )
     },
@@ -202,7 +202,7 @@ export default function AdvertisementsPage() {
       accessor: 'clicks',
       render: (row) => (
         <span className="font-mono text-sm font-semibold">
-          {row.clicks.toLocaleString('en-IN')}
+          {(row.clicks ?? 0).toLocaleString('en-IN')}
         </span>
       )
     },

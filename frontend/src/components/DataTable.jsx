@@ -97,8 +97,9 @@ export default function DataTable({
     return [...data].sort((a, b) => {
       const aVal = typeof sortColumn === 'function' ? sortColumn(a) : a[sortColumn];
       const bVal = typeof sortColumn === 'function' ? sortColumn(b) : b[sortColumn];
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
       if (typeof aVal === 'string') {
         const cmp = aVal.localeCompare(bVal);
         return sortDirection === 'asc' ? cmp : -cmp;

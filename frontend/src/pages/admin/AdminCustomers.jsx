@@ -264,7 +264,6 @@ export default function AdminCustomers() {
       render: (row) => (
         <div>
           <span className="font-bold text-slate-800 dark:text-white block">{row.name}</span>
-          <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{row.id}</span>
         </div>
       )
     },
@@ -278,7 +277,7 @@ export default function AdminCustomers() {
       accessor: 'balance',
       render: (row) => (
         <span className="font-extrabold text-slate-800 dark:text-white text-base">
-          {row.balance.toLocaleString('en-IN')}
+          {(row.balance ?? 0).toLocaleString('en-IN')}
         </span>
       )
     },
@@ -339,12 +338,12 @@ export default function AdminCustomers() {
     },
     {
       header: 'Outlet / Action',
-      accessor: (row) => row.transaction.remarks
+      accessor: (row) => row.transaction?.remarks
     },
     {
       header: 'Type',
-      accessor: (row) => row.transaction.type,
-      render: (row) => <Badge type={row.transaction.type}>{row.transaction.type}</Badge>
+      accessor: (row) => row.transaction?.type,
+      render: (row) => <Badge type={row.transaction?.type}>{row.transaction?.type}</Badge>
     },
     {
       header: 'Change',

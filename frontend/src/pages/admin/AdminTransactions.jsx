@@ -100,7 +100,7 @@ export default function AdminTransactions() {
     },
     {
       header: 'Merchant',
-      accessor: (row) => /referral bonus/i.test(row.remarks) ? 'Referral Bonus' : row.merchant.businessName
+      accessor: (row) => /referral bonus/i.test(row.remarks) ? 'Referral Bonus' : row.merchant?.businessName || 'N/A'
     },
     {
       header: 'Type',

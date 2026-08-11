@@ -645,7 +645,7 @@ export default function AdminMerchants() {
           render: (row) => (
             <div>
               <span className="font-bold text-slate-800 dark:text-white block">{row.businessName}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold uppercase">{row.id.substring(0, 8)}...</span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold uppercase">{row.id?.substring(0, 8)}...</span>
             </div>
           )
         },
@@ -699,7 +699,7 @@ export default function AdminMerchants() {
           render: (row) => (
             <div>
               <span className="font-bold text-slate-800 dark:text-white block">{row.businessName}</span>
-              <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold uppercase">{row.id.substring(0, 8)}...</span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block font-semibold uppercase">{row.id?.substring(0, 8)}...</span>
             </div>
           )
         },

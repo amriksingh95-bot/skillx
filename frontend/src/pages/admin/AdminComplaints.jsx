@@ -90,7 +90,7 @@ export default function AdminComplaints() {
       accessor: 'id',
       render: (row) => (
         <span className="font-mono text-xs font-semibold text-slate-500">
-          {row.id.substring(0, 8)}...
+          {row.id?.substring(0, 8)}...
         </span>
       )
     },
