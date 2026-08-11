@@ -659,20 +659,22 @@ export default function MerchantSubscription() {
             {subscriptionUpiId && (
               <p className="text-xs text-slate-400">If nothing opens, use any UPI app and pay to <span className="font-semibold text-slate-500">{subscriptionUpiId}</span></p>
             )}
-            <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-slate-500">Pay to</span>
-                <span className="text-sm font-bold text-slate-800">Amrik Singh</span>
+            {selectedPlan && (
+              <div className="bg-slate-50 rounded-lg px-4 py-2 space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Pay to</span>
+                  <span className="text-sm font-bold text-slate-800">Amrik Singh</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">UPI ID</span>
+                  <span className="text-sm font-bold text-slate-800 select-all cursor-text">{subscriptionUpiId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Amount</span>
+                  <span className="text-sm font-bold text-emerald-600">₹{selectedPlan.price ?? '—'}</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-slate-500">UPI ID</span>
-                <span className="text-sm font-bold text-slate-800 select-all cursor-text">{subscriptionUpiId}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-slate-500">Amount</span>
-                <span className="text-sm font-bold text-emerald-600">₹{selectedPlan.price ?? '—'}</span>
-              </div>
-            </div>
+            )}
             <p className="text-xs text-amber-600 font-medium">Note: After paying, scroll down to upload your payment screenshot</p>
           </div>
 
