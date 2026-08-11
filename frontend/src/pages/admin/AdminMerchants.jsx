@@ -4,7 +4,7 @@ import api from '../../services/api';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import Badge from '../../components/Badge';
-import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download } from 'lucide-react';
+import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
 
@@ -83,6 +83,11 @@ export default function AdminMerchants() {
   const [posterLoadingIds, setPosterLoadingIds] = useState(new Set());
   const [posterPreviewMerchant, setPosterPreviewMerchant] = useState(null);
   const [posterBlobUrl, setPosterBlobUrl] = useState(null);
+
+  // Notification Modal State
+  const [notifyMerchant, setNotifyMerchant] = useState(null);
+  const [notifyMessage, setNotifyMessage] = useState('');
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
 
   // Form Fields
   const [businessName, setBusinessName] = useState('');
@@ -210,6 +215,31 @@ export default function AdminMerchants() {
     if (posterBlobUrl) {
       window.URL.revokeObjectURL(posterBlobUrl);
       setPosterBlobUrl(null);
+    }
+  };
+
+  const handleOpenNotify = (merchant) => {
+    setNotifyMerchant(merchant);
+    setNotifyMessage('');
+  };
+
+  const handleSendNotification = async () => {
+    if (!notifyMessage.trim()) {
+      return toast.error('Please enter a notification message.');
+    }
+    setIsSendingNotification(true);
+    try {
+      await api.post(`/api/admin/merchants/${notifyMerchant.id}/notify`, {
+        message: notifyMessage.trim()
+      });
+      toast.success('Notification sent successfully!');
+      setNotifyMerchant(null);
+      setNotifyMessage('');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to send notification.';
+      toast.error(msg);
+    } finally {
+      setIsSendingNotification(false);
     }
   };
 
@@ -796,6 +826,13 @@ export default function AdminMerchants() {
                 <Download className="w-3.5 h-3.5" />
               )}
             </button>
+            <button
+              onClick={() => handleOpenNotify(row)}
+              className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 rounded-lg text-slate-600 dark:text-slate-300 transition-colors btn-press"
+              title="Send Notification"
+            >
+              <Bell className="w-3.5 h-3.5" />
+            </button>
           </div>
         )
       }
@@ -928,6 +965,12 @@ export default function AdminMerchants() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setIsDetailOpen(false); handleOpenNotify(selectedMerchant); }}
+                  className="px-3.5 py-2 text-xs font-extrabold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/10 transition-colors btn-press"
+                >
+                  Send Notification
+                </button>
                 {(selectedMerchant.status || 'active') === 'active' && (
                   <>
                     <button
@@ -1477,6 +1520,39 @@ export default function AdminMerchants() {
             Download
           </button>
         </div>
+      </Modal>
+
+      {/* SEND NOTIFICATION MODAL */}
+      <Modal isOpen={!!notifyMerchant} onClose={() => setNotifyMerchant(null)} title="Send Notification" size="sm">
+        {notifyMerchant && (
+          <div className="space-y-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Sending to: <span className="font-bold text-slate-700 dark:text-white">{notifyMerchant.businessName}</span>
+            </p>
+            <textarea
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm h-28 resize-none text-slate-800 dark:text-white"
+              placeholder="Type notification message here..."
+              value={notifyMessage}
+              onChange={(e) => setNotifyMessage(e.target.value)}
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setNotifyMerchant(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors btn-press"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendNotification}
+                disabled={isSendingNotification || !notifyMessage.trim()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 btn-press disabled:opacity-50"
+              >
+                {isSendingNotification ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Bell className="w-4 h-4" />}
+                Send
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Payment Screenshot Viewer Modal */}

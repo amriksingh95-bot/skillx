@@ -100,6 +100,16 @@ router.post(
   adminController.resetMerchantPassword
 );
 
+router.post(
+  '/merchants/:id/notify',
+  [
+    param('id').isUUID().withMessage('Invalid ID format.'),
+    body('message').trim().notEmpty().withMessage('Notification message is required.')
+  ],
+  validate,
+  adminController.sendMerchantNotification
+);
+
 router.patch(
   '/merchants/:id/approve',
   [

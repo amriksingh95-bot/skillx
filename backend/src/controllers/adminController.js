@@ -3120,6 +3120,51 @@ async function getMerchantReferrals(req, res, next) {
   }
 }
 
+/**
+ * POST /api/admin/merchants/:id/notify
+ * Send a one-way notification to a specific merchant.
+ */
+async function sendMerchantNotification(req, res, next) {
+  const { id } = req.params;
+  const { message } = req.body;
+
+  try {
+    if (!message || !message.trim()) {
+      const err = new Error('Notification message is required.');
+      err.status = 400;
+      err.code = 'VALIDATION_ERROR';
+      return next(err);
+    }
+
+    const merchant = await prisma.merchant.findUnique({ where: { id } });
+    if (!merchant) {
+      const err = new Error('Merchant not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    const notification = await prisma.merchantNotification.create({
+      data: {
+        merchantId: id,
+        message: message.trim(),
+        type: 'admin',
+        isRead: false
+      }
+    });
+
+    await createAuditLog(req.user.id, 'MERCHANT_NOTIFICATION_SENT', 'Merchant', id, { message: message.trim() }, req.ip);
+
+    res.status(201).json({
+      success: true,
+      message: 'Notification sent successfully.',
+      data: notification
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDashboard,
   getMerchants,
@@ -3169,7 +3214,8 @@ module.exports = {
   getChatbotAnalytics,
   getPointsLiabilityTrend,
   getMerchantHealth,
-  getMerchantReferrals
+  getMerchantReferrals,
+  sendMerchantNotification
 };
 
 /**
