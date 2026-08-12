@@ -91,9 +91,14 @@ export default function MerchantProfile() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleLocationChange = (lat, lng) => {
-    setFormData(prev => ({ ...prev, latitude: lat.toString(), longitude: lng.toString() }));
-  };
+   const handleLocationChange = (lat, lng) => {
+     setFormData(prev => ({ 
+       ...prev, 
+       latitude: lat.toString(), 
+       longitude: lng.toString(),
+       googleMapsUrl: `https://www.google.com/maps?q=${lat},${lng}`
+     }));
+   };
 
   const handleDownloadPoster = async () => {
     if (!profile?.merchantCode) return;

@@ -7,6 +7,7 @@ import Badge from '../../components/Badge';
 import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
+import { CITIES } from '../../constants/cities';
 import MerchantLocationMap from '../../components/MerchantLocationMap';
 
 // --- Predefined categories (must match your original dropdown list) -----------
@@ -90,34 +91,37 @@ export default function AdminMerchants() {
   const [notifyMessage, setNotifyMessage] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
 
-  // Form Fields
-  const [businessName, setBusinessName] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [category, setCategory] = useState('other');
-  // NEW: holds the typed custom category text
-  const [customCategory, setCustomCategory] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [welcomeBonusPoints, setWelcomeBonusPoints] = useState(1000);
+   // Form Fields
+   const [businessName, setBusinessName] = useState('');
+   const [ownerName, setOwnerName] = useState('');
+   const [mobile, setMobile] = useState('');
+   const [email, setEmail] = useState('');
+   const [address, setAddress] = useState('');
+   const [city, setCity] = useState(''); // ADDED: City field
+   const [latitude, setLatitude] = useState('');
+   const [longitude, setLongitude] = useState('');
+   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
+   const [category, setCategory] = useState('other');
+   // NEW: holds the typed custom category text
+   const [customCategory, setCustomCategory] = useState('');
+   const [password, setPassword] = useState('');
+   const [showPassword, setShowPassword] = useState(false);
+   const [welcomeBonusPoints, setWelcomeBonusPoints] = useState(1000);
 
   // Edit Track States
-  const [isFetching, setIsFetching] = useState(false);
-  const [originalValues, setOriginalValues] = useState({
-    businessName: '',
-    ownerName: '',
-    mobile: '',
-    email: '',
-    address: '',
-    latitude: '',
-    longitude: '',
-    category: 'other',
-    customCategory: ''
-  });
+   const [isFetching, setIsFetching] = useState(false);
+   const [originalValues, setOriginalValues] = useState({
+     businessName: '',
+     ownerName: '',
+     mobile: '',
+     email: '',
+     address: '',
+     city: '', // ADDED: City field
+     latitude: '',
+     longitude: '',
+     category: 'other',
+     customCategory: ''
+   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Password Reset States
@@ -264,18 +268,22 @@ export default function AdminMerchants() {
     setCustomCategory('');
   };
 
-  const handleOpenAdd = () => {
-    setBusinessName('');
-    setOwnerName('');
-    setMobile('');
-    setEmail('');
-    setAddress('');
-    resetCategoryState();
-    setPassword(generateRandomPassword());
-    setShowPassword(false);
-    setWelcomeBonusPoints(1000);
-    setIsAddOpen(true);
-  };
+   const handleOpenAdd = () => {
+     setBusinessName('');
+     setOwnerName('');
+     setMobile('');
+     setEmail('');
+     setAddress('');
+     setCity(''); // ADDED: Reset city field
+     setLatitude('');
+     setLongitude('');
+     setGoogleMapsUrl('');
+     resetCategoryState();
+     setPassword(generateRandomPassword());
+     setShowPassword(false);
+     setWelcomeBonusPoints(1000);
+     setIsAddOpen(true);
+   };
 
   const handleOpenDetail = async (m) => {
     setIsLoading(true);
@@ -314,52 +322,58 @@ export default function AdminMerchants() {
 
     setIsEditOpen(true);
     setIsFetching(true);
-    try {
-      const res = await api.get(`/api/admin/merchants/${m.id}`);
-      const profile = res.data.data;
+     try {
+       const res = await api.get(`/api/admin/merchants/${m.id}`);
+       const profile = res.data.data;
 
-      setBusinessName(profile.businessName);
-      setOwnerName(profile.ownerName);
-      setMobile(profile.user?.mobile || profile.mobile);
-      setEmail(profile.email || '');
-      setAddress(profile.address || '');
-      setLatitude(profile.latitude ? profile.latitude.toString() : '');
-      setLongitude(profile.longitude ? profile.longitude.toString() : '');
+       setBusinessName(profile.businessName);
+       setOwnerName(profile.ownerName);
+       setMobile(profile.user?.mobile || profile.mobile);
+       setEmail(profile.email || '');
+       setAddress(profile.address || '');
+       setLatitude(profile.latitude ? profile.latitude.toString() : '');
+       setLongitude(profile.longitude ? profile.longitude.toString() : '');
+       // ADDED: Initialize Google Maps URL from existing data or generate from lat/lng
+       setGoogleMapsUrl(profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''));
 
       // Detect whether the saved category is predefined or custom
       const savedCategory = profile.category || '';
       const isPredefined = predefinedCategories.includes(savedCategory);
 
-      if (isPredefined) {
-        setCategory(savedCategory);
-        setCustomCategory('');
-        setOriginalValues({
-          businessName: profile.businessName,
-          ownerName: profile.ownerName,
-          mobile: profile.user?.mobile || profile.mobile,
-          email: profile.email || '',
-          address: profile.address || '',
-          latitude: profile.latitude ? profile.latitude.toString() : '',
-          longitude: profile.longitude ? profile.longitude.toString() : '',
-          category: savedCategory,
-          customCategory: ''
-        });
-      } else {
-        // Custom category: dropdown = 'other', text box = saved value
-        setCategory('other');
-        setCustomCategory(savedCategory);
-        setOriginalValues({
-          businessName: profile.businessName,
-          ownerName: profile.ownerName,
-          mobile: profile.user?.mobile || profile.mobile,
-          email: profile.email || '',
-          address: profile.address || '',
-          latitude: profile.latitude ? profile.latitude.toString() : '',
-          longitude: profile.longitude ? profile.longitude.toString() : '',
-          category: 'other',
-          customCategory: savedCategory
-        });
-      }
+       if (isPredefined) {
+         setCategory(savedCategory);
+         setCustomCategory('');
+          setOriginalValues({
+            businessName: profile.businessName,
+            ownerName: profile.ownerName,
+            mobile: profile.user?.mobile || profile.mobile,
+            email: profile.email || '',
+            address: profile.address || '',
+            city: profile.city || '', // ADDED: City field
+            latitude: profile.latitude ? profile.latitude.toString() : '',
+            longitude: profile.longitude ? profile.longitude.toString() : '',
+            googleMapsUrl: profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''), // ADDED
+            category: savedCategory,
+            customCategory: ''
+          });
+       } else {
+         // Custom category: dropdown = 'other', text box = saved value
+         setCategory('other');
+         setCustomCategory(savedCategory);
+          setOriginalValues({
+            businessName: profile.businessName,
+            ownerName: profile.ownerName,
+            mobile: profile.user?.mobile || profile.mobile,
+            email: profile.email || '',
+            address: profile.address || '',
+            city: profile.city || '', // ADDED: City field
+            latitude: profile.latitude ? profile.latitude.toString() : '',
+            longitude: profile.longitude ? profile.longitude.toString() : '',
+            googleMapsUrl: profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''), // ADDED
+            category: 'other',
+            customCategory: savedCategory
+          });
+       }
     } catch (err) {
       toast.error('Failed to fetch latest merchant details.');
       setIsEditOpen(false);
@@ -397,18 +411,20 @@ export default function AdminMerchants() {
 
     setIsSubmitting(true);
     try {
-      const res = await api.post('/api/admin/merchants', {
-        businessName,
-        ownerName,
-        mobile,
-        email,
-        address,
-        latitude: latitude ? parseFloat(latitude) : undefined,
-        longitude: longitude ? parseFloat(longitude) : undefined,
-        category: resolvedCategory,
-        password,
-        welcomeBonusPoints: Number(welcomeBonusPoints)
-      });
+        const res = await api.post('/api/admin/merchants', {
+          businessName,
+          ownerName,
+          mobile,
+          email,
+          address,
+          city: city || undefined,
+          latitude: latitude ? parseFloat(latitude) : undefined,
+          longitude: longitude ? parseFloat(longitude) : undefined,
+          category: resolvedCategory,
+          googleMapsUrl: googleMapsUrl || undefined,
+          password,
+          welcomeBonusPoints: Number(welcomeBonusPoints)
+        });
       toast.success(res.data.message || 'Merchant created successfully!');
       setIsAddOpen(false);
       fetchMerchants();
@@ -434,26 +450,28 @@ export default function AdminMerchants() {
     }
 
     setIsSubmitting(true);
-    try {
-      const res = await api.put(`/api/admin/merchants/${selectedMerchant.id}`, {
-        businessName,
-        ownerName,
-        mobile,
-        email,
-        address,
-        latitude: latitude ? parseFloat(latitude) : undefined,
-        longitude: longitude ? parseFloat(longitude) : undefined,
-        category: resolvedCategory
-      });
+      try {
+        const res = await api.put(`/api/admin/merchants/${selectedMerchant.id}`, {
+          businessName,
+          ownerName,
+          mobile,
+          email,
+          address,
+          city: city || undefined, // ADDED: City field
+          latitude: latitude ? parseFloat(latitude) : undefined,
+          longitude: longitude ? parseFloat(longitude) : undefined,
+          category: resolvedCategory,
+          googleMapsUrl: googleMapsUrl || undefined
+        });
       toast.success(res.data.message || 'Merchant profile updated!');
       setIsEditOpen(false);
-      setMerchants(prev =>
-        prev.map(item =>
-          item.id === selectedMerchant.id
-            ? { ...item, businessName, ownerName, user: { ...item.user, mobile }, email, address, latitude: latitude ? parseFloat(latitude) : null, longitude: longitude ? parseFloat(longitude) : null, category: resolvedCategory }
-            : item
-        )
-      );
+       setMerchants(prev =>
+         prev.map(item =>
+           item.id === selectedMerchant.id
+             ? { ...item, businessName, ownerName, user: { ...item.user, mobile }, email, address, city: city || null, latitude: latitude ? parseFloat(latitude) : null, longitude: longitude ? parseFloat(longitude) : null, category: resolvedCategory, googleMapsUrl: googleMapsUrl || null }
+             : item
+         )
+       );
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to update merchant.';
       toast.error(msg);
@@ -623,28 +641,32 @@ export default function AdminMerchants() {
     }
   };
 
-  // Difference detection
-  const originalResolvedCategory = originalValues.category === 'other'
-    ? originalValues.customCategory
-    : originalValues.category;
+    // Difference detection
+    const originalResolvedCategory = originalValues.category === 'other'
+      ? originalValues.customCategory
+      : originalValues.category;
+    const isGoogleMapsUrlModified = googleMapsUrl !== originalValues.googleMapsUrl;
+    const isCityModified = city !== originalValues.city; // ADDED: City modification tracking
 
-  const isBusinessNameModified = businessName !== originalValues.businessName;
-  const isOwnerNameModified = ownerName !== originalValues.ownerName;
-  const isMobileModified = mobile !== originalValues.mobile;
-  const isCategoryModified = resolvedCategory !== originalResolvedCategory;
-  const isEmailModified = email !== originalValues.email;
-  const isAddressModified = address !== originalValues.address;
-  const isLatitudeModified = latitude !== originalValues.latitude;
-  const isLongitudeModified = longitude !== originalValues.longitude;
+    const isBusinessNameModified = businessName !== originalValues.businessName;
+    const isOwnerNameModified = ownerName !== originalValues.ownerName;
+    const isMobileModified = mobile !== originalValues.mobile;
+    const isCategoryModified = resolvedCategory !== originalResolvedCategory;
+    const isEmailModified = email !== originalValues.email;
+    const isAddressModified = address !== originalValues.address;
+    const isLatitudeModified = latitude !== originalValues.latitude;
+    const isLongitudeModified = longitude !== originalValues.longitude;
 
-  const modifiedCount = (isBusinessNameModified ? 1 : 0) +
-    (isOwnerNameModified ? 1 : 0) +
-    (isMobileModified ? 1 : 0) +
-    (isCategoryModified ? 1 : 0) +
-    (isEmailModified ? 1 : 0) +
-    (isAddressModified ? 1 : 0) +
-    (isLatitudeModified ? 1 : 0) +
-    (isLongitudeModified ? 1 : 0);
+    const modifiedCount = (isBusinessNameModified ? 1 : 0) +
+      (isOwnerNameModified ? 1 : 0) +
+      (isMobileModified ? 1 : 0) +
+      (isCategoryModified ? 1 : 0) +
+      (isEmailModified ? 1 : 0) +
+      (isAddressModified ? 1 : 0) +
+      (isLatitudeModified ? 1 : 0) +
+      (isLongitudeModified ? 1 : 0) +
+      (isGoogleMapsUrlModified ? 1 : 0) +
+      (isCityModified ? 1 : 0); // ADDED: City field to modified count
 
   const getPasswordStrength = (pwd) => {
     if (!pwd) return { score: 0, label: '', color: 'bg-slate-200' };
@@ -1142,10 +1164,24 @@ export default function AdminMerchants() {
               placeholder="outlet@domain.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+             />
+           </div>
 
-          <div>
+           <div>
+             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
+             <select
+               value={city}
+               onChange={(e) => setCity(e.target.value)}
+               className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm capitalize text-slate-800 dark:text-white"
+             >
+               <option value="">Select city</option>
+               {CITIES.map((cityOption) => (
+                 <option key={cityOption} value={cityOption}>{cityOption}</option>
+               ))}
+             </select>
+           </div>
+
+            <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Shop Address (Optional)</label>
             <textarea
               className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm h-20 resize-none text-slate-800 dark:text-white"
@@ -1155,14 +1191,21 @@ export default function AdminMerchants() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
-            <MerchantLocationMap
-              latitude={latitude}
-              longitude={longitude}
-              onLocationChange={(lat, lng) => { setLatitude(lat.toString()); setLongitude(lng.toString()); }}
-              height={250}
-            />
+           <div>
+             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
+             <MerchantLocationMap
+               latitude={latitude}
+               longitude={longitude}
+               onLocationChange={(lat, lng) => { 
+                 setLatitude(lat.toString()); 
+                 setLongitude(lng.toString());
+                 // Auto-generate Google Maps URL when pin is moved
+                 if (!isFetching) { // Only auto-update during user interaction, not initial load
+                   setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lng}`);
+                 }
+               }}
+               height={250}
+             />
             <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
               <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
                 <div className="font-bold text-slate-800 dark:text-white">Latitude</div>
@@ -1345,17 +1388,55 @@ export default function AdminMerchants() {
                   onChange={(e) => setAddress(e.target.value)}
                 />
                 {isAddressModified && <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
+             </div>
+           </div>
+           
+           {/* Google Maps URL Field */}
+           <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Google Maps URL</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={googleMapsUrl}
+                  onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm"
+                />
               </div>
             </div>
-
+            
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
-              <MerchantLocationMap
-                latitude={latitude}
-                longitude={longitude}
-                onLocationChange={(lat, lng) => { setLatitude(lat.toString()); setLongitude(lng.toString()); }}
-                height={250}
-              />
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
+              <div className="relative">
+                <select
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  style={{ color: isCityModified ? '#facc15' : undefined }}
+                  className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border rounded-xl text-sm capitalize transition-all ${isCityModified ? 'border-amber-500 bg-amber-50/20 dark:bg-amber-950/15 font-semibold' : 'border-slate-200 dark:border-dark-border text-slate-800 dark:text-white'}`}
+                >
+                  <option value="">Select city</option>
+                  {CITIES.map((cityOption) => (
+                    <option key={cityOption} value={cityOption}>{cityOption}</option>
+                  ))}
+                </select>
+                {isCityModified && <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
+              </div>
+            </div>
+            
+            <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
+               <MerchantLocationMap
+                 latitude={latitude}
+                 longitude={longitude}
+                 onLocationChange={(lat, lng) => { 
+                   setLatitude(lat.toString()); 
+                   setLongitude(lng.toString());
+                   // Auto-generate Google Maps URL when pin is moved
+                   if (!isFetching) { // Only auto-update during user interaction, not initial load
+                     setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lng}`);
+                   }
+                 }}
+                 height={250}
+               />
               <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                 <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
                   <div className="font-bold text-slate-800 dark:text-white">Latitude</div>
@@ -1371,9 +1452,23 @@ export default function AdminMerchants() {
                   Location modified
                 </div>
               )}
-            </div>
-
-            <div className="flex items-center gap-4 text-xs font-bold text-slate-400 mt-2 border-t border-slate-100 dark:border-slate-900 pt-4">
+             </div>
+             
+             {/* Google Maps URL Field */}
+             <div>
+               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Google Maps URL</label>
+               <div className="relative">
+                 <input
+                   type="text"
+                   value={googleMapsUrl}
+                   onChange={(e) => setGoogleMapsUrl(e.target.value)}
+                   className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border rounded-xl text-sm transition-all ${isGoogleMapsUrlModified ? 'border-amber-500 bg-amber-50/20 dark:bg-amber-950/15 font-semibold' : 'border-slate-200 dark:border-dark-border text-slate-800 dark:text-white'}`}
+                 />
+                 {isGoogleMapsUrlModified && <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
+               </div>
+             </div>
+             
+             <div className="flex items-center gap-4 text-xs font-bold text-slate-400 mt-2 border-t border-slate-100 dark:border-slate-900 pt-4">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                 <span>Grey dot = original data</span>

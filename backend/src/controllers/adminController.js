@@ -508,8 +508,8 @@ async function getPendingAdCount(req, res, next) {
  * Create a new Merchant.
  */
 async function createMerchant(req, res, next) {
-  const { businessName, ownerName, mobile, email, address, category, password, welcomeBonusPoints, latitude, longitude } = req.body;
-  const ipAddress = req.ip;
+   const { businessName, ownerName, mobile, email, address, city, category, password, welcomeBonusPoints, latitude, longitude } = req.body;
+   const ipAddress = req.ip;
 
   try {
     if (!password) {
@@ -572,19 +572,20 @@ async function createMerchant(req, res, next) {
         referralAttempts++;
       }
 
-      const merchant = await tx.merchant.create({
-        data: {
-          userId: user.id,
-          businessName,
-          ownerName,
-          email: email || null,
-          address: address || null,
-          category,
-          latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
-          longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
-          merchantCode: merchantCodeGenerated,
-          merchantReferralCode: merchantReferralCodeGenerated
-        },
+       const merchant = await tx.merchant.create({
+         data: {
+           userId: user.id,
+           businessName,
+           ownerName,
+           email: email || null,
+           address: address || null,
+           city: city || null, // ADDED: City field
+           category,
+           latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
+           longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
+           merchantCode: merchantCodeGenerated,
+           merchantReferralCode: merchantReferralCodeGenerated
+         },
         include: {
           user: {
             select: {
@@ -641,9 +642,9 @@ async function createMerchant(req, res, next) {
  * Edit an existing Merchant.
  */
 async function updateMerchant(req, res, next) {
-  const { id } = req.params;
-  const { businessName, ownerName, mobile, email, address, category, latitude, longitude } = req.body;
-  const ipAddress = req.ip;
+   const { id } = req.params;
+   const { businessName, ownerName, mobile, email, address, city, category, latitude, longitude } = req.body;
+   const ipAddress = req.ip;
 
   try {
     const merchant = await prisma.merchant.findUnique({
@@ -691,18 +692,19 @@ async function updateMerchant(req, res, next) {
         }
       });
 
-      // Update Merchant details
-      const m = await tx.merchant.update({
-        where: { id },
-        data: {
-          businessName,
-          ownerName,
-          email: email || null,
-          address: address || null,
-          category,
-          latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
-          longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
-        },
+       // Update Merchant details
+       const m = await tx.merchant.update({
+         where: { id },
+         data: {
+           businessName,
+           ownerName,
+           email: email || null,
+           address: address || null,
+           city: city || null, // ADDED: City field
+           category,
+           latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
+           longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
+         },
         include: {
           user: {
             select: {
