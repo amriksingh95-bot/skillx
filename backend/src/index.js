@@ -43,6 +43,7 @@ const { verifyTransporter } = require('./services/emailService');
 const { startScheduler } = require('./jobs/scheduler');
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Allowed origins for CORS and CSP
