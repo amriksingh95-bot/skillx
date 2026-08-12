@@ -7,6 +7,7 @@ import Badge from '../../components/Badge';
 import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
+import MerchantLocationMap from '../../components/MerchantLocationMap';
 
 // --- Predefined categories (must match your original dropdown list) -----------
 const predefinedCategories = CATEGORY_CODES.filter(c => c !== 'other');
@@ -95,6 +96,8 @@ export default function AdminMerchants() {
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [category, setCategory] = useState('other');
   // NEW: holds the typed custom category text
   const [customCategory, setCustomCategory] = useState('');
@@ -110,6 +113,8 @@ export default function AdminMerchants() {
     mobile: '',
     email: '',
     address: '',
+    latitude: '',
+    longitude: '',
     category: 'other',
     customCategory: ''
   });
@@ -292,6 +297,8 @@ export default function AdminMerchants() {
     setMobile('');
     setEmail('');
     setAddress('');
+    setLatitude('');
+    setLongitude('');
     resetCategoryState();
     setOriginalValues({
       businessName: '',
@@ -299,6 +306,8 @@ export default function AdminMerchants() {
       mobile: '',
       email: '',
       address: '',
+      latitude: '',
+      longitude: '',
       category: 'other',
       customCategory: ''
     });
@@ -314,6 +323,8 @@ export default function AdminMerchants() {
       setMobile(profile.user?.mobile || profile.mobile);
       setEmail(profile.email || '');
       setAddress(profile.address || '');
+      setLatitude(profile.latitude ? profile.latitude.toString() : '');
+      setLongitude(profile.longitude ? profile.longitude.toString() : '');
 
       // Detect whether the saved category is predefined or custom
       const savedCategory = profile.category || '';
@@ -328,6 +339,8 @@ export default function AdminMerchants() {
           mobile: profile.user?.mobile || profile.mobile,
           email: profile.email || '',
           address: profile.address || '',
+          latitude: profile.latitude ? profile.latitude.toString() : '',
+          longitude: profile.longitude ? profile.longitude.toString() : '',
           category: savedCategory,
           customCategory: ''
         });
@@ -341,6 +354,8 @@ export default function AdminMerchants() {
           mobile: profile.user?.mobile || profile.mobile,
           email: profile.email || '',
           address: profile.address || '',
+          latitude: profile.latitude ? profile.latitude.toString() : '',
+          longitude: profile.longitude ? profile.longitude.toString() : '',
           category: 'other',
           customCategory: savedCategory
         });
@@ -388,6 +403,8 @@ export default function AdminMerchants() {
         mobile,
         email,
         address,
+        latitude: latitude ? parseFloat(latitude) : undefined,
+        longitude: longitude ? parseFloat(longitude) : undefined,
         category: resolvedCategory,
         password,
         welcomeBonusPoints: Number(welcomeBonusPoints)
@@ -424,6 +441,8 @@ export default function AdminMerchants() {
         mobile,
         email,
         address,
+        latitude: latitude ? parseFloat(latitude) : undefined,
+        longitude: longitude ? parseFloat(longitude) : undefined,
         category: resolvedCategory
       });
       toast.success(res.data.message || 'Merchant profile updated!');
@@ -431,7 +450,7 @@ export default function AdminMerchants() {
       setMerchants(prev =>
         prev.map(item =>
           item.id === selectedMerchant.id
-            ? { ...item, businessName, ownerName, user: { ...item.user, mobile }, email, address, category: resolvedCategory }
+            ? { ...item, businessName, ownerName, user: { ...item.user, mobile }, email, address, latitude: latitude ? parseFloat(latitude) : null, longitude: longitude ? parseFloat(longitude) : null, category: resolvedCategory }
             : item
         )
       );
@@ -615,13 +634,17 @@ export default function AdminMerchants() {
   const isCategoryModified = resolvedCategory !== originalResolvedCategory;
   const isEmailModified = email !== originalValues.email;
   const isAddressModified = address !== originalValues.address;
+  const isLatitudeModified = latitude !== originalValues.latitude;
+  const isLongitudeModified = longitude !== originalValues.longitude;
 
   const modifiedCount = (isBusinessNameModified ? 1 : 0) +
     (isOwnerNameModified ? 1 : 0) +
     (isMobileModified ? 1 : 0) +
     (isCategoryModified ? 1 : 0) +
     (isEmailModified ? 1 : 0) +
-    (isAddressModified ? 1 : 0);
+    (isAddressModified ? 1 : 0) +
+    (isLatitudeModified ? 1 : 0) +
+    (isLongitudeModified ? 1 : 0);
 
   const getPasswordStrength = (pwd) => {
     if (!pwd) return { score: 0, label: '', color: 'bg-slate-200' };
@@ -1133,6 +1156,26 @@ export default function AdminMerchants() {
           </div>
 
           <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
+            <MerchantLocationMap
+              latitude={latitude}
+              longitude={longitude}
+              onLocationChange={(lat, lng) => { setLatitude(lat.toString()); setLongitude(lng.toString()); }}
+              height={250}
+            />
+            <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
+                <div className="font-bold text-slate-800 dark:text-white">Latitude</div>
+                <div className="font-mono text-slate-600 dark:text-slate-400">{latitude || 'Not set'}</div>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
+                <div className="font-bold text-slate-800 dark:text-white">Longitude</div>
+                <div className="font-mono text-slate-600 dark:text-slate-400">{longitude || 'Not set'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Login Password *</label>
             <div className="relative">
               <input
@@ -1303,6 +1346,31 @@ export default function AdminMerchants() {
                 />
                 {isAddressModified && <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Location on Map</label>
+              <MerchantLocationMap
+                latitude={latitude}
+                longitude={longitude}
+                onLocationChange={(lat, lng) => { setLatitude(lat.toString()); setLongitude(lng.toString()); }}
+                height={250}
+              />
+              <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
+                  <div className="font-bold text-slate-800 dark:text-white">Latitude</div>
+                  <div className="font-mono text-slate-600 dark:text-slate-400">{latitude || 'Not set'}</div>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-2 text-center">
+                  <div className="font-bold text-slate-800 dark:text-white">Longitude</div>
+                  <div className="font-mono text-slate-600 dark:text-slate-400">{longitude || 'Not set'}</div>
+                </div>
+              </div>
+              {(isLatitudeModified || isLongitudeModified) && (
+                <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                  Location modified
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4 text-xs font-bold text-slate-400 mt-2 border-t border-slate-100 dark:border-slate-900 pt-4">

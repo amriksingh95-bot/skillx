@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff, Download, RefreshCw, Image } from 'lucide-react';
+import { User, Building, MapPin, Clock, Lock, Save, X, Eye, EyeOff, Download, RefreshCw, Image, Navigation2 } from 'lucide-react';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
 import { CITIES } from '../../constants/cities';
+import MerchantLocationMap from '../../components/MerchantLocationMap';
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
@@ -38,6 +39,8 @@ export default function MerchantProfile() {
     closingTime: '',
     workingDays: '',
     category: '',
+    latitude: '',
+    longitude: '',
   });
 
   const [originalData, setOriginalData] = useState({});
@@ -69,6 +72,8 @@ export default function MerchantProfile() {
         closingTime: data.closingTime || '',
         workingDays: data.workingDays || '',
         category: isKnownCode ? normalized : 'other',
+        latitude: data.latitude ? data.latitude.toString() : '',
+        longitude: data.longitude ? data.longitude.toString() : '',
       };
       setCustomCategory(isKnownCode ? '' : rawCategory.trim());
       setOriginalCustomCategory(isKnownCode ? '' : rawCategory.trim());
@@ -84,6 +89,10 @@ export default function MerchantProfile() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLocationChange = (lat, lng) => {
+    setFormData(prev => ({ ...prev, latitude: lat.toString(), longitude: lng.toString() }));
   };
 
   const handleDownloadPoster = async () => {
@@ -134,6 +143,8 @@ export default function MerchantProfile() {
         category: formData.category === 'other'
           ? customCategory.trim().toLowerCase()
           : formData.category,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
       };
       await api.put('/api/merchant/profile', payload);
       toast.success('Profile updated successfully!');
@@ -348,6 +359,15 @@ export default function MerchantProfile() {
             <div>
               <label className={labelClass}>Landmark</label>
               <input name="landmark" value={formData.landmark} onChange={handleChange} className={inputClass} placeholder="Near landmark" />
+            </div>
+            <div>
+              <label className={labelClass}>Interactive Map</label>
+              <MerchantLocationMap
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={handleLocationChange}
+                height={300}
+              />
             </div>
             <div>
               <label className={labelClass}>Google Maps URL</label>

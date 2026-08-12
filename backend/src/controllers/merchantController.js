@@ -1412,7 +1412,8 @@ async function updateMerchantProfile(req, res, next) {
     const {
       businessName, ownerName, email, address, city,
       landmark, googleMapsUrl, openingTime, closingTime,
-      workingDays, category, alternativePhone
+      workingDays, category, alternativePhone,
+      latitude, longitude
     } = req.body;
 
     const merchant = await prisma.merchant.findUnique({
@@ -1440,6 +1441,8 @@ async function updateMerchantProfile(req, res, next) {
         ...(workingDays !== undefined && { workingDays }),
         ...(category && { category: normalizeCategory(category) }),
         ...(alternativePhone !== undefined && { alternativePhone }),
+        ...(latitude !== undefined && { latitude: parseFloat(latitude) }),
+        ...(longitude !== undefined && { longitude: parseFloat(longitude) }),
       }
     });
 

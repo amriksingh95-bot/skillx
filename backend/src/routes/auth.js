@@ -113,7 +113,8 @@ router.post(
     body('otp').notEmpty().withMessage('OTP verification is required.'),
     body('category').optional({ checkFalsy: true }).trim().customSanitizer(v => normalizeCategory(v)).isIn(CATEGORY_CODES).withMessage('Invalid category.'),
     body('address').optional().trim(),
-    body('city').trim().notEmpty().withMessage('City is required.').isIn(CITY_VALUES).withMessage('City must be one of the allowed values.')
+    body('city').trim().notEmpty().withMessage('City is required.').isIn(CITY_VALUES).withMessage('City must be one of the allowed values.'),
+    body('referredByMerchantCode').optional({ checkFalsy: true }).trim()
   ],
   handleValidationErrors,
   authController.registerMerchantSelf

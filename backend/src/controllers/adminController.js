@@ -508,7 +508,7 @@ async function getPendingAdCount(req, res, next) {
  * Create a new Merchant.
  */
 async function createMerchant(req, res, next) {
-  const { businessName, ownerName, mobile, email, address, category, password, welcomeBonusPoints } = req.body;
+  const { businessName, ownerName, mobile, email, address, category, password, welcomeBonusPoints, latitude, longitude } = req.body;
   const ipAddress = req.ip;
 
   try {
@@ -580,6 +580,8 @@ async function createMerchant(req, res, next) {
           email: email || null,
           address: address || null,
           category,
+          latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
+          longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
           merchantCode: merchantCodeGenerated,
           merchantReferralCode: merchantReferralCodeGenerated
         },
@@ -640,7 +642,7 @@ async function createMerchant(req, res, next) {
  */
 async function updateMerchant(req, res, next) {
   const { id } = req.params;
-  const { businessName, ownerName, mobile, email, address, category } = req.body;
+  const { businessName, ownerName, mobile, email, address, category, latitude, longitude } = req.body;
   const ipAddress = req.ip;
 
   try {
@@ -697,7 +699,9 @@ async function updateMerchant(req, res, next) {
           ownerName,
           email: email || null,
           address: address || null,
-          category
+          category,
+          latitude: latitude !== undefined ? parseFloat(latitude) : undefined,
+          longitude: longitude !== undefined ? parseFloat(longitude) : undefined,
         },
         include: {
           user: {
