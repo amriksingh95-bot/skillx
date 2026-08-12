@@ -186,7 +186,7 @@ async function runDailyReminders() {
         merchant: {
           include: {
             user: {
-              select: { email: true, name: true }
+              select: { email: true }
             }
           }
         },
@@ -252,7 +252,7 @@ async function getExpiringSubscriptions() {
       merchant: {
         include: {
           user: {
-            select: { email: true, name: true }
+            select: { email: true }
           }
         }
       },

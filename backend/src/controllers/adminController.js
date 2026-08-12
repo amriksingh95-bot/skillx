@@ -441,9 +441,13 @@ async function getMerchants(req, res, next) {
     const adminIds = [...new Set(merchants.map(m => m.statusChangedBy).filter(Boolean))];
     const admins = adminIds.length > 0 ? await prisma.user.findMany({
       where: { id: { in: adminIds } },
-      select: { id: true, name: true, email: true }
+      select: { id: true, email: true, role: true }
     }) : [];
-    const adminMap = new Map(admins.map(a => [a.id, a]));
+    const adminMap = new Map(admins.map(a => [a.id, {
+      id: a.id,
+      name: a.email || a.role || 'Admin',
+      email: a.email
+    }]));
 
     // Attach admin info to merchants
     const merchantsWithAdminInfo = merchants.map(m => ({
