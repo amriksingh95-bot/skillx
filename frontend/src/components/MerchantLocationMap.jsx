@@ -17,7 +17,11 @@ function MarkerComponent({ position, onDragEnd, onClick }) {
     <Marker
       position={position}
       draggable={true}
-      onDragEnd={(e) => onDragEnd(e.target.getLatLng())}
+      eventHandlers={{
+        dragend: (e) => {
+          onDragEnd(e.target.getLatLng());
+        },
+      }}
       icon={{
         iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -67,8 +71,8 @@ export default function MerchantLocationMap({
     if (latitude && longitude) {
       const newCenter = { lat: parseFloat(latitude), lng: parseFloat(longitude) };
       setMapCenter(newCenter);
-      if (mapRef.current && mapRef.current.leafletElement) {
-        mapRef.current.leafletElement.setView([newCenter.lat, newCenter.lng], mapZoom);
+      if (mapRef.current) {
+        mapRef.current.setView([newCenter.lat, newCenter.lng], mapZoom);
       }
     }
   }, [latitude, longitude, mapZoom]);
