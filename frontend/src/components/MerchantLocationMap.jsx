@@ -1,13 +1,35 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { MapPin } from 'lucide-react';
+import L from 'leaflet';
 
 const DEFAULT_CENTER = { lat: 30.9010, lng: 75.8573 }; // Ludhiana, Punjab
 const DEFAULT_ZOOM = 13;
 
+const pinIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">
+  <defs>
+    <filter id="shadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 28 16 28s16-16 16-28C32 7.163 24.837 0 16 0z" fill="#E53935" filter="url(#shadow)"/>
+  <circle cx="16" cy="15" r="7" fill="white"/>
+</svg>`;
+
+function createPinIcon(size = [32, 44]) {
+  return L.divIcon({
+    html: pinIconSvg,
+    className: '',
+    iconSize: size,
+    iconAnchor: [size[0] / 2, size[1]],
+    popupAnchor: [0, -size[1] + 6],
+  });
+}
+
+const PIN_ICON = createPinIcon();
+
 function MarkerComponent({ position, onDragEnd, onClick }) {
-  const map = useMapEvents({
+  useMapEvents({
     click(e) {
       if (onClick) onClick(e.latlng);
     },
@@ -22,15 +44,7 @@ function MarkerComponent({ position, onDragEnd, onClick }) {
           onDragEnd(e.target.getLatLng());
         },
       }}
-      icon={{
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      }}
+      icon={PIN_ICON}
     />
   );
 }
@@ -78,7 +92,7 @@ export default function MerchantLocationMap({
   }, [latitude, longitude, mapZoom]);
 
   return (
-    <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden" style={{ height }}>
+    <div className="relative w-full rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden" style={{ height }}>
       <MapContainer
         ref={mapRef}
         center={[mapCenter.lat, mapCenter.lng]}
@@ -100,20 +114,12 @@ export default function MerchantLocationMap({
         {readOnly && latitude && longitude && (
           <Marker
             position={[parseFloat(latitude), parseFloat(longitude)]}
-            icon={{
-              iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-              iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-              shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41],
-            }}
+            icon={PIN_ICON}
           />
         )}
       </MapContainer>
       {!readOnly && (
-        <div className="absolute bottom-2 left-2 right-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-slate-600 dark:text-slate-400 text-center pointer-events-none">
+        <div className="absolute bottom-2 left-2 right-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-slate-600 dark:text-slate-400 text-center pointer-events-none z-[1000]">
           Drag the marker or click on the map to set location
         </div>
       )}
