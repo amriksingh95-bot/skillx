@@ -33,8 +33,11 @@ async function generatePosterBuffer(merchant) {
   ctx.drawImage(template, 0, 0, TEMPLATE_W, TEMPLATE_H);
   ctx.drawImage(qrImage, QR_X, QR_Y, QR_SIZE, QR_SIZE);
 
-  // Business name — auto-shrink to fit zone
+  // Business name — erase baked placeholder text, then draw real name auto-shrunk to fit zone
   const name = merchant.businessName || '';
+  ctx.fillStyle = 'rgb(251, 251, 251)';
+  ctx.fillRect(NAME_ZONE.x, NAME_ZONE.y, NAME_ZONE.w, NAME_ZONE.h);
+
   let fontSize = 72;
   ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.fillStyle = '#0a1a3a';
@@ -42,17 +45,19 @@ async function generatePosterBuffer(merchant) {
   ctx.textBaseline = 'middle';
   const nameCx = NAME_ZONE.x + NAME_ZONE.w / 2;
   const nameCy = NAME_ZONE.y + NAME_ZONE.h / 2;
-  while (fontSize > 20 && ctx.measureText(name).width > NAME_ZONE.w) {
+  while (fontSize > 28 && ctx.measureText(name).width > NAME_ZONE.w) {
     fontSize -= 2;
     ctx.font = `bold ${fontSize}px sans-serif`;
   }
   ctx.fillText(name, nameCx, nameCy);
 
-  // Merchant code
+  // Merchant code — erase baked placeholder text, then draw real code in white (visible on navy band)
   const codeText = `Code: ${merchant.merchantCode}`;
   const codeFontSize = 56;
+  ctx.fillStyle = 'rgb(0, 17, 38)';
+  ctx.fillRect(770, 2240, 950, 75);
   ctx.font = `bold ${codeFontSize}px sans-serif`;
-  ctx.fillStyle = '#0a1a3a';
+  ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const codeCx = CODE_ZONE.x + CODE_ZONE.w / 2;
