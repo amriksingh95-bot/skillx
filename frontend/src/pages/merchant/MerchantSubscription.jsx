@@ -13,7 +13,9 @@ import {
   Star,
   Upload,
   X,
-  Camera
+  Camera,
+  Image,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
@@ -147,7 +149,8 @@ export default function MerchantSubscription() {
       await api.post('/api/merchant/subscription/renewal/upload-screenshot', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 120000
       });
 
       toast.success('Screenshot uploaded – admin will verify within 3 days');
@@ -182,7 +185,8 @@ export default function MerchantSubscription() {
       await api.post('/api/merchant/subscription/upload-screenshot', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 120000
       });
 
       toast.success('Screenshot uploaded. Admin will verify within 24 hours.');
@@ -401,21 +405,30 @@ export default function MerchantSubscription() {
               <input
                 key={screenshotFileKey}
                 type="file"
-                accept="image/*"
+                accept="image/*,.pdf"
                 onChange={(e) => setScreenshotFile(e.target.files[0])}
                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {screenshotFile && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                  <span className="flex-1 truncate">{screenshotFile.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => { setScreenshotFile(null); setScreenshotFileKey(Date.now()); }}
-                    className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
-                    title="Remove file"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+                <div className="mt-2 space-y-2">
+                  {screenshotFile.type.startsWith('image/') ? (
+                    <img src={URL.createObjectURL(screenshotFile)} alt="Preview" className="w-20 h-20 object-cover rounded-lg border border-slate-200" />
+                  ) : (
+                    <div className="w-20 h-20 flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200">
+                      <FileText className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="flex-1 truncate">{screenshotFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setScreenshotFile(null); setScreenshotFileKey(Date.now()); }}
+                      className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                      title="Remove file"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               )}
               <input
@@ -760,21 +773,30 @@ export default function MerchantSubscription() {
             <input
               key={renewalFileKey}
               type="file"
-              accept="image/*"
+              accept="image/*,.pdf"
               onChange={(e) => setRenewalScreenshotFile(e.target.files[0])}
               className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
             />
             {renewalScreenshotFile && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                <span className="flex-1 truncate">{renewalScreenshotFile.name}</span>
-                <button
-                  type="button"
-                  onClick={() => { setRenewalScreenshotFile(null); setRenewalFileKey(Date.now()); }}
-                  className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
-                  title="Remove file"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+              <div className="mt-2 space-y-2">
+                {renewalScreenshotFile.type.startsWith('image/') ? (
+                  <img src={URL.createObjectURL(renewalScreenshotFile)} alt="Preview" className="w-20 h-20 object-cover rounded-lg border border-slate-200" />
+                ) : (
+                  <div className="w-20 h-20 flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200">
+                    <FileText className="w-8 h-8 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span className="flex-1 truncate">{renewalScreenshotFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setRenewalScreenshotFile(null); setRenewalFileKey(Date.now()); }}
+                    className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                    title="Remove file"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             )}
             <input

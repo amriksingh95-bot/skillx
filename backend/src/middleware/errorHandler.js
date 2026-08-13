@@ -8,6 +8,17 @@ function errorHandler(err, req, res, next) {
   let code = err.code || 'INTERNAL_SERVER_ERROR';
   let message = err.message || 'An unexpected error occurred.';
 
+  // Handle Multer errors (file uploads)
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    status = 413;
+    code = 'FILE_TOO_LARGE';
+    message = 'File is too large. Maximum size is 5 MB.';
+  } else if (err.message && err.message.includes('Only image files are allowed')) {
+    status = 400;
+    code = 'INVALID_FILE_TYPE';
+    message = 'Invalid file type. Only JPEG, PNG, WebP, and PDF files are allowed.';
+  }
+
   // Prevent raw database/Prisma details leaking to the client
   if (err.name && (err.name.startsWith('Prisma') || err.name.includes('Prisma'))) {
     status = 400;
