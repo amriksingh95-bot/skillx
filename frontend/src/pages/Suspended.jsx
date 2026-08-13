@@ -57,6 +57,7 @@ export default function Suspended() {
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [upiId, setUpiId] = useState('');
+  const [monthlyPrice, setMonthlyPrice] = useState(0);
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [screenshotFileKey, setScreenshotFileKey] = useState(Date.now());
@@ -64,7 +65,12 @@ export default function Suspended() {
   useEffect(() => {
     if (code === 'PAYMENT_REQUIRED') {
       api.get('/api/merchant/subscription')
-        .then((res) => setUpiId(res.data.data?.upiId || ''))
+        .then((res) => {
+          setUpiId(res.data.data?.upiId || '');
+          const plans = res.data.data?.availablePlans || [];
+          const monthly = plans.find((p) => p.name === 'monthly');
+          if (monthly) setMonthlyPrice(monthly.price);
+        })
         .catch(() => {});
     }
   }, [code]);
@@ -141,7 +147,7 @@ export default function Suspended() {
 
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-white tracking-tight">{config.title}</h2>
-          <p className="text-sm text-slate-400 leading-relaxed">{config.description}</p>
+          <p className="text-sm text-slate-400 leading-relaxed">{config.description.replace('₹399', monthlyPrice ? `₹${monthlyPrice}` : '₹399')}</p>
         </div>
 
         <div className="pt-4 flex flex-col gap-3">
@@ -151,7 +157,7 @@ export default function Suspended() {
               className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-base font-extrabold shadow-lg shadow-amber-500/20 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Upload className="w-5 h-5" />
-              Pay ₹399 Now
+              Pay ₹{monthlyPrice || '399'} Now
             </button>
           )}
           {code !== 'PAYMENT_REQUIRED' && config.showRefresh ? (
@@ -196,13 +202,13 @@ export default function Suspended() {
       <Toaster position="top-center" />
 
       {code === 'PAYMENT_REQUIRED' && (
-        <Modal isOpen={isPaymentModalOpen} onClose={() => { setIsPaymentModalOpen(false); setScreenshotFile(null); }} title="Pay ₹399 via GPay / UPI">
+        <Modal isOpen={isPaymentModalOpen} onClose={() => { setIsPaymentModalOpen(false); setScreenshotFile(null); }} title={`Pay ₹${monthlyPrice || '399'} via GPay / UPI`}>
           <form onSubmit={handleScreenshotUpload} className="space-y-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4 text-center space-y-3">
               <p className="text-xs font-medium text-slate-500">Scan & pay using any UPI app</p>
               {upiId ? (
                 <a
-                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${monthlyPrice || 399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                   className="block"
                 >
                   <img
@@ -220,7 +226,7 @@ export default function Suspended() {
               )}
               {upiId && (
                 <a
-                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                  href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${monthlyPrice || 399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                   className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
                 >
                   Pay now
@@ -236,7 +242,7 @@ export default function Suspended() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Amount</span>
-                  <span className="text-sm font-bold text-emerald-600">₹399</span>
+                  <span className="text-sm font-bold text-emerald-600">₹{monthlyPrice || '399'}</span>
                 </div>
               </div>
             </div>

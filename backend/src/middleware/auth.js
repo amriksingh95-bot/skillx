@@ -113,7 +113,9 @@ async function requireActiveMerchant(req, res, next) {
         err1.code = 'ACCOUNT_PENDING';
         return next(err1);
       case 'approved':
-        const err2 = new Error('Your application is approved. Please login and complete subscription payment of \u20B9399 to activate your account.');
+        const monthlyPlan = await prisma.subscriptionPlan.findFirst({ where: { name: 'monthly' } });
+        const approvedPrice = monthlyPlan ? monthlyPlan.price : 399;
+        const err2 = new Error(`Your application is approved. Please login and complete subscription payment of ₹${approvedPrice} to activate your account.`);
         err2.status = 403;
         err2.code = 'PAYMENT_REQUIRED';
         return next(err2);

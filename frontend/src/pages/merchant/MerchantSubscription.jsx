@@ -54,6 +54,7 @@ export default function MerchantSubscription() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [merchantStatus, setMerchantStatus] = useState(null);
   const [subscriptionUpiId, setSubscriptionUpiId] = useState('');
+  const [monthlyPrice, setMonthlyPrice] = useState(0);
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -74,6 +75,8 @@ export default function MerchantSubscription() {
       setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
       setPlans(d.availablePlans || []);
       setSubscriptionUpiId(d.upiId || '');
+      const monthly = (d.availablePlans || []).find((p) => p.name === 'monthly');
+      if (monthly) setMonthlyPrice(monthly.price);
       if (d.status) {
         setMerchantStatus(d.status);
       }
@@ -328,7 +331,7 @@ export default function MerchantSubscription() {
         <div className="bg-white dark:bg-dark-card border border-slate-100 dark:border-dark-border rounded-3xl p-6 shadow-sm space-y-4">
           <h3 className="font-bold text-base text-slate-800 dark:text-white">Complete Your Activation</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Pay ₹399 via UPI to activate your account
+            Pay ₹{monthlyPrice} via UPI to activate your account
           </p>
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
@@ -344,28 +347,28 @@ export default function MerchantSubscription() {
           <div className="flex flex-col items-center gap-2">
             {subscriptionUpiId ? (
               <a
-                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${monthlyPrice}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                 className="block"
               >
                 <img
                   src={gpayQR}
-                  alt="Scan to pay ₹399 – tap to pay"
+                  alt={`Scan to pay ₹${monthlyPrice} – tap to pay`}
                   className="w-48 h-48 object-contain border border-slate-200 dark:border-dark-border rounded-xl cursor-pointer active:scale-95 transition-transform"
                 />
               </a>
             ) : (
               <img
                 src={gpayQR}
-                alt="Scan to pay ₹399"
+                alt={`Scan to pay ₹${monthlyPrice}`}
                 className="w-48 h-48 object-contain border border-slate-200 dark:border-dark-border rounded-xl"
               />
             )}
-            <p className="text-xs text-slate-400">Scan QR code to pay ₹399</p>
+            <p className="text-xs text-slate-400">Scan QR code to pay ₹{monthlyPrice}</p>
           </div>
 
           {/* GPay QR Payment Section */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 text-center">
-            <h3 className="text-base font-semibold text-slate-700 mb-1">Scan & Pay ₹399</h3>
+            <h3 className="text-base font-semibold text-slate-700 mb-1">Scan & Pay ₹{monthlyPrice}</h3>
             <p className="text-xs text-slate-500 mb-3">Use any UPI app – GPay, PhonePe, Paytm</p>
             <img
               src={gpayQR}
@@ -374,7 +377,7 @@ export default function MerchantSubscription() {
             />
             {subscriptionUpiId && (
               <a
-                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${monthlyPrice}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                 className="mt-3 inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
               >
                 Pay now
@@ -724,7 +727,7 @@ export default function MerchantSubscription() {
             />
             {subscriptionUpiId && (
               <a
-                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${399}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
+                href={`upi://pay?pa=${encodeURIComponent(subscriptionUpiId)}&pn=${encodeURIComponent('Amrik Singh')}&am=${subscription.plan?.price ?? 0}&cu=INR&tn=${encodeURIComponent('SkillXT Subscription ' + (user?.id || ''))}`}
                 className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
               >
                 Pay now
@@ -744,7 +747,7 @@ export default function MerchantSubscription() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-slate-500">Amount</span>
-                <span className="text-sm font-bold text-emerald-600">₹399</span>
+                <span className="text-sm font-bold text-emerald-600">₹{subscription.plan?.price ?? '—'}</span>
               </div>
             </div>
             <p className="text-xs text-amber-600 font-medium">Note: After paying, upload your payment screenshot below</p>

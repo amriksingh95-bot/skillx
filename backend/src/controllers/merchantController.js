@@ -1277,11 +1277,14 @@ async function uploadPaymentScreenshot(req, res, next) {
       }
     });
 
+    const monthlyPlan = await prisma.subscriptionPlan.findFirst({ where: { name: 'monthly' } });
+    const planPrice = monthlyPlan ? monthlyPlan.price : 399;
+
     await sendWhatsAppAlert(
       `Payment Screenshot Received%0A` +
       `Business: ${merchant.businessName}%0A` +
       `Merchant Code: ${merchant.merchantCode}%0A` +
-      `Amount: Rs. 399%0A` +
+      `Amount: Rs. ${planPrice}%0A` +
       `Action needed: Verify screenshot and confirm payment`
     );
 
@@ -1289,7 +1292,7 @@ async function uploadPaymentScreenshot(req, res, next) {
       `Payment Screenshot Received%0A` +
       `Business: ${merchant.businessName}%0A` +
       `Merchant Code: ${merchant.merchantCode}%0A` +
-      `Amount: Rs. 399%0A` +
+      `Amount: Rs. ${planPrice}%0A` +
       `Action needed: Verify screenshot and confirm payment`
     );
 

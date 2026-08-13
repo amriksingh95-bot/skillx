@@ -85,6 +85,7 @@ export default function AdminMerchants() {
   const [posterLoadingIds, setPosterLoadingIds] = useState(new Set());
   const [posterPreviewMerchant, setPosterPreviewMerchant] = useState(null);
   const [posterBlobUrl, setPosterBlobUrl] = useState(null);
+  const [monthlyPrice, setMonthlyPrice] = useState(0);
 
   // Notification Modal State
   const [notifyMerchant, setNotifyMerchant] = useState(null);
@@ -261,6 +262,16 @@ export default function AdminMerchants() {
       fetchPendingPayments();
     }
   }, [activeTab, page, search]);
+
+  useEffect(() => {
+    api.get('/api/admin/subscription-plans')
+      .then((res) => {
+        const plans = res.data.data || [];
+        const monthly = plans.find((p) => p.name === 'monthly');
+        if (monthly) setMonthlyPrice(monthly.price);
+      })
+      .catch(() => {});
+  }, []);
 
   // Helper: reset category-related state cleanly
   const resetCategoryState = () => {
@@ -960,7 +971,7 @@ export default function AdminMerchants() {
         <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl">
           <span className="text-blue-500 text-lg leading-none mt-0.5"><CheckCircle className="w-5 h-5" /></span>
           <div>
-            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ₹399/month subscription.</p>
+            <p className="text-sm font-extrabold text-blue-700 dark:text-blue-400">These merchants were approved and have paid their ₹{monthlyPrice || '399'}/month subscription.</p>
             <p className="text-xs text-blue-600 dark:text-blue-500 font-semibold mt-0.5">Check your bank/UPI for their payment screenshot. Click <span className="underline">Confirm Payment</span> to activate their account. They get 1,000 bonus points on activation.</p>
           </div>
         </div>
