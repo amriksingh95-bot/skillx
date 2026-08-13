@@ -52,7 +52,7 @@ export default function Suspended() {
   const [searchParams, setSearchParams] = useSearchParams();
   const code = searchParams.get('code');
   const config = STATUS_CONFIG[code] || DEFAULT_CONFIG;
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -79,13 +79,16 @@ export default function Suspended() {
     try {
       const res = await api.get('/api/merchant/profile');
       const merchant = res.data?.data;
-      if (merchant && (!merchant.status || merchant.status === 'active')) {
-        window.location.reload();
-      } else {
-        window.location.reload();
+
+      if (merchant && merchant.status === 'active') {
+        updateUser({ merchantStatus: undefined, merchantStatusCode: undefined });
+        navigate('/merchant/dashboard', { replace: true });
+        return;
       }
+
+      toast('Your account is still pending verification. Please check back later.');
     } catch {
-      window.location.reload();
+      toast.error('Unable to check status right now. Please try again.');
     }
   };
 

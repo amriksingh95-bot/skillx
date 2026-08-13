@@ -31,6 +31,19 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
   };
 
+  // Merge partial updates into the current user object (no re-login required)
+  const updateUser = useCallback((fields) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...fields };
+      // Clean up keys set to undefined so they don't appear on the object
+      Object.keys(next).forEach((k) => {
+        if (next[k] === undefined) delete next[k];
+      });
+      return next;
+    });
+  }, []);
+
   // Decode JWT payload (no verification — just reads { userId, role })
   const decodeAccessToken = (token) => {
     try {
@@ -271,13 +284,14 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{
+        value={{
         user,
         accessToken,
         loading,
         loggingOut,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user
       }}
     >
