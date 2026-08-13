@@ -2,6 +2,25 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 
+async function generateMerchantCode(businessName) {
+  const namePart = (businessName || '').replace(/[^a-zA-Z]/g, '').padEnd(4, 'X').substring(0, 4).toUpperCase();
+  let merchantCodeGenerated = '';
+  let isUnique = false;
+  let attempts = 0;
+  while (!isUnique && attempts < 10) {
+    const digitsPart = Math.floor(1000 + Math.random() * 9000).toString();
+    merchantCodeGenerated = `SKXT${namePart}${digitsPart}`;
+    const existing = await prisma.merchant.findUnique({
+      where: { merchantCode: merchantCodeGenerated }
+    });
+    if (!existing) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+  return merchantCodeGenerated;
+}
+
 async function main() {
   console.log('Clearing old seed data...');
   // Delete in reverse order of relationships
@@ -117,7 +136,7 @@ async function main() {
         address: 'Ludhiana, Punjab',
         status: 'active',
         pointsBalance: 1000,
-        merchantCode: m.mobile,
+        merchantCode: await generateMerchantCode(m.business),
       }
     });
   }
