@@ -1,11 +1,22 @@
 const path = require('path');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const QRCode = require('qrcode');
 const prisma = require('../lib/prisma');
 
 const TEMPLATE_PATH = path.join(__dirname, '..', 'assets', 'final_skillxt_poster_upscaled_A4_300dpi.png');
 const TEMPLATE_W = 2480;
 const TEMPLATE_H = 3508;
+
+const FONT_PATH = path.join(__dirname, '..', 'assets', 'fonts', 'DejaVuSans-Bold.ttf');
+const FONT_FAMILY = 'SkillXTFont';
+let fontRegistered = false;
+
+function ensureFontRegistered() {
+  if (fontRegistered) return;
+  const ok = GlobalFonts.registerFromPath(FONT_PATH, FONT_FAMILY);
+  if (!ok) throw new Error(`Failed to register poster font: ${FONT_PATH}`);
+  fontRegistered = true;
+}
 
 const QR_X = 714;
 const QR_Y = 800;
@@ -15,6 +26,8 @@ const NAME_ZONE = { x: 700, y: 2095, w: 1080, h: 100 };
 const CODE_ZONE = { x: 760, y: 2215, w: 960, h: 110 };
 
 async function generatePosterBuffer(merchant) {
+  ensureFontRegistered();
+
   const qrValue = `${process.env.FRONTEND_URL}/register?mcode=${merchant.merchantCode}`;
 
   const qrBuffer = await QRCode.toBuffer(qrValue, {
@@ -39,7 +52,7 @@ async function generatePosterBuffer(merchant) {
   ctx.fillRect(NAME_ZONE.x, NAME_ZONE.y, NAME_ZONE.w, NAME_ZONE.h);
 
   let fontSize = 72;
-  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
   ctx.fillStyle = '#0a1a3a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -47,7 +60,7 @@ async function generatePosterBuffer(merchant) {
   const nameCy = NAME_ZONE.y + NAME_ZONE.h / 2;
   while (fontSize > 28 && ctx.measureText(name).width > NAME_ZONE.w) {
     fontSize -= 2;
-    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
   }
   ctx.fillText(name, nameCx, nameCy);
 
@@ -56,7 +69,7 @@ async function generatePosterBuffer(merchant) {
   const codeFontSize = 56;
   ctx.fillStyle = 'rgb(0, 17, 38)';
   ctx.fillRect(770, 2240, 950, 75);
-  ctx.font = `bold ${codeFontSize}px sans-serif`;
+  ctx.font = `bold ${codeFontSize}px ${FONT_FAMILY}`;
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
