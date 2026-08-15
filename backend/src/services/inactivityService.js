@@ -229,11 +229,21 @@ async function getCustomerInactivityData(customerId) {
 /**
  * Get inactivity report for all active merchants.
  * Returns grouped summary + full merchant list.
+ * Uses batched GROUP BY queries instead of per-entity lookups (N+1 fix).
  */
 async function getMerchantInactivityReport() {
   const merchants = await prisma.merchant.findMany({
     where: { isActive: true, status: 'active' },
-    select: { id: true }
+    select: {
+      id: true,
+      businessName: true,
+      category: true,
+      isActive: true,
+      status: true,
+      createdAt: true,
+      pointsBalance: true,
+      userId: true
+    }
   });
 
   const report = {
@@ -241,12 +251,104 @@ async function getMerchantInactivityReport() {
     merchants: []
   };
 
-  for (const { id } of merchants) {
-    const data = await getMerchantInactivityData(id);
-    if (data) {
-      report.merchants.push(data);
-      report.summary[data.inactivityStatus]++;
-    }
+  if (merchants.length === 0) return report;
+
+  const merchantIds = merchants.map(m => m.id);
+  const userIds = merchants.map(m => m.userId);
+
+  const [loginRows, txRows, redeemRows, earnRows, transferRows, subscriptions, customerCountRows] = await Promise.all([
+    prisma.auditLog.groupBy({
+      by: ['userId'],
+      where: { userId: { in: userIds }, action: 'LOGIN_SUCCESS' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['merchantId'],
+      where: { merchantId: { in: merchantIds }, status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['merchantId'],
+      where: { merchantId: { in: merchantIds }, type: 'redeem', status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['merchantId'],
+      where: { merchantId: { in: merchantIds }, type: 'earn', status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.auditLog.groupBy({
+      by: ['merchantId'],
+      where: { merchantId: { in: merchantIds }, action: 'POINTS_TRANSFERRED' },
+      _max: { createdAt: true }
+    }),
+    prisma.merchantSubscription.findMany({
+      where: { merchantId: { in: merchantIds }, status: { in: ['active', 'grace_period'] } },
+      orderBy: { createdAt: 'desc' },
+      select: { merchantId: true, status: true, endDate: true, gracePeriodEnd: true, plan: { select: { displayName: true } } }
+    }),
+    prisma.customer.groupBy({
+      by: ['signedUpViaMerchantId'],
+      where: { signedUpViaMerchantId: { in: merchantIds }, isActive: true },
+      _count: { id: true }
+    })
+  ]);
+
+  const loginMap = new Map(loginRows.map(r => [r.userId, r._max.createdAt]));
+  const txMap = new Map(txRows.map(r => [r.merchantId, r._max.createdAt]));
+  const redeemMap = new Map(redeemRows.map(r => [r.merchantId, r._max.createdAt]));
+  const earnMap = new Map(earnRows.map(r => [r.merchantId, r._max.createdAt]));
+  const transferMap = new Map(transferRows.map(r => [r.merchantId, r._max.createdAt]));
+  const customerCountMap = new Map(customerCountRows.map(r => [r.signedUpViaMerchantId, r._count.id]));
+
+  const subscriptionMap = new Map();
+  for (const s of subscriptions) {
+    if (!subscriptionMap.has(s.merchantId)) subscriptionMap.set(s.merchantId, s);
+  }
+
+  for (const m of merchants) {
+    const lastLoginDate = loginMap.get(m.userId) || null;
+    const lastTxDate = txMap.get(m.id) || null;
+    const lastRedemptionDate = redeemMap.get(m.id) || null;
+    const lastEarnDate = earnMap.get(m.id) || null;
+    const lastTransferDate = transferMap.get(m.id) || null;
+
+    const allDates = [lastLoginDate, lastTxDate, lastRedemptionDate, lastEarnDate, lastTransferDate].filter(Boolean);
+    const lastActivityDate = allDates.length > 0 ? new Date(Math.max(...allDates.map(d => new Date(d).getTime()))) : null;
+
+    const subscription = subscriptionMap.get(m.id) || null;
+
+    const data = {
+      merchantId: m.id,
+      businessName: m.businessName,
+      category: m.category,
+      isActive: m.isActive,
+      status: m.status,
+      createdAt: m.createdAt,
+      accountAge: daysSince(m.createdAt),
+      lastLoginAt: lastLoginDate,
+      lastTransactionAt: lastTxDate,
+      lastRedemptionAt: lastRedemptionDate,
+      lastEarnAt: lastEarnDate,
+      lastTransferAt: lastTransferDate,
+      lastActivityAt: lastActivityDate,
+      daysSinceLogin: daysSince(lastLoginDate),
+      daysSinceTransaction: daysSince(lastTxDate),
+      daysSinceRedemption: daysSince(lastRedemptionDate),
+      daysSinceActivity: daysSince(lastActivityDate),
+      inactivityStatus: classifyStatus(daysSince(lastActivityDate)),
+      pointsBalance: m.pointsBalance,
+      customerCount: customerCountMap.get(m.id) || 0,
+      subscription: subscription ? {
+        status: subscription.status,
+        planName: subscription.plan?.displayName,
+        endDate: subscription.endDate,
+        gracePeriodEnd: subscription.gracePeriodEnd
+      } : null
+    };
+
+    report.merchants.push(data);
+    report.summary[data.inactivityStatus]++;
   }
 
   report.merchants.sort((a, b) => (a.daysSinceActivity ?? 9999) - (b.daysSinceActivity ?? 9999));
@@ -256,11 +358,31 @@ async function getMerchantInactivityReport() {
 
 /**
  * Get inactivity report for all active customers.
+ * Uses batched GROUP BY queries instead of per-entity lookups (N+1 fix).
  */
 async function getCustomerInactivityReport() {
   const customers = await prisma.customer.findMany({
     where: { isActive: true },
-    select: { id: true }
+    select: {
+      id: true,
+      userId: true,
+      name: true,
+      email: true,
+      city: true,
+      isActive: true,
+      createdAt: true,
+      signedUpViaMerchantId: true,
+      dateOfBirth: true,
+      gender: true,
+      pinCode: true,
+      area: true,
+      occupation: true,
+      maritalStatus: true,
+      preferredLanguage: true,
+      communicationPref: true,
+      favouriteCategories: true,
+      dietaryPreference: true
+    }
   });
 
   const report = {
@@ -268,12 +390,121 @@ async function getCustomerInactivityReport() {
     customers: []
   };
 
-  for (const { id } of customers) {
-    const data = await getCustomerInactivityData(id);
-    if (data) {
-      report.customers.push(data);
-      report.summary[data.inactivityStatus]++;
-    }
+  if (customers.length === 0) return report;
+
+  const customerIds = customers.map(c => c.id);
+  const userIds = customers.map(c => c.userId);
+
+  const [loginRows, txRows, redeemRows, earnRows, ledgerRows, earnedRows, redeemedRows] = await Promise.all([
+    prisma.auditLog.groupBy({
+      by: ['userId'],
+      where: { userId: { in: userIds }, action: 'LOGIN_SUCCESS' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds }, status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds }, type: 'redeem', status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.transaction.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds }, type: 'earn', status: 'completed' },
+      _max: { createdAt: true }
+    }),
+    prisma.pointsLedger.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds } },
+      _sum: { pointsChange: true },
+      _count: { id: true }
+    }),
+    prisma.pointsLedger.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds }, pointsChange: { gt: 0 } },
+      _sum: { pointsChange: true }
+    }),
+    prisma.pointsLedger.groupBy({
+      by: ['customerId'],
+      where: { customerId: { in: customerIds }, pointsChange: { lt: 0 } },
+      _sum: { pointsChange: true }
+    })
+  ]);
+
+  const loginMap = new Map(loginRows.map(r => [r.userId, r._max.createdAt]));
+  const txMap = new Map(txRows.map(r => [r.customerId, r._max.createdAt]));
+  const redeemMap = new Map(redeemRows.map(r => [r.customerId, r._max.createdAt]));
+  const earnMap = new Map(earnRows.map(r => [r.customerId, r._max.createdAt]));
+  const earnedMap = new Map(earnedRows.map(r => [r.customerId, r._sum.pointsChange]));
+  const redeemedMap = new Map(redeemedRows.map(r => [r.customerId, r._sum.pointsChange]));
+
+  const currentBalanceMap = new Map();
+  for (const r of ledgerRows) {
+    currentBalanceMap.set(r.customerId, r._sum.pointsChange || 0);
+  }
+
+  for (const c of customers) {
+    const lastLoginDate = loginMap.get(c.userId) || null;
+    const lastTxDate = txMap.get(c.id) || null;
+    const lastRedemptionDate = redeemMap.get(c.id) || null;
+    const lastEarnDate = earnMap.get(c.id) || null;
+
+    const allDates = [lastLoginDate, lastTxDate, lastRedemptionDate, lastEarnDate].filter(Boolean);
+    const lastActivityDate = allDates.length > 0 ? new Date(Math.max(...allDates.map(d => new Date(d).getTime()))) : null;
+
+    const earned = earnedMap.get(c.id) || 0;
+    const redeemed = Math.abs(redeemedMap.get(c.id) || 0);
+    const currentBalance = currentBalanceMap.get(c.id) || 0;
+
+    // Churn signals
+    const pointsNeverRedeemed = earned > 0 && redeemed === 0;
+    const highBalanceNoRedemption = currentBalance > 100 && !lastRedemptionDate;
+
+    // Profile completeness
+    const profileFields = [
+      c.dateOfBirth, c.gender, c.city, c.pinCode,
+      c.area, c.occupation, c.maritalStatus,
+      c.preferredLanguage, c.communicationPref,
+      c.favouriteCategories, c.dietaryPreference
+    ];
+    const filledFields = profileFields.filter(f => f !== null && f !== undefined && f !== '').length;
+    const profileCompleteness = Math.round((filledFields / profileFields.length) * 100);
+
+    const data = {
+      customerId: c.id,
+      name: c.name,
+      email: c.email,
+      city: c.city,
+      isActive: c.isActive,
+      createdAt: c.createdAt,
+      accountAge: daysSince(c.createdAt),
+      lastLoginAt: lastLoginDate,
+      lastTransactionAt: lastTxDate,
+      lastRedemptionAt: lastRedemptionDate,
+      lastEarnAt: lastEarnDate,
+      lastActivityAt: lastActivityDate,
+      daysSinceLogin: daysSince(lastLoginDate),
+      daysSinceTransaction: daysSince(lastTxDate),
+      daysSinceRedemption: daysSince(lastRedemptionDate),
+      daysSinceActivity: daysSince(lastActivityDate),
+      inactivityStatus: classifyStatus(daysSince(lastActivityDate)),
+      signedUpViaMerchantId: c.signedUpViaMerchantId,
+      churnSignals: {
+        pointsNeverRedeemed,
+        highBalanceNoRedemption,
+        profileIncomplete: profileCompleteness < 50,
+        profileCompleteness,
+        currentBalance,
+        totalEarned: earned,
+        totalRedeemed: redeemed
+      }
+    };
+
+    report.customers.push(data);
+    report.summary[data.inactivityStatus]++;
   }
 
   report.customers.sort((a, b) => (a.daysSinceActivity ?? 9999) - (b.daysSinceActivity ?? 9999));
