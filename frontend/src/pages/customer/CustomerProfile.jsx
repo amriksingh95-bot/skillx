@@ -297,7 +297,7 @@ export default function CustomerProfile() {
   }
 
   const categoryOptions = [
-    'Grocery', 'Cafe & Restaurant', 'Beauty & Salon', 'Doctor & Clinic',
+    'Grocery', 'Cafe', 'Restaurant', 'Beauty & Salon', 'Doctor & Clinic',
     'Pharmacy', 'Fashion & Clothing', 'Stationery', 'Gym & Fitness',
     'Electronics', 'Education', 'Hotel & Travel'
   ];

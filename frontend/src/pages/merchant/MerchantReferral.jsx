@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   Scissors,
   Coffee,
+  Utensils,
   Dumbbell,
   Shirt,
   Pill,
@@ -36,6 +37,7 @@ import toast from 'react-hot-toast';
 const CATEGORY_ICONS = {
   grocery: { icon: ShoppingBag, label: 'Grocery', color: 'text-emerald-500' },
   cafe: { icon: Coffee, label: 'Cafe', color: 'text-amber-500' },
+  restaurant: { icon: Utensils, label: 'Restaurant', color: 'text-orange-500' },
   beauty: { icon: Scissors, label: 'Salon', color: 'text-pink-500' },
   gym: { icon: Dumbbell, label: 'Gym', color: 'text-blue-500' },
   fashion: { icon: Shirt, label: 'Boutique', color: 'text-purple-500' },
@@ -50,7 +52,8 @@ const CATEGORY_ICONS = {
 
 const CATEGORY_WHATSAPP = {
   grocery: 'grocery store',
-  cafe: 'cafe or restaurant',
+  cafe: 'cafe',
+  restaurant: 'restaurant',
   beauty: 'salon or beauty parlor',
   gym: 'gym or fitness centre',
   fashion: 'fashion boutique or clothing store',

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { 
   Search, MapPin, Phone, Mail, Store, ShoppingCart, Navigation,
-  Coffee, Scissors, Stethoscope, Pill, Shirt, BookOpen, 
+  Coffee, Utensils, Scissors, Stethoscope, Pill, Shirt, BookOpen, 
   Dumbbell, Wrench, Hotel, GraduationCap, Info, AlertCircle, Layers 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -36,7 +36,8 @@ export default function FindPartners() {
   const categoryPills = [
     { id: 'all', label: 'All', Icon: Layers },
     { id: 'grocery', label: 'Grocery', Icon: ShoppingCart },
-    { id: 'cafe', label: 'Cafe & Restaurant', Icon: Coffee },
+    { id: 'cafe', label: 'Cafe', Icon: Coffee },
+    { id: 'restaurant', label: 'Restaurant', Icon: Utensils },
     { id: 'beauty', label: 'Beauty & Salon', Icon: Scissors },
     { id: 'doctor', label: 'Doctor & Clinic', Icon: Stethoscope },
     { id: 'pharmacy', label: 'Pharmacy', Icon: Pill },
@@ -55,6 +56,7 @@ export default function FindPartners() {
     const c = cat.toLowerCase();
     if (c === 'grocery') return <ShoppingCart className="w-4 h-4 shrink-0" />;
     if (c === 'cafe') return <Coffee className="w-4 h-4 shrink-0" />;
+    if (c === 'restaurant') return <Utensils className="w-4 h-4 shrink-0" />;
     if (c === 'beauty') return <Scissors className="w-4 h-4 shrink-0" />;
     if (c === 'doctor') return <Stethoscope className="w-4 h-4 shrink-0" />;
     if (c === 'medical' || c === 'pharmacy') return <Pill className="w-4 h-4 shrink-0" />;
@@ -71,6 +73,7 @@ export default function FindPartners() {
     const c = cat.toLowerCase();
     if (c === 'grocery') return { border: 'border-l-4 border-l-emerald-500', glow: 'hover:shadow-emerald-500/5' };
     if (c === 'cafe') return { border: 'border-l-4 border-l-amber-500', glow: 'hover:shadow-amber-500/5' };
+    if (c === 'restaurant') return { border: 'border-l-4 border-l-orange-500', glow: 'hover:shadow-orange-500/5' };
     if (c === 'beauty') return { border: 'border-l-4 border-l-pink-500', glow: 'hover:shadow-pink-500/5' };
     if (c === 'doctor') return { border: 'border-l-4 border-l-blue-500', glow: 'hover:shadow-blue-500/5' };
     if (c === 'medical' || c === 'pharmacy') return { border: 'border-l-4 border-l-teal-500', glow: 'hover:shadow-teal-500/5' };
@@ -83,6 +86,7 @@ export default function FindPartners() {
     const cat = merchantCat.toLowerCase();
     if (selectedPill === 'grocery') return cat === 'grocery';
     if (selectedPill === 'cafe') return cat === 'cafe';
+    if (selectedPill === 'restaurant') return cat === 'restaurant';
     if (selectedPill === 'doctor') return cat === 'doctor';
     if (selectedPill === 'pharmacy') return cat === 'medical' || cat === 'pharmacy';
     if (selectedPill === 'fashion') return cat === 'fashion';
