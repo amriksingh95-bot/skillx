@@ -321,9 +321,9 @@ export default function FindPartners() {
                     </div>
                   )}
 
-                  {(m.googleMapsUrl || (m.latitude && m.longitude) || m.address) && (
+                  {(m.latitude && m.longitude || m.address) && (
                     <a
-                      href={m.googleMapsUrl || (m.latitude ? `https://www.google.com/maps?q=${m.latitude},${m.longitude}` : `https://www.google.com/maps/search/${encodeURIComponent(m.address)}`)}
+                      href={m.latitude && m.longitude ? `https://www.google.com/maps?q=${m.latitude},${m.longitude}` : `https://www.google.com/maps/search/${encodeURIComponent(m.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"

@@ -48,7 +48,6 @@ export default function AdCard({
     if (!enableDirections || !ad?.showDirections) return null;
     const m = ad?.merchant;
     if (!m) return null;
-    if (m.googleMapsUrl) return m.googleMapsUrl;
     if (m.latitude && m.longitude) {
       return `https://www.google.com/maps/dir/?api=1&destination=${m.latitude},${m.longitude}`;
     }

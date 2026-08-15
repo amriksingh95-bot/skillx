@@ -56,6 +56,8 @@ router.get('/profile', async (req, res, next) => {
         city: true,
         landmark: true,
         category: true,
+        latitude: true,
+        longitude: true,
         googleMapsUrl: true,
         openingTime: true,
         closingTime: true,
