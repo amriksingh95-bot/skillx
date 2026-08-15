@@ -5,8 +5,34 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
-import { CITIES } from '../../constants/cities';
+import { CITIES, CITY_CENTERS } from '../../constants/cities';
 import MerchantLocationMap from '../../components/MerchantLocationMap';
+
+const CITY_CENTER_ENTRIES = Object.entries(CITY_CENTERS);
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function nearestCity(lat, lng) {
+  let best = CITIES[0];
+  let bestDist = Infinity;
+  for (const [city, center] of CITY_CENTER_ENTRIES) {
+    const dist = haversineKm(lat, lng, center.lat, center.lng);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = city;
+    }
+  }
+  return best;
+}
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
@@ -65,7 +91,9 @@ export default function MerchantProfile() {
         email: data.email || '',
         alternativePhone: data.alternativePhone || '',
         address: data.address || '',
-        city: CITIES.includes(data.city) ? data.city : '',
+        city: data.latitude && data.longitude
+          ? nearestCity(parseFloat(data.latitude), parseFloat(data.longitude))
+          : (CITIES.includes(data.city) ? data.city : ''),
         landmark: data.landmark || '',
         googleMapsUrl: data.googleMapsUrl || '',
         openingTime: data.openingTime || '',
@@ -96,6 +124,7 @@ export default function MerchantProfile() {
        ...prev, 
        latitude: lat.toString(), 
        longitude: lng.toString(),
+       city: nearestCity(lat, lng),
        googleMapsUrl: `https://www.google.com/maps?q=${lat},${lng}`
      }));
    };
@@ -353,15 +382,6 @@ export default function MerchantProfile() {
               <textarea name="address" value={formData.address} onChange={handleChange} className={inputClass} rows={3} placeholder="Full shop address" />
             </div>
             <div>
-              <label className={labelClass}>City</label>
-              <select name="city" value={formData.city} onChange={handleChange} className={inputClass}>
-                <option value="">Select city</option>
-                {CITIES.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            </div>
-            <div>
               <label className={labelClass}>Landmark</label>
               <input name="landmark" value={formData.landmark} onChange={handleChange} className={inputClass} placeholder="Near landmark" />
             </div>
@@ -375,6 +395,7 @@ export default function MerchantProfile() {
               />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Drag the pin or tap the map to set your exact location.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">City: {formData.city ? `${formData.city} (auto-detected)` : 'Not set'}</p>
           </div>
         )}
 
