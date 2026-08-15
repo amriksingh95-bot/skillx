@@ -305,6 +305,16 @@ router.patch(
 router.get('/reports/points-liability-trend', adminController.getPointsLiabilityTrend);
 router.get('/reports/merchant-health', adminController.getMerchantHealth);
 
+// Merchant Signup Performance
+router.get('/reports/merchant-signups', adminController.getMerchantSignups);
+
+router.post(
+  '/reports/merchant-signups/:merchantId/call-log',
+  [param('merchantId').isUUID().withMessage('Invalid merchant ID.')],
+  validate,
+  adminController.logMerchantCall
+);
+
 // Fee Revenue Routes
 router.get('/fee-revenue/merchant-wise', adminController.getMerchantFeeRevenue);
 router.get('/fee-revenue/monthly-trend', adminController.getMonthlyFeeTrend);

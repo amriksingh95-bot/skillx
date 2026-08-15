@@ -3225,7 +3225,9 @@ module.exports = {
   getPointsLiabilityTrend,
   getMerchantHealth,
   getMerchantReferrals,
-  sendMerchantNotification
+  sendMerchantNotification,
+  getMerchantSignups,
+  logMerchantCall
 };
 
 /**
@@ -3458,6 +3460,161 @@ async function getMerchantHealth(req, res, next) {
           return order[a.tier] - order[b.tier];
         })
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/admin/reports/merchant-signups
+ * Per-merchant counts of new customers signed up via merchant code,
+ * for today, last 7 days and last 30 days, with category averages
+ * and the most recent call-log entry per merchant.
+ */
+async function getMerchantSignups(req, res, next) {
+  try {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const merchants = await prisma.merchant.findMany({
+      where: { isActive: true, status: 'active' },
+      select: {
+        id: true,
+        businessName: true,
+        category: true
+      },
+      include: {
+        user: {
+          select: { mobile: true }
+        }
+      }
+    });
+
+    if (merchants.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Merchant signup performance retrieved successfully.',
+        data: { merchants: [] }
+      });
+    }
+
+    const merchantIds = merchants.map(m => m.id);
+    const placeholders = merchantIds.map((_, i) => `$${i + 1}`).join(',');
+    const todayParam = merchantIds.length + 1;
+    const sevenParam = merchantIds.length + 2;
+    const thirtyParam = merchantIds.length + 3;
+
+    const signupRows = await prisma.$queryRawUnsafe(`
+      SELECT
+        "signedUpViaMerchantId" AS "merchantId",
+        COUNT(*) FILTER (WHERE "createdAt" >= $${todayParam})::int AS "todayCount",
+        COUNT(*) FILTER (WHERE "createdAt" >= $${sevenParam})::int AS "last7Count",
+        COUNT(*) FILTER (WHERE "createdAt" >= $${thirtyParam})::int AS "last30Count"
+      FROM "Customer"
+      WHERE "signedUpViaMerchantId" IN (${placeholders})
+      GROUP BY "signedUpViaMerchantId"
+    `, ...merchantIds, startOfToday, sevenDaysAgo, thirtyDaysAgo);
+
+    const signupMap = {};
+    for (const row of signupRows) {
+      signupMap[row.merchantId] = {
+        today: row.todayCount,
+        last7: row.last7Count,
+        last30: row.last30Count
+      };
+    }
+
+    const callLogRows = await prisma.merchantCallLog.findMany({
+      where: { merchantId: { in: merchantIds } },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        merchantId: true,
+        note: true,
+        createdAt: true,
+        calledBy: true
+      }
+    });
+
+    const callLogMap = {};
+    for (const row of callLogRows) {
+      if (!callLogMap[row.merchantId]) callLogMap[row.merchantId] = row;
+    }
+
+    // Category averages for last-30-day signups
+    const catCounts = {};
+    for (const m of merchants) {
+      const count = signupMap[m.id]?.last30 || 0;
+      if (!catCounts[m.category]) catCounts[m.category] = { sum: 0, count: 0 };
+      catCounts[m.category].sum += count;
+      catCounts[m.category].count += 1;
+    }
+    const catAvg = {};
+    for (const [cat, c] of Object.entries(catCounts)) {
+      catAvg[cat] = c.count > 0 ? c.sum / c.count : 0;
+    }
+
+    const rows = merchants.map(m => {
+      const counts = signupMap[m.id] || { today: 0, last7: 0, last30: 0 };
+      const call = callLogMap[m.id] || null;
+      return {
+        id: m.id,
+        businessName: m.businessName,
+        category: m.category,
+        phone: m.user?.mobile || null,
+        signupsToday: counts.today,
+        signupsLast7Days: counts.last7,
+        signupsLast30Days: counts.last30,
+        categoryAvg30Days: parseFloat(catAvg[m.category].toFixed(2)),
+        lastCalledAt: call ? call.createdAt : null,
+        lastCallNote: call ? call.note : null
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Merchant signup performance retrieved successfully.',
+      data: { merchants: rows }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/admin/reports/merchant-signups/:merchantId/call-log
+ * Logs an admin call to a merchant with an optional note.
+ */
+async function logMerchantCall(req, res, next) {
+  const { merchantId } = req.params;
+  const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+
+  try {
+    const merchant = await prisma.merchant.findUnique({
+      where: { id: merchantId },
+      select: { id: true }
+    });
+    if (!merchant) {
+      const err = new Error('Merchant not found.');
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      return next(err);
+    }
+
+    const entry = await prisma.merchantCallLog.create({
+      data: {
+        merchantId,
+        calledBy: req.user.id,
+        note: note || null
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Call logged successfully.',
+      data: { callLog: entry }
     });
   } catch (error) {
     next(error);

@@ -59,6 +59,7 @@ model Merchant {
   subscriptions                MerchantSubscription[]
   topUps                       PointsTopUp[]
   transactions                 Transaction[]
+  callLogs                     MerchantCallLog[]
 
   @@index([isActive])
   @@index([status])
@@ -105,6 +106,7 @@ model Customer {
   @@index([referredBy])
   @@index([createdAt])
   @@index([notificationOptIn])
+  @@index([signedUpViaMerchantId])
 }
 
 model Transaction {
@@ -395,6 +397,19 @@ model MerchantNotification {
   @@index([merchantId])
   @@index([merchantId, isRead])
   @@index([createdAt])
+}
+
+model MerchantCallLog {
+  id         String    @id @default(uuid())
+  merchantId String
+  calledBy   String
+  note       String?
+  createdAt  DateTime  @default(now())
+
+  merchant   Merchant  @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@index([merchantId, createdAt])
 }
 
 enum TransactionType {

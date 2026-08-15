@@ -35,6 +35,7 @@ const AdminInactivityMonitor = React.lazy(() => import('./pages/admin/AdminInact
 const ChatbotAnalytics = React.lazy(() => import('./pages/admin/ChatbotAnalytics'));
 const TopUpRequests = React.lazy(() => import('./pages/admin/TopUpRequests'));
 const AdPayments = React.lazy(() => import('./pages/admin/AdPayments'));
+const AdminMerchantSignups = React.lazy(() => import('./pages/admin/AdminMerchantSignups'));
 
 // Merchant Pages — lazy-loaded
 const MerchantDashboard = React.lazy(() => import('./pages/merchant/MerchantDashboard'));
@@ -199,6 +200,14 @@ export default function App() {
                 element={
                   <RoleGuard allowedRoles={['super_admin']}>
                     <ChatbotAnalytics />
+                  </RoleGuard>
+                }
+              />
+              <Route
+                path="admin/merchant-signups"
+                element={
+                  <RoleGuard allowedRoles={['super_admin']}>
+                    <AdminMerchantSignups />
                   </RoleGuard>
                 }
               />
