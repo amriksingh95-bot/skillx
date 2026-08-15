@@ -148,7 +148,7 @@
       "category": "customer_points",
       "keywords": ["full bill", "pay full", "20 percent", "cap", "maximum discount", "how much of bill"],
       "question": "Can I use points to pay the full bill or only part of it?",
-      "answer": "Points can cover a maximum of 20% of your bill value. For example, on a ₹500 bill, the maximum points discount is ₹100 regardless of how many points you have."
+      "answer": "There is no percentage cap on redemption — you can use points to cover up to the full bill value. The only requirement is the 100-point minimum redemption limit."
     },
     {
       "id": "q18",
@@ -260,7 +260,7 @@
       "category": "merchant",
       "keywords": ["cap on discount", "maximum discount bill", "20 percent cap", "redemption cap", "max discount"],
       "question": "Is there a cap on discount per bill?",
-      "answer": "Yes. Maximum 20% of the bill value can be covered by points redemption. On a ₹500 bill, maximum discount is ₹100 regardless of how many points the customer has. This protects your margins."
+      "answer": "No percentage cap applies. Points can cover up to 100% of the bill value. For example, on a ₹500 bill, you can redeem up to ₹500 worth of points. The only rule is the 100-point minimum redemption limit."
     },
     {
       "id": "q34",

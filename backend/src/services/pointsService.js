@@ -268,18 +268,9 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmou
       throw err;
     }
 
-    // Enforce 20% redemption cap at transaction level
-    const rupeesPerPoint = parseFloat(settings.rupeesPerPoint);
     if (!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || parseFloat(invoiceAmount) <= 0) {
       const err = new Error('Purchase amount is required for redemption.');
       err.code = 'VALIDATION_ERROR';
-      throw err;
-    }
-    const maxDiscountAllowed = parseFloat(invoiceAmount) * 0.20;
-    const maxPointsAllowed = Math.floor(maxDiscountAllowed / rupeesPerPoint);
-    if (pointsToRedeem > maxPointsAllowed) {
-      const err = new Error(`Redemption exceeds 20% cap. Maximum allowed: ${maxPointsAllowed} points for Rs. ${invoiceAmount} invoice.`);
-      err.code = 'CAP_EXCEEDED';
       throw err;
     }
 

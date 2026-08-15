@@ -40,10 +40,8 @@ export default function MerchantRedeemPoints() {
   const feePercent = customer?.rewardSettings?.redemptionFeePercent !== undefined && customer?.rewardSettings?.redemptionFeePercent !== null
     ? parseFloat(customer.rewardSettings.redemptionFeePercent)
     : 5;
-  // 20% cap: points can cover at most 20% of the invoice value
-  const maxDiscountAllowed = purchaseAmount && !isNaN(purchaseAmount) ? parseFloat(purchaseAmount) * 0.20 : 0;
-  const maxPointsByPurchase = purchaseAmount && !isNaN(purchaseAmount) ? Math.floor(maxDiscountAllowed / rate) : (customer?.balance || 0);
-  const maxRedeemablePoints = customer ? Math.min(customer.balance, maxPointsByPurchase) : 0;
+  // Points can redeem up to the full customer balance
+  const maxRedeemablePoints = customer ? customer.balance : 0;
   const maxDiscount = maxRedeemablePoints * rate;
 
   // Auto-fill points to redeem based on purchase amount
@@ -226,10 +224,6 @@ export default function MerchantRedeemPoints() {
       return toast.error(`Insufficient balance. Customer only has ${customer.balance} points.`);
     }
 
-    if (points > maxRedeemablePoints) {
-      return toast.error(`Points to redeem cannot exceed maximum allowed (${maxRedeemablePoints} points).`);
-    }
-
     setIsLoading(true);
     try {
       const res = await api.post('/api/merchant/redeem', {
@@ -238,20 +232,13 @@ export default function MerchantRedeemPoints() {
         purchaseAmount: parseFloat(purchaseAmount)
       });
       
-      const { transaction, redemptionCap } = res.data.data;
+      const { transaction } = res.data.data;
       const actualFee = transaction.platformFee || 0;
       const actualNet = transaction.netAmount || transaction.purchaseAmount || 0;
-      
-      if (redemptionCap?.capped) {
-        toast.success(
-          `Capped! Redeemed ${transaction.points} pts (from ${redemptionCap.requestedPoints} requested) = ₹${actualNet} discount on ₹${redemptionCap.invoiceAmount} bill`,
-          { duration: 6000 }
-        );
-      } else {
-        toast.success(
-          `Redeemed ${transaction.points} points! Gross: ₹${transaction.purchaseAmount} | Fee: ₹${actualFee} | Net: ₹${actualNet}`
-        );
-      }
+
+      toast.success(
+        `Redeemed ${transaction.points} points! Gross: ₹${transaction.purchaseAmount} | Fee: ₹${actualFee} | Net: ₹${actualNet}`
+      );
       
       // Update customer balance on UI
       setCustomer(prev => ({
@@ -441,15 +428,7 @@ export default function MerchantRedeemPoints() {
 
           {/* Issue Points Form */}
           <div className="bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-base text-slate-800 dark:text-white">Redeem Points</h3>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50">
-                Max 20% of Bill
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
-              Loyalty points can only cover up to 20% of the total invoice value.
-            </p>
+            <h3 className="font-bold text-base text-slate-800 dark:text-white mb-1">Redeem Points</h3>
             
              <form onSubmit={handleRedeem} className="space-y-4 my-auto py-4">
               <div>
@@ -467,12 +446,8 @@ export default function MerchantRedeemPoints() {
                   onChange={(e) => setPurchaseAmount(e.target.value)}
                 />
                 {purchaseAmount && !isNaN(purchaseAmount) && (
-                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 space-y-1">
-                    <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      <span>Points can cover max 20% of invoice (₹{maxDiscountAllowed.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
-                    </div>
-                    <div>Maximum redeemable: {maxRedeemablePoints} points = ₹{maxDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} discount</div>
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                    Maximum redeemable: {maxRedeemablePoints} points = ₹{maxDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} discount
                   </div>
                 )}
               </div>
@@ -520,7 +495,7 @@ export default function MerchantRedeemPoints() {
                   </div>
                   {purchaseAmount && !isNaN(purchaseAmount) && (
                     <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-emerald-200/50 dark:border-emerald-800/30">
-                      Covers <span className="font-bold text-emerald-600 dark:text-emerald-400">{((feePreview.netAmount / parseFloat(purchaseAmount)) * 100).toFixed(1)}%</span> of the bill (max 20%)
+                      Covers <span className="font-bold text-emerald-600 dark:text-emerald-400">{((feePreview.netAmount / parseFloat(purchaseAmount)) * 100).toFixed(1)}%</span> of the bill
                     </div>
                   )}
                 </div>

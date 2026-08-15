@@ -345,19 +345,7 @@ async function redeem(req, res, next) {
       return next(err);
     }
 
-    // Fetch reward settings once for cap calculation and service
-    const settings = await prisma.rewardSettings.findFirst({ orderBy: { updatedAt: 'desc' } });
-    const rupeesPerPoint = settings ? parseFloat(settings.rupeesPerPoint) : 0.10;
-
-    // Apply 20% redemption cap: points can cover at most 20% of the invoice value
-    let finalPoints = pointsToRedeem;
-    let capped = false;
-    const maxDiscountAllowed = parseFloat(purchaseAmount) * 0.20;
-    const maxPointsAllowed = Math.floor(maxDiscountAllowed / rupeesPerPoint);
-    if (finalPoints > maxPointsAllowed) {
-      finalPoints = maxPointsAllowed;
-      capped = true;
-    }
+    const finalPoints = pointsToRedeem;
 
     // Call transaction service
     const transaction = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
@@ -368,7 +356,7 @@ async function redeem(req, res, next) {
       'POINTS_REDEEMED',
       'Transaction',
       transaction.id,
-      { customerId: customer.id, points: finalPoints, invoiceAmount: purchaseAmount || null, capped },
+      { customerId: customer.id, points: finalPoints, invoiceAmount: purchaseAmount || null },
       ipAddress
     );
 
@@ -376,9 +364,7 @@ async function redeem(req, res, next) {
 
     res.status(200).json({
       success: true,
-      message: capped
-        ? `Redemption capped to 20% of invoice. Redeemed ${finalPoints} points (from ${pointsToRedeem} requested).`
-        : `Successfully redeemed ${finalPoints} points.`,
+      message: `Successfully redeemed ${finalPoints} points.`,
       data: {
         transaction,
         customer: {
@@ -386,13 +372,6 @@ async function redeem(req, res, next) {
           name: customer.name,
           mobile: customer.user.mobile,
           newBalance
-        },
-        redemptionCap: {
-          invoiceAmount: purchaseAmount ? parseFloat(purchaseAmount) : null,
-          maxAllowedPoints: maxPointsAllowed,
-          requestedPoints: parseInt(pointsToRedeem),
-          redeemedPoints: finalPoints,
-          capped
         }
       }
     });
