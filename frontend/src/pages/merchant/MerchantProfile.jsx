@@ -374,15 +374,7 @@ export default function MerchantProfile() {
                 height={300}
               />
             </div>
-            <div>
-              <label className={labelClass}>Google Maps URL</label>
-              <div className="flex gap-2">
-                <input name="googleMapsUrl" value={formData.googleMapsUrl} onChange={handleChange} className={`${inputClass} flex-1`} placeholder="https://maps.google.com/..." />
-                <button type="button" title="Find your location on Google Maps" onClick={() => window.open(`https://www.google.com/maps/search/${encodeURIComponent((formData.address || '') + ', ' + (formData.city || ''))}`, '_blank')} className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors btn-press shrink-0">
-                  <MapPin className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Drag the pin or tap the map to set your exact location.</p>
           </div>
         )}
 
