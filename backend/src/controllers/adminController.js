@@ -3484,9 +3484,7 @@ async function getMerchantSignups(req, res, next) {
       select: {
         id: true,
         businessName: true,
-        category: true
-      },
-      include: {
+        category: true,
         user: {
           select: { mobile: true }
         }
