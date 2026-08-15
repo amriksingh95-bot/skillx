@@ -16,6 +16,26 @@ export function setAppNavigate(fn) { _navigate = fn; }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
+let refreshInFlight = null;
+
+async function performRefresh(refreshToken) {
+  if (!refreshInFlight) {
+    refreshInFlight = axios
+      .post(`${API_BASE_URL}/api/auth/refresh-token`, { refreshToken })
+      .then((res) => {
+        const data = res.data.data;
+        if (data.refreshToken && localStorage.getItem('refreshToken') === refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        return data;
+      })
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
@@ -65,19 +85,13 @@ export function AuthProvider({ children }) {
 
         if (storedRefreshToken) {
           try {
-            const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
-              refreshToken: storedRefreshToken
-            });
+            const { accessToken: newAccessToken } = await performRefresh(storedRefreshToken);
 
             if (cancelled) return;
             if (_authGeneration.current !== genAtStart) return;
             if (!localStorage.getItem('refreshToken')) return;
 
-            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
             setAccessToken(newAccessToken);
-            if (newRefreshToken) {
-              localStorage.setItem('refreshToken', newRefreshToken);
-            }
             api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
             const payload = decodeAccessToken(newAccessToken);
@@ -203,15 +217,8 @@ export function AuthProvider({ children }) {
             }
 
             // Request new token
-            const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
-              refreshToken: storedRefreshToken
-            });
-
-            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+            const { accessToken: newAccessToken } = await performRefresh(storedRefreshToken);
             setAccessToken(newAccessToken);
-            if (newRefreshToken) {
-              localStorage.setItem('refreshToken', newRefreshToken);
-            }
             api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
             // Re-apply header and run request again
