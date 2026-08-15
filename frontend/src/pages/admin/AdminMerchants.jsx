@@ -7,7 +7,7 @@ import Badge from '../../components/Badge';
 import { Plus, Edit2, Lock, UserX, UserCheck, RefreshCw, Eye, Check, X, Store, MapPin, Phone, Mail, EyeOff, AlertTriangle, Clock, CheckCircle, Image, ExternalLink, Download, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES } from '../../constants/categories';
-import { CITIES } from '../../constants/cities';
+import { nearestCity } from '../../constants/cities';
 import MerchantLocationMap from '../../components/MerchantLocationMap';
 
 // --- Predefined categories (must match your original dropdown list) -----------
@@ -342,8 +342,14 @@ export default function AdminMerchants() {
        setMobile(profile.user?.mobile || profile.mobile);
        setEmail(profile.email || '');
        setAddress(profile.address || '');
-       setLatitude(profile.latitude ? profile.latitude.toString() : '');
-       setLongitude(profile.longitude ? profile.longitude.toString() : '');
+       const loadedLat = profile.latitude ? profile.latitude.toString() : '';
+       const loadedLng = profile.longitude ? profile.longitude.toString() : '';
+       setLatitude(loadedLat);
+       setLongitude(loadedLng);
+       const derivedCity = profile.latitude && profile.longitude
+         ? nearestCity(profile.latitude, profile.longitude)
+         : (profile.city || '');
+       setCity(derivedCity);
        // ADDED: Initialize Google Maps URL from existing data or generate from lat/lng
        setGoogleMapsUrl(profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''));
 
@@ -360,7 +366,7 @@ export default function AdminMerchants() {
             mobile: profile.user?.mobile || profile.mobile,
             email: profile.email || '',
             address: profile.address || '',
-            city: profile.city || '', // ADDED: City field
+            city: derivedCity, // ADDED: City field
             latitude: profile.latitude ? profile.latitude.toString() : '',
             longitude: profile.longitude ? profile.longitude.toString() : '',
             googleMapsUrl: profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''), // ADDED
@@ -377,7 +383,7 @@ export default function AdminMerchants() {
             mobile: profile.user?.mobile || profile.mobile,
             email: profile.email || '',
             address: profile.address || '',
-            city: profile.city || '', // ADDED: City field
+            city: derivedCity, // ADDED: City field
             latitude: profile.latitude ? profile.latitude.toString() : '',
             longitude: profile.longitude ? profile.longitude.toString() : '',
             googleMapsUrl: profile.googleMapsUrl || (profile.latitude && profile.longitude ? `https://www.google.com/maps?q=${profile.latitude},${profile.longitude}` : ''), // ADDED
@@ -1178,19 +1184,10 @@ export default function AdminMerchants() {
              />
            </div>
 
-           <div>
-             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
-             <select
-               value={city}
-               onChange={(e) => setCity(e.target.value)}
-               className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-dark-border rounded-xl text-sm capitalize text-slate-800 dark:text-white"
-             >
-               <option value="">Select city</option>
-               {CITIES.map((cityOption) => (
-                 <option key={cityOption} value={cityOption}>{cityOption}</option>
-               ))}
-             </select>
-           </div>
+<div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
+              <p className="text-sm text-slate-800 dark:text-white">{city ? `${city} (auto-detected)` : 'Not set'}</p>
+            </div>
 
             <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Shop Address (Optional)</label>
@@ -1207,14 +1204,15 @@ export default function AdminMerchants() {
              <MerchantLocationMap
                latitude={latitude}
                longitude={longitude}
-               onLocationChange={(lat, lng) => { 
-                 setLatitude(lat.toString()); 
-                 setLongitude(lng.toString());
-                 // Auto-generate Google Maps URL when pin is moved
-                 if (!isFetching) { // Only auto-update during user interaction, not initial load
-                   setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lng}`);
-                 }
-               }}
+onLocationChange={(lat, lng) => { 
+                  setLatitude(lat.toString()); 
+                  setLongitude(lng.toString());
+                  // Auto-generate Google Maps URL when pin is moved
+                  if (!isFetching) { // Only auto-update during user interaction, not initial load
+                    setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lng}`);
+                    setCity(nearestCity(lat, lng));
+                  }
+                }}
                height={250}
              />
             <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
@@ -1417,20 +1415,7 @@ export default function AdminMerchants() {
             
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
-              <div className="relative">
-                <select
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  style={{ color: isCityModified ? '#facc15' : undefined }}
-                  className={`w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border rounded-xl text-sm capitalize transition-all ${isCityModified ? 'border-amber-500 bg-amber-50/20 dark:bg-amber-950/15 font-semibold' : 'border-slate-200 dark:border-dark-border text-slate-800 dark:text-white'}`}
-                >
-                  <option value="">Select city</option>
-                  {CITIES.map((cityOption) => (
-                    <option key={cityOption} value={cityOption}>{cityOption}</option>
-                  ))}
-                </select>
-                {isCityModified && <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#facc15] shadow-sm" title="Modified" />}
-              </div>
+              <p className="text-sm text-slate-800 dark:text-white">{city ? `${city} (auto-detected)` : 'Not set'}</p>
             </div>
             
             <div>
@@ -1444,6 +1429,7 @@ export default function AdminMerchants() {
                    // Auto-generate Google Maps URL when pin is moved
                    if (!isFetching) { // Only auto-update during user interaction, not initial load
                      setGoogleMapsUrl(`https://www.google.com/maps?q=${lat},${lng}`);
+                     setCity(nearestCity(lat, lng));
                    }
                  }}
                  height={250}

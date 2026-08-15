@@ -5,34 +5,8 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import Modal from '../../components/Modal';
 import toast from 'react-hot-toast';
 import { CATEGORIES, CATEGORY_CODES, normalizeCategory } from '../../constants/categories';
-import { CITIES, CITY_CENTERS } from '../../constants/cities';
+import { CITIES, nearestCity } from '../../constants/cities';
 import MerchantLocationMap from '../../components/MerchantLocationMap';
-
-const CITY_CENTER_ENTRIES = Object.entries(CITY_CENTERS);
-
-function haversineKm(lat1, lng1, lat2, lng2) {
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function nearestCity(lat, lng) {
-  let best = CITIES[0];
-  let bestDist = Infinity;
-  for (const [city, center] of CITY_CENTER_ENTRIES) {
-    const dist = haversineKm(lat, lng, center.lat, center.lng);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = city;
-    }
-  }
-  return best;
-}
 
 export default function MerchantProfile() {
   const [profile, setProfile] = useState(null);
