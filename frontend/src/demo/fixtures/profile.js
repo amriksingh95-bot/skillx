@@ -34,8 +34,8 @@ export const DEMO_PROFILE_BASE = {
   referralCode: 'SKXTDEMO0001',
   referredBy: 'demo-referrer-01',
   referredByName: 'Kabir Singh',
-  referredCount: 2,
-  referredPoints: 40,
+  referredCount: 1,
+  referredPoints: 20,
   profilePhoto: '',
   alternativePhone: '9876505678',
   updatedAtDaysAgo: 3

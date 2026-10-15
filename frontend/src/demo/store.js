@@ -297,7 +297,7 @@ export function createDemoStore({ now } = {}) {
     return null;
   }
 
-  function pushTxAndLedger({ type, purchaseAmount, invoiceAmount, points, platformFee, netAmount, remarks, merchantId, merchant, expiresAt }) {
+  function pushTxAndLedger({ type, purchaseAmount, invoiceAmount, points, pointsChange = points, platformFee, netAmount, remarks, merchantId, merchant, expiresAt }) {
     simSeq += 1;
     const txId = `demo-sim-tx-${simSeq}`;
     const lgId = `demo-sim-lg-${simSeq}`;
@@ -324,7 +324,7 @@ export function createDemoStore({ now } = {}) {
       id: lgId,
       customerId: DEMO_CUSTOMER_ID,
       transactionId: txId,
-      pointsChange: points,
+      pointsChange,
       createdAt: startIso,
       expiresAt: type === 'redeem' ? null : expiresAt
     });
@@ -419,6 +419,7 @@ export function createDemoStore({ now } = {}) {
       purchaseAmount: String(fee.grossDiscount),
       invoiceAmount: String(bill),
       points,
+      pointsChange: -points,
       platformFee: String(fee.platformFee),
       netAmount: String(fee.netAmount),
       remarks: `Redeemed ${points} points for Rs. ${fee.netAmount} discount on Rs. ${bill} invoice (Rs. ${fee.platformFee} platform fee)`,

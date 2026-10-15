@@ -31,7 +31,7 @@ export const DEMO_LEDGER = [
   { id: 'demo-lg-06', transactionId: 'demo-tx-06', pointsChange: 120, daysAgo: 155, expiresInDays: 210 },
   { id: 'demo-lg-07', transactionId: 'demo-tx-07', pointsChange: -100, daysAgo: 140, expiresInDays: null }, // redeem
   { id: 'demo-lg-08', transactionId: 'demo-tx-08', pointsChange: 150, daysAgo: 120, expiresInDays: 245 },
-  { id: 'demo-lg-09', transactionId: 'demo-tx-09', pointsChange: 20, daysAgo: 100, expiresInDays: null }, // referral
+  { id: 'demo-lg-09', transactionId: 'demo-tx-09', pointsChange: 20, daysAgo: 20, expiresInDays: null }, // referral (within current month -> monthlyReferrals: 1)
   { id: 'demo-lg-10', transactionId: 'demo-tx-10', pointsChange: 150, daysAgo: 90, expiresInDays: 275 },
   { id: 'demo-lg-11', transactionId: 'demo-tx-11', pointsChange: 600, daysAgo: 90, expiresInDays: 275 }, // milestone M2
   { id: 'demo-lg-12', transactionId: 'demo-tx-12', pointsChange: 90, daysAgo: 75, expiresInDays: 290 },
@@ -176,7 +176,7 @@ export const DEMO_TRANSACTIONS = [
     netAmount: null,
     remarks: 'Referral Bonus - friend joined SkillXT',
     status: 'completed',
-    daysAgo: 100,
+    daysAgo: 20,
     merchant: { businessName: 'NovaMart Grocery', category: 'grocery' }
   },
   {
