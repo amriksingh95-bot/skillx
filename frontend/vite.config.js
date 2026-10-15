@@ -54,5 +54,9 @@ export default defineConfig({
     port: 5173,
     host: true,
     strictPort: true
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js'
   }
 });
