@@ -44,6 +44,11 @@ export function AuthProvider({ children }) {
 
   // Clear auth states locally
   const handleLogoutLocal = () => {
+    // Demo user: React state only — never touch real localStorage / headers (R3)
+    if (user?.isDemo) {
+      setUser(null);
+      return;
+    }
     setUser(null);
     setAccessToken(null);
     delete api.defaults.headers.common['Authorization'];
@@ -266,8 +271,30 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Guest-demo identity: React state only — no token, no storage, no URL flags (R5).
+  // No-op if a real (non-demo) user is signed in (R4).
+  const enterDemo = useCallback(() => {
+    setUser((prev) => {
+      if (prev && !prev.isDemo) return prev;
+      return { id: 'demo-customer', role: 'customer', name: 'Demo User', isDemo: true };
+    });
+  }, []);
+
+  // Demo exit: clears ONLY the demo user (R3/R5). Never removes real storage.
+  const exitDemo = useCallback(() => {
+    setUser((prev) => {
+      if (!prev?.isDemo) return prev;
+      return null;
+    });
+  }, []);
+
   // Logout handler
   const logout = async () => {
+    // Demo user must never reach the real logout path (R3)
+    if (user?.isDemo) {
+      exitDemo();
+      return;
+    }
     if (isLoggingOut) return;
     isLoggingOut = true;
     setLoggingOut(true);
@@ -298,8 +325,11 @@ export function AuthProvider({ children }) {
         loggingOut,
         login,
         logout,
+        enterDemo,
+        exitDemo,
         updateUser,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        isDemo: !!user?.isDemo
       }}
     >
       {children}
