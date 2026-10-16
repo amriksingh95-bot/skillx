@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth, setAppNavigate } from './context/AuthContext';
+import { DemoProvider } from './context/DemoContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MerchantSubscriptionProvider } from './context/MerchantSubscriptionContext';
 import { PWAInstallProvider } from './context/PWAInstallContext';
@@ -54,6 +55,10 @@ const CustomerDashboard = React.lazy(() => import('./pages/customer/CustomerDash
 const FindPartners = React.lazy(() => import('./pages/customer/FindPartners'));
 const CustomerProfile = React.lazy(() => import('./pages/customer/CustomerProfile'));
 
+// Guest demo — lazy-loaded
+const DemoEntry = React.lazy(() => import('./pages/demo/DemoEntry'));
+const DemoLayout = React.lazy(() => import('./pages/demo/DemoLayout'));
+
 
 // Helper to redirect to dashboard depending on role after log-in
 function DashboardRedirect() {
@@ -80,6 +85,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
+        <DemoProvider>
         <PWAInstallProvider>
         <Router>
           <NavigateSetter />
@@ -91,7 +97,17 @@ export default function App() {
 <Route path="/merchant-signup" element={<MerchantSignup />} />
 <Route path="/forgot-password" element={<ForgotPassword />} />
 <Route path="/suspended" element={<Suspended />} />
-<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+            {/* Guest demo routes — transport installed by DemoLayout, never by
+                entry/layout gates for real or cold users (R2/R6) */}
+            <Route path="/demo" element={<DemoEntry />} />
+            <Route path="/demo/*" element={<DemoLayout />}>
+              <Route path="dashboard" element={<CustomerDashboard />} />
+              <Route path="partners" element={<FindPartners />} />
+              <Route path="profile" element={<CustomerProfile />} />
+              <Route path="*" element={<Navigate to="/demo/dashboard" replace />} />
+            </Route>
 
             {/* Authenticated Routes with Shell Layout */}
             <Route path="/" element={<MerchantSubscriptionProvider><Layout /></MerchantSubscriptionProvider>}>
@@ -345,6 +361,7 @@ export default function App() {
           <FloatingChatbot />
           </Router>
         </PWAInstallProvider>
+        </DemoProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
