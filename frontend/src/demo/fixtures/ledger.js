@@ -15,15 +15,16 @@
  *
  * Invariants (verified by tests):
  *   Σ positive non-expired pointsChange = balance (1485)
- *   lifetimeEarned = 1785, lifetimeRedeemed = 300, expiringWithin30Days = 160
+ *   lifetimeEarned = 1785, lifetimeRedeemed = 300, expiringWithin30Days = 0
+ *   every unexpired entry expires 120-330 days from demo-start (all in 2027)
  *   total earn spend = ₹9,950 (milestone M3 @ ₹10,000 stays pending — good demo tension)
  */
 
 export const DEMO_LEDGER = [
-  // --- legacy promos / earns whose 365-day expiry lands within 30 days ---
-  { id: 'demo-lg-01', transactionId: 'demo-tx-01', pointsChange: 30, daysAgo: 360, expiresInDays: 5 },
-  { id: 'demo-lg-02', transactionId: 'demo-tx-02', pointsChange: 90, daysAgo: 355, expiresInDays: 10 },
-  { id: 'demo-lg-03', transactionId: 'demo-tx-03', pointsChange: 40, daysAgo: 340, expiresInDays: 25 },
+  // --- legacy promos / earns (oldest entries expire soonest, but never within 30 days) ---
+  { id: 'demo-lg-01', transactionId: 'demo-tx-01', pointsChange: 30, daysAgo: 360, expiresInDays: 120 },
+  { id: 'demo-lg-02', transactionId: 'demo-tx-02', pointsChange: 90, daysAgo: 355, expiresInDays: 125 },
+  { id: 'demo-lg-03', transactionId: 'demo-tx-03', pointsChange: 40, daysAgo: 340, expiresInDays: 130 },
 
   // --- last ~6 months ---
   { id: 'demo-lg-04', transactionId: 'demo-tx-04', pointsChange: 80, daysAgo: 170, expiresInDays: 195 },
@@ -37,10 +38,10 @@ export const DEMO_LEDGER = [
   { id: 'demo-lg-12', transactionId: 'demo-tx-12', pointsChange: 90, daysAgo: 75, expiresInDays: 290 },
   { id: 'demo-lg-13', transactionId: 'demo-tx-13', pointsChange: -200, daysAgo: 60, expiresInDays: null }, // redeem
   { id: 'demo-lg-14', transactionId: 'demo-tx-14', pointsChange: 120, daysAgo: 45, expiresInDays: 320 },
-  { id: 'demo-lg-15', transactionId: 'demo-tx-15', pointsChange: 50, daysAgo: 28, expiresInDays: 337 },
-  { id: 'demo-lg-16', transactionId: 'demo-tx-16', pointsChange: 70, daysAgo: 20, expiresInDays: 345 },
-  { id: 'demo-lg-17', transactionId: 'demo-tx-17', pointsChange: 30, daysAgo: 12, expiresInDays: 353 },
-  { id: 'demo-lg-18', transactionId: 'demo-tx-18', pointsChange: 45, daysAgo: 5, expiresInDays: 360 }
+  { id: 'demo-lg-15', transactionId: 'demo-tx-15', pointsChange: 50, daysAgo: 28, expiresInDays: 322 },
+  { id: 'demo-lg-16', transactionId: 'demo-tx-16', pointsChange: 70, daysAgo: 20, expiresInDays: 325 },
+  { id: 'demo-lg-17', transactionId: 'demo-tx-17', pointsChange: 30, daysAgo: 12, expiresInDays: 328 },
+  { id: 'demo-lg-18', transactionId: 'demo-tx-18', pointsChange: 45, daysAgo: 5, expiresInDays: 330 }
 ];
 
 export const DEMO_TRANSACTIONS = [

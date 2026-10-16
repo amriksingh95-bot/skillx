@@ -24,9 +24,8 @@ describe('demo store — profile & derived stats', () => {
     expect(p.stats.lifetimeRedeemed).toBe(300);
     expect(p.stats.totalVisits).toBe(18);
     expect(p.stats.expiredPoints).toBe(0);
-    expect(p.stats.expiringWithin30Days).toBe(160);
-    expect(p.stats.expiringEntries.map((e) => e.points)).toEqual([30, 90, 40]);
-    expect(p.stats.expiringEntries[0].daysUntilExpiry).toBe(5);
+    expect(p.stats.expiringWithin30Days).toBe(0);
+    expect(p.stats.expiringEntries).toEqual([]);
     expect(p.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(p).not.toHaveProperty('daysAgo');
     expect(p).not.toHaveProperty('updatedAtDaysAgo');

@@ -169,7 +169,8 @@ describe('fixture totals (the numbers the demo is built on)', () => {
     }));
     expect(calcBalance(ledger, NOW)).toBe(1485);
     expect(calcLifetime(ledger)).toEqual({ lifetimeEarned: 1785, lifetimeRedeemed: 300 });
-    expect(calcExpiringPoints(ledger, NOW, 30).totalExpiring).toBe(160);
+    expect(calcExpiringPoints(ledger, NOW, 30).totalExpiring).toBe(0);
+    expect(calcExpiringPoints(ledger, NOW, 30).entries).toEqual([]);
     expect(calcTotalSpend(DEMO_TRANSACTIONS)).toBe(9950);
   });
 
