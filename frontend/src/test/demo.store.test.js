@@ -38,7 +38,7 @@ describe('demo store — profile & derived stats', () => {
 
   it('materializes merchant createdAt and keeps the merchant payload intact', () => {
     const merchants = store.getMerchants();
-    expect(merchants).toHaveLength(10);
+    expect(merchants).toHaveLength(12);
     expect(merchants[0]).toHaveProperty('createdAt');
     expect(merchants[0]).not.toHaveProperty('daysAgo');
     expect(merchants[0].offers.length).toBeGreaterThan(0);

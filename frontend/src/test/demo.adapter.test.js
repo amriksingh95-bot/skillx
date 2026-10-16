@@ -123,7 +123,7 @@ describe('demo routes — served from the store with backend envelopes', () => {
     const res = await api.get('/api/customer/merchants');
     expect(res.data.success).toBe(true);
     expect(Array.isArray(res.data.data)).toBe(true);
-    expect(res.data.data).toHaveLength(10);
+    expect(res.data.data).toHaveLength(12);
     expect(res.data.data[0]).toHaveProperty('businessName');
     expect(res.data.data[0]).toHaveProperty('createdAt');
   });

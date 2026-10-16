@@ -19,13 +19,13 @@ const RESERVED_NAMES = [
 ];
 
 describe('merchants fixture', () => {
-  it('has exactly 10 merchants with unique ids, names, and mobiles', () => {
-    expect(DEMO_MERCHANTS).toHaveLength(10);
+  it('has exactly 12 merchants with unique ids, names, and mobiles', () => {
+    expect(DEMO_MERCHANTS).toHaveLength(12);
     const ids = DEMO_MERCHANTS.map((m) => m.id);
     const names = DEMO_MERCHANTS.map((m) => m.businessName);
-    expect(new Set(ids).size).toBe(10);
-    expect(new Set(names).size).toBe(10);
-    expect(new Set(DEMO_MERCHANTS.map((m) => m.user.mobile)).size).toBe(10);
+    expect(new Set(ids).size).toBe(12);
+    expect(new Set(names).size).toBe(12);
+    expect(new Set(DEMO_MERCHANTS.map((m) => m.user.mobile)).size).toBe(12);
   });
 
   it('avoids all reserved seed/demo names', () => {
@@ -68,12 +68,12 @@ describe('merchants fixture', () => {
     }
   });
 
-  it('covers 10 of the 12 FindPartners category pills (hotel & education flagged for product decision)', () => {
+  it('covers all 12 FindPartners category pills (Phase 2: hotel & education added)', () => {
     const pillIds = ['grocery', 'cafe', 'restaurant', 'beauty', 'doctor', 'pharmacy', 'fashion', 'stationery', 'gym', 'electronics', 'hotel', 'education'];
     const merchantCats = DEMO_MERCHANTS.map((m) => (m.category === 'medical' ? 'pharmacy' : m.category));
     const covered = pillIds.filter((p) => merchantCats.includes(p));
-    expect(covered).toHaveLength(10);
-    expect(pillIds.filter((p) => !covered.includes(p))).toEqual(['hotel', 'education']);
+    expect(covered).toEqual(pillIds);
+    expect(pillIds.filter((p) => !covered.includes(p))).toEqual([]);
   });
 });
 

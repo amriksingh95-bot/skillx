@@ -16,6 +16,9 @@
  * TechZone Electronics, Dr. Sharma Clinic). Categories come from
  * frontend/src/constants/categories.js; cities from constants/cities.js.
  * Mobiles are fake 98xxxxxxxx numbers; emails are example.com.
+ *
+ * Phase 2: demo-m-11 (hotel) and demo-m-12 (education) added so all 12
+ * FindPartners category pills (FindPartners.jsx:36-50) have at least one hit.
  */
 
 export const DEMO_MERCHANTS = [
@@ -305,6 +308,64 @@ export const DEMO_MERCHANTS = [
       {
         title: 'Screen Replacement Deal',
         description: '₹200 off smartphone screen replacements on all brands.',
+        validUntil: '2026-12-31'
+      }
+    ]
+  },
+  {
+    id: 'demo-m-11',
+    userId: 'demo-u-11',
+    businessName: 'Sunstone Suites',
+    ownerName: 'Priya Malhotra',
+    email: 'sunstonesuites@example.com',
+    address: '32 Model House Lane, Model Town',
+    city: 'Jalandhar',
+    category: 'hotel',
+    isActive: true,
+    daysAgo: 95,
+    latitude: 31.3266,
+    longitude: 75.5766,
+    googleMapsUrl: null,
+    landmark: 'Near Model Town Market',
+    openingTime: '00:00',
+    closingTime: '23:59',
+    workingDays: 'Mon-Sun',
+    isOpen: true,
+    user: { id: 'demo-u-11', mobile: '9800000011' },
+    distance: null,
+    offers: [
+      {
+        title: 'Weekend Stay Saver',
+        description: '12% off room tariffs on Friday–Sunday bookings, breakfast included.',
+        validUntil: '2027-03-31'
+      }
+    ]
+  },
+  {
+    id: 'demo-m-12',
+    userId: 'demo-u-12',
+    businessName: 'BrightPath Academy',
+    ownerName: 'Gurmeet Bansal',
+    email: 'brightpath@example.com',
+    address: '9 Ferozepur Road, Sarabha Nagar',
+    city: 'Ludhiana',
+    category: 'education',
+    isActive: true,
+    daysAgo: 80,
+    latitude: 30.8988,
+    longitude: 75.8633,
+    googleMapsUrl: null,
+    landmark: 'Near Sarabha Nagar Market',
+    openingTime: '08:00',
+    closingTime: '19:00',
+    workingDays: 'Mon-Sat',
+    isOpen: true,
+    user: { id: 'demo-u-12', mobile: '9800000012' },
+    distance: null,
+    offers: [
+      {
+        title: 'New Session Enrollment',
+        description: 'Flat ₹500 off course fees on enrollments above ₹5,000.',
         validUntil: '2026-12-31'
       }
     ]
