@@ -58,6 +58,7 @@ const CustomerProfile = React.lazy(() => import('./pages/customer/CustomerProfil
 // Guest demo — lazy-loaded
 const DemoEntry = React.lazy(() => import('./pages/demo/DemoEntry'));
 const DemoLayout = React.lazy(() => import('./pages/demo/DemoLayout'));
+const DemoMerchantProfile = React.lazy(() => import('./pages/demo/DemoMerchantProfile'));
 
 
 // Helper to redirect to dashboard depending on role after log-in
@@ -106,6 +107,7 @@ export default function App() {
               <Route path="dashboard" element={<CustomerDashboard />} />
               <Route path="partners" element={<FindPartners />} />
               <Route path="profile" element={<CustomerProfile />} />
+              <Route path="merchant/:id" element={<DemoMerchantProfile />} />
               <Route path="*" element={<Navigate to="/demo/dashboard" replace />} />
             </Route>
 

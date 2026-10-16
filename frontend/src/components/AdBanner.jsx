@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Modal from './Modal';
 import AdCard from './AdCard';
+import { buildDirectionsUrl } from '../utils/geo';
 
 const carouselStyle = (
   <style>{`
@@ -201,9 +202,8 @@ export function getDirectionsUrl(ad) {
   if (!ad) return null;
   const m = ad.merchant;
   if (!m) return null;
-  if (m.latitude && m.longitude) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${m.latitude},${m.longitude}`;
-  }
+  const fromCoords = buildDirectionsUrl(m.latitude, m.longitude);
+  if (fromCoords) return fromCoords;
   if (m.address || m.city) {
     const addr = [m.address, m.city, m.landmark].filter(Boolean).join(', ');
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;

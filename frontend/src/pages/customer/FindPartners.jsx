@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { 
   Search, MapPin, Phone, Mail, Store, ShoppingCart, Navigation,
   Coffee, Utensils, Scissors, Stethoscope, Pill, Shirt, BookOpen, 
-  Dumbbell, Wrench, Hotel, GraduationCap, Info, AlertCircle, Layers 
+  Dumbbell, Wrench, Hotel, GraduationCap, Info, AlertCircle, Layers, Ticket
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '../../components/Badge';
 import { CATEGORIES } from '../../constants/categories';
 import { CITIES } from '../../constants/cities';
+import { useAuth } from '../../context/AuthContext';
+import { buildDirectionsUrl } from '../../utils/geo';
 
 export default function FindPartners() {
+  const { user } = useAuth();
+  const isDemo = !!user?.isDemo;
   const [merchants, setMerchants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -325,17 +330,22 @@ export default function FindPartners() {
                     </div>
                   )}
 
-                  {(m.latitude && m.longitude || m.address) && (
-                    <a
-                      href={m.latitude && m.longitude ? `https://www.google.com/maps?q=${m.latitude},${m.longitude}` : `https://www.google.com/maps/search/${encodeURIComponent(m.address)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      Get Directions
-                    </a>
-                  )}
+                  {(() => {
+                    const directionsUrl =
+                      buildDirectionsUrl(m.latitude, m.longitude) ||
+                      (m.address ? `https://www.google.com/maps/search/${encodeURIComponent(m.address)}` : null);
+                    return directionsUrl ? (
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        Get Directions
+                      </a>
+                    ) : null;
+                  })()}
                 </div>
 
                 {/* Card Footer strip */}
@@ -343,9 +353,19 @@ export default function FindPartners() {
                   <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-black tracking-wider uppercase">
                     SkillXT Partner
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500 font-bold tracking-tight">
-                    Earn & Redeem points here
-                  </span>
+                  {isDemo ? (
+                    <Link
+                      to={`/demo/merchant/${m.id}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20 font-black tracking-wider uppercase hover:bg-primary/20 transition-colors"
+                    >
+                      <Ticket className="w-3 h-3" />
+                      View offers
+                    </Link>
+                  ) : (
+                    <span className="text-slate-400 dark:text-slate-500 font-bold tracking-tight">
+                      Earn & Redeem points here
+                    </span>
+                  )}
                 </div>
               </div>
             );

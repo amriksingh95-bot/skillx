@@ -78,6 +78,13 @@ export function createDemoStore({ now } = {}) {
   let simSeq = 0;
   let state = null;
 
+  // Mutation listeners — DemoContext subscribes so a version counter can
+  // remount <Outlet/> (dashboard/profile refetch) after successful writes.
+  const listeners = new Set();
+  function notify() {
+    for (const listener of listeners) listener();
+  }
+
   function materializeProfile() {
     const { daysAgo, updatedAtDaysAgo, ...rest } = DEMO_PROFILE_BASE;
     return {
@@ -244,6 +251,7 @@ export function createDemoStore({ now } = {}) {
     }
 
     Object.assign(state.profile, fields, { updatedAt: startIso });
+    notify();
     return ok(getProfile());
   }
 
@@ -253,6 +261,7 @@ export function createDemoStore({ now } = {}) {
     }
     state.profile.email = email;
     state.profile.updatedAt = startIso;
+    notify();
     return ok(getProfile());
   }
 
@@ -328,6 +337,7 @@ export function createDemoStore({ now } = {}) {
       createdAt: startIso,
       expiresAt: type === 'redeem' ? null : expiresAt
     });
+    notify();
 
     return tx;
   }
@@ -441,7 +451,15 @@ export function createDemoStore({ now } = {}) {
     state = buildState();
     simCount = 0;
     simSeq = 0;
+    notify();
     return getProfile();
+  }
+
+  function subscribe(listener) {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
   }
 
   return {
@@ -459,6 +477,7 @@ export function createDemoStore({ now } = {}) {
     simulateEarn,
     simulateRedeem,
     reset,
+    subscribe,
     getSimCount: () => simCount
   };
 }

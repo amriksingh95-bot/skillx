@@ -6,7 +6,7 @@
  * SAME store instance (a per-component useState(createDemoStore) would build
  * two stores and leak the first one's adapter bindings).
  */
-import React, { createContext, useContext, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createDemoStore } from '../demo/store.js';
 
 const DemoContext = createContext(null);
@@ -27,7 +27,15 @@ export function DemoProvider({ children }) {
   }
   const store = storeRef.current;
 
-  const value = useMemo(() => ({ store }), [store]);
+  // Version refresh: bump after every successful store mutation (simulate
+  // earn/redeem, profile/email save, reset). DemoLayout keys <Outlet/> with
+  // it so dashboard/profile remount and refetch — no shared-page edits.
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    return store.subscribe(() => setVersion((v) => v + 1));
+  }, [store]);
+
+  const value = useMemo(() => ({ store, version }), [store, version]);
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 

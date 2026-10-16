@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createDemoStore, DEMO_SIM_LIMIT } from '../demo/store.js';
 
 const NOW = new Date('2026-10-15T12:00:00.000Z');
@@ -264,6 +264,46 @@ describe('demo store — profile updates', () => {
     expect(r.data.email).toBe('new.mail@example.com');
     expect(store.updateEmail('not-an-email')).toMatchObject({ ok: false, code: 'DEMO_VALIDATION' });
     expect(store.getProfile().email).toBe('new.mail@example.com');
+  });
+});
+
+describe('demo store — mutation subscription (version refresh)', () => {
+  it('notifies on successful simulate earn/redeem, profile/email save, and reset', () => {
+    const store = makeStore();
+    const listener = vi.fn();
+    const unsubscribe = store.subscribe(listener);
+
+    store.simulateEarn({ merchantId: 'demo-m-03', purchaseAmount: '40' });
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    store.simulateRedeem({ merchantId: 'demo-m-01', pointsToRedeem: 100, billAmount: 250 });
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    store.updateProfile({ name: 'Renamed' });
+    expect(listener).toHaveBeenCalledTimes(3);
+
+    store.updateEmail('fresh@example.com');
+    expect(listener).toHaveBeenCalledTimes(4);
+
+    store.reset();
+    expect(listener).toHaveBeenCalledTimes(5);
+
+    unsubscribe();
+    store.simulateEarn({ merchantId: 'demo-m-03', purchaseAmount: '40' });
+    expect(listener).toHaveBeenCalledTimes(5);
+  });
+
+  it('does NOT notify on failed mutations', () => {
+    const store = makeStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.simulateEarn({ merchantId: 'nope', purchaseAmount: '40' }); // unknown merchant
+    store.simulateEarn({ merchantId: 'demo-m-03', purchaseAmount: 'abc' }); // bad amount
+    store.simulateRedeem({ merchantId: 'demo-m-01', pointsToRedeem: 50, billAmount: 500 }); // below min
+    store.updateProfile({ name: '' }); // validation fail
+    store.updateEmail('not-an-email'); // validation fail
+    expect(listener).not.toHaveBeenCalled();
   });
 });
 

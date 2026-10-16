@@ -19,9 +19,9 @@
  * but is intentionally NOT reused — Layout wraps MerchantSubscriptionProvider
  * and has the merchant expiry ribbon; the demo shell needs neither.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, UserPlus } from 'lucide-react';
+import { LogOut, Sparkles, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDemo } from '../../context/DemoContext';
 import {
@@ -32,12 +32,25 @@ import {
 import Sidebar from '../../components/Sidebar';
 import Navbar from '../../components/Navbar';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import SimulatorModal from '../../components/demo/SimulatorModal';
 
 export default function DemoLayout() {
   const { user, loading, exitDemo } = useAuth();
-  const { store } = useDemo();
+  const { store, version } = useDemo();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [simOpen, setSimOpen] = useState(false);
+  const [simMerchantId, setSimMerchantId] = useState('');
   const navigate = useNavigate();
+
+  const simMerchants = useMemo(
+    () => store.getMerchants().filter((m) => m.isActive),
+    [store]
+  );
+  useEffect(() => {
+    if (!simMerchantId && simMerchants.length > 0) {
+      setSimMerchantId(simMerchants[0].id);
+    }
+  }, [simMerchants, simMerchantId]);
 
   // Re-ensure after StrictMode's synchronous cleanup flush; uninstall on
   // real unmount (exact previous adapter restored — R8).
@@ -109,8 +122,39 @@ export default function DemoLayout() {
         <Navbar onMenuToggle={() => setMobileMenuOpen(true)} />
 
         <main className="flex-1 p-5 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto overflow-x-clip pb-32">
-          <Outlet />
+          {/* key={version}: remount children after successful demo mutations
+              so dashboard/profile refetch from the store (version refresh). */}
+          <Outlet key={version} />
         </main>
+
+        {/* Floating simulator entry (Phase 3) — merchant dropdown + open modal.
+            z-40 keeps it under the Modal's z-50 backdrop. */}
+        <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+          <select
+            aria-label="Simulator merchant"
+            value={simMerchantId}
+            onChange={(e) => setSimMerchantId(e.target.value)}
+            className="max-w-[9.5rem] sm:max-w-none truncate px-3 py-2 rounded-xl bg-white dark:bg-dark-card border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            {simMerchants.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.businessName}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSimOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/25 transition-colors btn-press"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Try earning points
+          </button>
+        </div>
+        <SimulatorModal
+          isOpen={simOpen}
+          onClose={() => setSimOpen(false)}
+          merchantId={simMerchantId}
+        />
       </div>
     </div>
   );
