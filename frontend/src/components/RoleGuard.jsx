@@ -1,13 +1,21 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function RoleGuard({ allowedRoles, children }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingSpinner size="large" fullPage />;
+  }
+
+  // Demo users belong only under /demo — redirect BEFORE the role check so
+  // they are never granted access to /customer/*, /merchant/* or /admin/*,
+  // and never bounce through /login (R7).
+  if (user?.isDemo && !location.pathname.startsWith('/demo')) {
+    return <Navigate to="/demo/dashboard" replace />;
   }
 
   if (!user || !allowedRoles.includes(user.role)) {

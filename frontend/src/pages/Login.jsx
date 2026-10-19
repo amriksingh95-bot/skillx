@@ -189,6 +189,16 @@ export default function Login() {
           >
             Enter Site
           </button>
+
+          {/* Guest demo entry — additive only; hidden once authenticated */}
+          {!isAuthenticated && (
+            <button
+              onClick={() => navigate('/demo')}
+              className="px-8 py-3 border border-[#38bdf8]/40 text-[#38bdf8] hover:bg-[#38bdf8]/10 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+            >
+              Try the demo
+            </button>
+          )}
         </div>
       </div>
     );

@@ -233,11 +233,20 @@ export default function Sidebar({ isOpen, onClose }) {
     </div>
   );
 
-  const renderCustomerNav = () => (
-    <div className="space-y-0.5">
-      {customerLinks.map(renderNavLink)}
-    </div>
-  );
+  const renderCustomerNav = () => {
+    // Demo users navigate the /demo tree; real customers keep /customer
+    // (byte-for-byte identical paths when not in demo).
+    const prefix = user?.isDemo ? '/demo' : '/customer';
+    const links = customerLinks.map((link) => ({
+      ...link,
+      path: link.path.replace('/customer', prefix)
+    }));
+    return (
+      <div className="space-y-0.5">
+        {links.map(renderNavLink)}
+      </div>
+    );
+  };
 
   const navContent = (() => {
     switch (user.role) {

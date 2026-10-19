@@ -6,12 +6,12 @@ import { useTheme } from '../context/ThemeContext';
 import Badge from './Badge';
 
 export default function Navbar({ onMenuToggle }) {
-  const { user, logout, loggingOut } = useAuth();
+  const { user, logout, exitDemo, loggingOut } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const profilePath = user?.role === 'merchant' ? '/merchant/profile'
-    : user?.role === 'customer' ? '/customer/profile'
+    : user?.role === 'customer' ? (user?.isDemo ? '/demo/profile' : '/customer/profile')
     : null;
 
   const initials = user?.name
@@ -21,6 +21,17 @@ export default function Navbar({ onMenuToggle }) {
   const roleLabel = user?.role
     ? user.role.charAt(0).toUpperCase() + user.role.slice(1).replace('_', ' ')
     : '';
+
+  // Demo users must never reach logout() — it clears the REAL localStorage
+  // refreshToken/user (R3). Exit routes through exitDemo only.
+  const handleLogout = () => {
+    if (user?.isDemo) {
+      exitDemo();
+      navigate('/login');
+      return;
+    }
+    logout();
+  };
 
   if (!user) return null;
 
@@ -82,8 +93,9 @@ export default function Navbar({ onMenuToggle }) {
           >
             <div className="flex flex-col text-right">
               <span className="text-sm font-bold">{user.name}</span>
-              <div className="mt-0.5">
+              <div className="mt-0.5 flex items-center justify-end gap-1">
                 <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
+                {user.isDemo && <Badge type="demo">demo</Badge>}
               </div>
             </div>
             <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
@@ -94,8 +106,9 @@ export default function Navbar({ onMenuToggle }) {
           <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-slate-100 dark:border-dark-border">
             <div className="flex flex-col text-right">
               <span className="text-sm font-bold">{user.name}</span>
-              <div className="mt-0.5">
+              <div className="mt-0.5 flex items-center justify-end gap-1">
                 <Badge type={user.role}>{user.role.replace('_', ' ')}</Badge>
+                {user.isDemo && <Badge type="demo">demo</Badge>}
               </div>
             </div>
             <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300">
@@ -104,12 +117,12 @@ export default function Navbar({ onMenuToggle }) {
           </div>
         )}
 
-        {/* Logout */}
+        {/* Logout / Exit demo */}
         <button
-          onClick={logout}
+          onClick={handleLogout}
           disabled={loggingOut}
           className="ml-2 p-2.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all active:scale-95 active:bg-rose-100 dark:active:bg-rose-900/30 disabled:opacity-50 disabled:pointer-events-none"
-          title="Sign Out"
+          title={user?.isDemo ? 'Exit Demo' : 'Sign Out'}
         >
           <LogOut className="w-4 h-4" />
         </button>
