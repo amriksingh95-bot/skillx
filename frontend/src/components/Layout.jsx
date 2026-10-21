@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMerchantSubscription } from '../context/MerchantSubscriptionContext';
@@ -12,6 +12,9 @@ export default function Layout() {
   const { isAuthenticated, loading, user } = useAuth();
   const { subscription } = useMerchantSubscription();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [ribbonDuration, setRibbonDuration] = useState(null);
+  const [ribbonPaused, setRibbonPaused] = useState(false);
+  const ribbonTrackRef = useRef(null);
   const navigate = useNavigate();
 
   const showExpiryRibbon = (() => {
@@ -22,6 +25,21 @@ export default function Layout() {
   })();
 
   const ribbonText = ribbonSubscriptionText(subscription);
+
+  useEffect(() => {
+    if (!showExpiryRibbon) return undefined;
+    const measure = () => {
+      const el = ribbonTrackRef.current;
+      if (!el || !el.scrollWidth) return;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      const speed = isMobile ? 40 : 50; // px/second
+      const travel = el.scrollWidth * 2; // keyframes translateX(100%) -> translateX(-100%)
+      setRibbonDuration(Math.max(travel / speed, 1));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [showExpiryRibbon, ribbonText]);
 
   if (loading) {
     return <LoadingSpinner size="large" fullPage />;
@@ -38,6 +56,9 @@ export default function Layout() {
           @keyframes ribbon-scroll {
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .expiry-ribbon-track { animation: none !important; }
           }
         `}</style>
       )}
@@ -63,12 +84,21 @@ export default function Layout() {
       {showExpiryRibbon && (
         <div
           onClick={() => navigate('/merchant/subscription')}
+          onMouseEnter={() => setRibbonPaused(true)}
+          onMouseLeave={() => setRibbonPaused(false)}
+          onTouchStart={() => setRibbonPaused(true)}
+          onTouchEnd={() => setRibbonPaused(false)}
           className="fixed bottom-0 left-0 right-0 z-50 bg-amber-600 text-white cursor-pointer overflow-hidden shadow-lg"
           style={{ height: '36px' }}
         >
           <div
-            className="whitespace-nowrap flex items-center h-full text-sm font-bold tracking-wide"
-            style={{ animation: 'ribbon-scroll 15s linear infinite', width: 'max-content' }}
+            ref={ribbonTrackRef}
+            className="whitespace-nowrap flex items-center h-full text-sm font-bold tracking-wide expiry-ribbon-track"
+            style={{
+              animation: `ribbon-scroll ${ribbonDuration ?? 15}s linear infinite`,
+              width: 'max-content',
+              animationPlayState: ribbonPaused ? 'paused' : 'running',
+            }}
           >
             <span className="px-8">{ribbonText}</span>
             <span className="px-8">{ribbonText}</span>
