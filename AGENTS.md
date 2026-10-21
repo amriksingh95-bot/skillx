@@ -1,5 +1,9 @@
 # AGENTS.md — SkillXT Reward Program
 
+## Graphify
+
+Before searching files, query the Graphify graph first (graphify query / path / explain). Verify results against the source code.
+
 ## Visual Gate (Mandatory for UI/Layout Tasks)
 
 Any task involving layout, spacing, alignment, visual hierarchy, colors, typography, or rendered appearance is subject to the Visual Gate before it can be marked complete.

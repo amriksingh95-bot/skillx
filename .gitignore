@@ -53,3 +53,7 @@ coverage/
 .nyc_output/
 temp_pg_test.js 
 vite.config.js.timestamp-*.mjs 
+
+# Graphify knowledge graph output
+graphify-out/
+
