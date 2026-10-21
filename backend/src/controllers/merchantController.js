@@ -151,7 +151,7 @@ async function earn(req, res, next) {
     const customer = await findActiveCustomer(identifier);
 
     // Call service to run transaction
-    const transaction = await processEarn(customer.id, merchantId, purchaseAmount);
+    const { transaction, subscriptionExpired } = await processEarn(customer.id, merchantId, purchaseAmount);
 
     // Referral bonus checks and award (delayed to first real transaction)
     try {
@@ -304,6 +304,7 @@ async function earn(req, res, next) {
       message: `Successfully issued ${transaction.points} points.`,
       data: {
         transaction,
+        subscriptionExpired,
         customer: {
           id: customer.id,
           name: customer.name,
@@ -348,7 +349,7 @@ async function redeem(req, res, next) {
     const finalPoints = pointsToRedeem;
 
     // Call transaction service
-    const transaction = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
+    const { transaction, subscriptionExpired } = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
 
     // Log audit log
     await createAuditLog(
@@ -367,6 +368,7 @@ async function redeem(req, res, next) {
       message: `Successfully redeemed ${finalPoints} points.`,
       data: {
         transaction,
+        subscriptionExpired,
         customer: {
           id: customer.id,
           name: customer.name,

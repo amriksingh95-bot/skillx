@@ -213,7 +213,10 @@ async function processEarn(customerId, merchantId, purchaseAmount, remarks = nul
       }
     }
 
-    return transaction;
+    return {
+      transaction,
+      subscriptionExpired: subscriptionStatus.subscriptionExpired === true
+    };
   });
 }
 
@@ -297,8 +300,11 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmou
     await addLedgerEntry(customerId, -pointsToRedeem, transaction.id, tx, null);
 
     return {
-      ...transaction,
-      feeInfo
+      transaction: {
+        ...transaction,
+        feeInfo
+      },
+      subscriptionExpired: subscriptionStatus.subscriptionExpired === true
     };
   });
 }

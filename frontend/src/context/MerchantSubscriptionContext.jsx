@@ -22,7 +22,7 @@ export function MerchantSubscriptionProvider({ children }) {
         const res = await api.get('/api/merchant/subscription');
         if (!cancelled) {
            const d = res.data.data;
-           setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
+           setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, subscriptionExpired: d.subscriptionExpired === true, daysExpired: d.daysExpired ?? null, availablePlans: d.availablePlans });
         }
       } catch (err) {
         if (!cancelled) {

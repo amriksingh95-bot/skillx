@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { generateAndSendOTP, verifyOTP } = require('../services/otpService');
 const { createAuditLog } = require('../services/auditLogService');
 const { getCustomerBalance } = require('../services/pointsService');
+const subscriptionService = require('../services/subscriptionService');
 const { sendWhatsAppAlert, sendTelegramAlert } = require('../utils/whatsappNotify');
 
 if (!process.env.JWT_SECRET) {
@@ -279,6 +280,7 @@ async function login(req, res, next) {
     let profileId = null;
     let merchantStatus = null;
     let merchantStatusCode = null;
+    let subscriptionExpired = false;
 
     if (user.role === 'merchant' && user.merchant) {
       name = user.merchant.businessName;
@@ -294,6 +296,9 @@ async function login(req, res, next) {
         };
         merchantStatusCode = statusToCode[user.merchant.status] || null;
       }
+
+      const subscriptionStatus = await subscriptionService.checkMerchantSubscriptionStatus(user.merchant.id);
+      subscriptionExpired = subscriptionStatus.subscriptionExpired === true;
     } else if (user.role === 'customer' && user.customer) {
       name = user.customer.name;
       profileId = user.customer.id;
@@ -313,7 +318,8 @@ async function login(req, res, next) {
           role: user.role,
           name,
           ...(merchantStatus ? { merchantStatus } : {}),
-          ...(merchantStatusCode ? { merchantStatusCode } : {})
+          ...(merchantStatusCode ? { merchantStatusCode } : {}),
+          ...(subscriptionExpired ? { subscriptionExpired: true } : {})
         }
       }
     });

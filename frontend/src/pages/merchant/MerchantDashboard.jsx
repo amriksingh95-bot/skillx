@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/Modal';
 import StatCard from '../../components/StatCard';
+import { expiredDaysAgoLabel } from '../../utils/subscriptionText';
 import Badge from '../../components/Badge';
 import DataTable from '../../components/DataTable';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -156,7 +157,7 @@ export default function MerchantDashboard() {
       setSubscriptionLoading(true);
       const res = await api.get('/api/merchant/subscription');
       const d = res.data.data;
-      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
+      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, daysExpired: d.daysExpired ?? null, availablePlans: d.availablePlans });
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -365,6 +366,11 @@ export default function MerchantDashboard() {
                   {subscription.endDate && (
                     <span className="text-xs text-slate-400 dark:text-slate-500">
                       Expires: {new Date(subscription.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                  {subscription.status === 'expired' && expiredDaysAgoLabel(subscription.daysExpired) && (
+                    <span className="text-xs font-semibold text-red-500 dark:text-red-400">
+                      {expiredDaysAgoLabel(subscription.daysExpired)}
                     </span>
                   )}
                 </div>

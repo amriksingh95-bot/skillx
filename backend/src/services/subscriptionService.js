@@ -129,11 +129,35 @@ async function checkMerchantSubscriptionStatus(merchantId) {
   const subscription = await getMerchantSubscription(merchantId);
 
   if (!subscription) {
+    // No active/grace record — look for a fully expired one (only when none
+    // exists, so renewed merchants with an old expired record are never flagged).
+    const expiredSubscription = await prisma.merchantSubscription.findFirst({
+      where: { merchantId, status: 'expired' },
+      include: { plan: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (expiredSubscription) {
+      const now = new Date();
+      const daysExpired = Math.floor((now - expiredSubscription.endDate) / (1000 * 60 * 60 * 24));
+      return {
+        isActive: true, // Special consideration: expired merchants may continue operating
+        status: 'expired',
+        subscription: expiredSubscription,
+        daysRemaining: null,
+        daysExpired,
+        subscriptionExpired: true,
+        message: 'Subscription expired. You may continue using SkillXT Rewards temporarily. Please recharge to avoid service interruptions.'
+      };
+    }
+
     return {
       isActive: true, // Allow basic operations for merchants without subscription
       status: 'none',
       subscription: null,
       daysRemaining: null,
+      daysExpired: null,
+      subscriptionExpired: false,
       message: 'No active subscription. Subscribe to access full features.'
     };
   }
@@ -148,27 +172,48 @@ async function checkMerchantSubscriptionStatus(merchantId) {
       status: 'active',
       subscription,
       daysRemaining,
+      daysExpired: 0,
+      subscriptionExpired: false,
       message: `Active subscription. ${daysRemaining} days remaining.`
     };
   }
 
   if (subscription.status === 'grace_period') {
     daysRemaining = Math.ceil((subscription.gracePeriodEnd - now) / (1000 * 60 * 60 * 24));
+    const daysExpired = Math.max(0, Math.floor((now - subscription.endDate) / (1000 * 60 * 60 * 24)));
     return {
       isActive: true, // Still active during grace period
       status: 'grace_period',
       subscription,
       daysRemaining,
+      daysExpired,
+      subscriptionExpired: false,
       message: `Subscription expired. Grace period: ${daysRemaining} days remaining. Please renew.`
     };
   }
 
-  // Expired or cancelled
+  // Lazy transition just flipped the record to expired (first call after grace ends).
+  if (subscription.status === 'expired') {
+    const daysExpired = Math.floor((now - subscription.endDate) / (1000 * 60 * 60 * 24));
+    return {
+      isActive: true, // Special consideration: expired merchants may continue operating
+      status: 'expired',
+      subscription,
+      daysRemaining: null,
+      daysExpired,
+      subscriptionExpired: true,
+      message: 'Subscription expired. You may continue using SkillXT Rewards temporarily. Please recharge to avoid service interruptions.'
+    };
+  }
+
+  // Cancelled (or any other non-active status) keeps its previous blocked semantics
   return {
     isActive: false,
     status: subscription.status,
     subscription,
     daysRemaining: null,
+    daysExpired: null,
+    subscriptionExpired: false,
     message: 'Subscription expired. Please renew to continue.'
   };
 }

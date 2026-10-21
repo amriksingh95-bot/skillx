@@ -5,6 +5,8 @@ import { useMerchantSubscription } from '../context/MerchantSubscriptionContext'
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import LoadingSpinner from './LoadingSpinner';
+import SubscriptionExpiredModal from './SubscriptionExpiredModal';
+import { ribbonSubscriptionText } from '../utils/subscriptionText';
 
 export default function Layout() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -19,15 +21,7 @@ export default function Layout() {
     return daysLeft <= 3;
   })();
 
-  const expiryDateStr = subscription?.endDate
-    ? new Date(subscription.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '';
-
-  const expiryLabel = (() => {
-    if (!subscription?.endDate) return '';
-    const daysLeft = Math.ceil((new Date(subscription.endDate) - new Date()) / (1000 * 60 * 60 * 24));
-    return daysLeft <= 0 ? 'expired on' : 'expires on';
-  })();
+  const ribbonText = ribbonSubscriptionText(subscription);
 
   if (loading) {
     return <LoadingSpinner size="large" fullPage />;
@@ -62,6 +56,9 @@ export default function Layout() {
         </div>
       </div>
 
+      {/* Expired-beyond-grace subscription popup — merchant only, snoozable */}
+      <SubscriptionExpiredModal />
+
       {/* Expiry Ribbon — fixed at viewport bottom, merchant only, <=3 days */}
       {showExpiryRibbon && (
         <div
@@ -73,11 +70,11 @@ export default function Layout() {
             className="whitespace-nowrap flex items-center h-full text-sm font-bold tracking-wide"
             style={{ animation: 'ribbon-scroll 15s linear infinite', width: 'max-content' }}
           >
-            <span className="px-8">Your subscription {expiryLabel} {expiryDateStr} — renew now</span>
-            <span className="px-8">Your subscription {expiryLabel} {expiryDateStr} — renew now</span>
-            <span className="px-8">Your subscription {expiryLabel} {expiryDateStr} — renew now</span>
-            <span className="px-8">Your subscription {expiryLabel} {expiryDateStr} — renew now</span>
-            <span className="px-8">Your subscription {expiryLabel} {expiryDateStr} — renew now</span>
+            <span className="px-8">{ribbonText}</span>
+            <span className="px-8">{ribbonText}</span>
+            <span className="px-8">{ribbonText}</span>
+            <span className="px-8">{ribbonText}</span>
+            <span className="px-8">{ribbonText}</span>
           </div>
         </div>
       )}

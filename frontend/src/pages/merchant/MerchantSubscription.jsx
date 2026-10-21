@@ -22,6 +22,7 @@ import imageCompression from 'browser-image-compression';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
+import { expiryDatePrefix, expiredDaysAgoLabel } from '../../utils/subscriptionText';
 import gpayQR from '../../assets/gpay-qr.png';
 
 const statusConfig = {
@@ -74,7 +75,7 @@ export default function MerchantSubscription() {
       setLoading(true);
       const res = await api.get('/api/merchant/subscription');
       const d = res.data.data;
-      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
+      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, daysExpired: d.daysExpired ?? null, availablePlans: d.availablePlans });
       setPlans(d.availablePlans || []);
       setSubscriptionUpiId(d.upiId || '');
       const monthly = (d.availablePlans || []).find((p) => p.name === 'monthly');
@@ -263,8 +264,13 @@ export default function MerchantSubscription() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    Expires {formatDate(subscription.endDate)}
+                    {expiryDatePrefix(currentStatus)} {formatDate(subscription.endDate)}
                   </span>
+                  {currentStatus === 'expired' && expiredDaysAgoLabel(subscription.daysExpired) && (
+                    <span className="font-bold text-red-500 dark:text-red-400">
+                      {expiredDaysAgoLabel(subscription.daysExpired)}
+                    </span>
+                  )}
                   {subscription.daysRemaining !== null && (
                     <span className={`font-bold ${
                       currentStatus === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
