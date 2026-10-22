@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMerchantSubscription } from '../context/MerchantSubscriptionContext';
@@ -13,6 +13,7 @@ export default function Layout() {
   const { subscription } = useMerchantSubscription();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [ribbonDuration, setRibbonDuration] = useState(null);
+  const [ribbonCopies, setRibbonCopies] = useState(6);
   const [ribbonPaused, setRibbonPaused] = useState(false);
   const ribbonTrackRef = useRef(null);
   const navigate = useNavigate();
@@ -26,20 +27,50 @@ export default function Layout() {
 
   const ribbonText = ribbonSubscriptionText(subscription);
 
-  useEffect(() => {
+  // Duration estimate from the text length, used until the track is measured
+  // (and wherever measurement is unavailable). Never a fixed 15s, so the very
+  // first frame already scrolls at the right speed. ~7.5px per bold char at
+  // text-sm; travel spans half of the (even) copy set. 50 px/s desktop.
+  const estimatedRibbonDuration = (() => {
+    const copyWidth = (ribbonText.length + 16) * 7.5; // + px-8 padding both sides
+    const travel = (copyWidth * ribbonCopies) / 2;
+    return Math.max(travel / 50, 1);
+  })();
+
+  // Measure before first paint: one copy's width decides how many copies the
+  // track needs (so travelling half the track never exposes a gap) and the
+  // exact duration of the seamless 0% -> -50% loop at 50 px/s desktop /
+  // 40 px/s mobile.
+  useLayoutEffect(() => {
     if (!showExpiryRibbon) return undefined;
     const measure = () => {
-      const el = ribbonTrackRef.current;
-      if (!el || !el.scrollWidth) return;
+      const track = ribbonTrackRef.current;
+      const firstCopy = track?.firstElementChild;
+      if (!track || !firstCopy) return;
+      const copyWidth = firstCopy.getBoundingClientRect().width;
+      if (!copyWidth) return; // not measurable (e.g. jsdom) - keep the estimate
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       const speed = isMobile ? 40 : 50; // px/second
-      const travel = el.scrollWidth * 2; // keyframes translateX(100%) -> translateX(-100%)
+      // The track must stay at least two viewports wide so half a track of
+      // travel still covers the screen on every frame.
+      const needed = Math.ceil((window.innerWidth * 2) / copyWidth);
+      const copies = Math.max(4, needed % 2 === 0 ? needed : needed + 1);
+      if (copies !== ribbonCopies) setRibbonCopies(copies);
+      const travel = (copies * copyWidth) / 2; // keyframes translateX(0) -> translateX(-50%)
       setRibbonDuration(Math.max(travel / speed, 1));
     };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [showExpiryRibbon, ribbonText]);
+  }, [showExpiryRibbon, ribbonText, ribbonCopies]);
+
+  // Pause on tab hide so the loop doesn't drift while off-screen.
+  useEffect(() => {
+    if (!showExpiryRibbon) return undefined;
+    const onVisibility = () => setRibbonPaused(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [showExpiryRibbon]);
 
   if (loading) {
     return <LoadingSpinner size="large" fullPage />;
@@ -54,8 +85,8 @@ export default function Layout() {
       {showExpiryRibbon && (
         <style>{`
           @keyframes ribbon-scroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
           }
           @media (prefers-reduced-motion: reduce) {
             .expiry-ribbon-track { animation: none !important; }
@@ -95,16 +126,15 @@ export default function Layout() {
             ref={ribbonTrackRef}
             className="whitespace-nowrap flex items-center h-full text-sm font-bold tracking-wide expiry-ribbon-track"
             style={{
-              animation: `ribbon-scroll ${ribbonDuration ?? 15}s linear infinite`,
+              animation: `ribbon-scroll ${ribbonDuration ?? estimatedRibbonDuration}s linear infinite`,
               width: 'max-content',
               animationPlayState: ribbonPaused ? 'paused' : 'running',
             }}
           >
-            <span className="px-8">{ribbonText}</span>
-            <span className="px-8">{ribbonText}</span>
-            <span className="px-8">{ribbonText}</span>
-            <span className="px-8">{ribbonText}</span>
-            <span className="px-8">{ribbonText}</span>
+            {/* Even count of identical copies => second half mirrors the first. */}
+            {Array.from({ length: ribbonCopies }, (_, i) => (
+              <span key={i} className="px-8">{ribbonText}</span>
+            ))}
           </div>
         </div>
       )}
