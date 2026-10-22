@@ -48,6 +48,16 @@ function daysUntil(dateStr) {
   return diff > 0 ? diff : 0;
 }
 
+const RENEWABLE_STATUSES = ['active', 'grace_period', 'expired'];
+
+export function canShowRenewButton(subscriptionStatus, merchantStatus) {
+  return RENEWABLE_STATUSES.includes(subscriptionStatus) && merchantStatus !== 'payment_pending';
+}
+
+export function isRenewalPendingVerification(subscriptionStatus, merchantStatus) {
+  return RENEWABLE_STATUSES.includes(subscriptionStatus) && merchantStatus === 'payment_pending';
+}
+
 export default function MerchantSubscription() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
@@ -283,16 +293,16 @@ export default function MerchantSubscription() {
             </div>
           </div>
           <div className="flex gap-2">
-            {currentStatus === 'active' && merchantStatus !== 'payment_pending' && (
+            {canShowRenewButton(currentStatus, merchantStatus) && (
               <button
                 onClick={handleOpenRenew}
                 className="px-5 py-2.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 btn-press"
               >
                 <RefreshCw className="w-4 h-4" />
-                Renew
+                {currentStatus === 'expired' ? 'Renew Now' : 'Renew'}
               </button>
             )}
-            {currentStatus === 'active' && merchantStatus === 'payment_pending' && (
+            {isRenewalPendingVerification(currentStatus, merchantStatus) && (
               <span className="px-5 py-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 Renewal pending verification
