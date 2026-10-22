@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { getCustomerBalance, processEarn, processRedeem, processTransfer, calculateExpiryDate } = require('../services/pointsService');
+const { getCustomerBalance, processEarn, processRedeem, processTransfer, calculateExpiryDate, computeMaxRedeemablePoints } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const { pauseExistingLiveAds } = require('../services/adService');
 const notificationService = require('../services/notificationService');
@@ -343,6 +343,19 @@ async function redeem(req, res, next) {
       const err = new Error('Insufficient points balance.');
       err.status = 400;
       err.code = 'INSUFFICIENT_BALANCE';
+      return next(err);
+    }
+
+    // Invoice cap: reject up-front if the discount would exceed the bill.
+    const rewardSettings = await prisma.rewardSettings.findFirst({ orderBy: { updatedAt: 'desc' } });
+    const rupeesPerPoint = rewardSettings?.rupeesPerPoint ?? 0.10;
+    const maxRedeemable = computeMaxRedeemablePoints(purchaseAmount, rupeesPerPoint);
+    if (maxRedeemable !== null && pointsToRedeem > maxRedeemable) {
+      const err = new Error(
+        `Cannot redeem ${pointsToRedeem} points: discount would exceed the bill of Rs. ${parseFloat(purchaseAmount).toFixed(2)}. Maximum redeemable on this bill is ${maxRedeemable} points.`
+      );
+      err.status = 400;
+      err.code = 'REDEMPTION_EXCEEDS_INVOICE';
       return next(err);
     }
 

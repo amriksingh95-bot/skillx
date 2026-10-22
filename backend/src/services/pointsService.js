@@ -221,6 +221,18 @@ async function processEarn(customerId, merchantId, purchaseAmount, remarks = nul
 }
 
 /**
+ * Maximum points redeemable against an invoice: the discount may not exceed
+ * the bill. Cap discount = invoiceAmount (100%); maxPoints = floor(cap / rate).
+ * No invoice → null (cap skipped; balance-only limit applies).
+ */
+function computeMaxRedeemablePoints(invoiceAmount, rupeesPerPoint) {
+  if (!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || parseFloat(invoiceAmount) <= 0) return null;
+  const rate = parseFloat(rupeesPerPoint);
+  if (!rate || rate <= 0) return null;
+  return Math.floor(parseFloat(invoiceAmount) / rate);
+}
+
+/**
  * Processes a redeem transaction.
  * @param {string} customerId
  * @param {string} merchantId
@@ -274,6 +286,17 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmou
     if (!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || parseFloat(invoiceAmount) <= 0) {
       const err = new Error('Purchase amount is required for redemption.');
       err.code = 'VALIDATION_ERROR';
+      throw err;
+    }
+
+    // Invoice cap: discount may not exceed the bill (100% of invoice).
+    const maxRedeemable = computeMaxRedeemablePoints(invoiceAmount, settings.rupeesPerPoint);
+    if (maxRedeemable !== null && pointsToRedeem > maxRedeemable) {
+      const err = new Error(
+        `Cannot redeem ${pointsToRedeem} points: discount (Rs. ${(pointsToRedeem * parseFloat(settings.rupeesPerPoint)).toFixed(2)}) would exceed the bill of Rs. ${parseFloat(invoiceAmount).toFixed(2)}. Maximum redeemable on this bill is ${maxRedeemable} points.`
+      );
+      err.code = 'REDEMPTION_EXCEEDS_INVOICE';
+      err.status = 400;
       throw err;
     }
 
@@ -653,5 +676,6 @@ module.exports = {
   processTransfer,
   getExpiringPoints,
   getPointsSummary,
-  calculateExpiryDate
+  calculateExpiryDate,
+  computeMaxRedeemablePoints
 };

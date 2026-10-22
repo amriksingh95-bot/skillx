@@ -15,6 +15,23 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Cap helpers (exported for tests). Discount may never exceed the bill.
+export function computeBillCapPoints(billAmount, rate) {
+  const bill = parseFloat(billAmount);
+  if (!billAmount || isNaN(bill) || bill <= 0) return Infinity;
+  return Math.floor(bill / rate);
+}
+
+export function computeMaxRedeemablePoints({ balance, billAmount, rate }) {
+  return Math.min(balance, computeBillCapPoints(billAmount, rate));
+}
+
+export function isBillTooSmall({ billAmount, rate, minLimit }) {
+  const bill = parseFloat(billAmount);
+  if (!billAmount || isNaN(bill) || bill <= 0) return false;
+  return computeBillCapPoints(billAmount, rate) < minLimit;
+}
+
 export default function MerchantRedeemPoints() {
   const [identifier, setIdentifier] = useState('');
   const [customer, setCustomer] = useState(null);
@@ -40,14 +57,22 @@ export default function MerchantRedeemPoints() {
   const feePercent = customer?.rewardSettings?.redemptionFeePercent !== undefined && customer?.rewardSettings?.redemptionFeePercent !== null
     ? parseFloat(customer.rewardSettings.redemptionFeePercent)
     : 5;
-  // Points can redeem up to the full customer balance
-  const maxRedeemablePoints = customer ? customer.balance : 0;
-  const maxDiscount = maxRedeemablePoints * rate;
+  const minLimit = customer?.rewardSettings?.minRedeemPoints || 100;
+  const billAmount = purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0 ? parseFloat(purchaseAmount) : null;
+
+  // Cap: discount may not exceed the bill. maxRedeemable = min(balance, floor(bill / rate)).
+  const billCapPoints = computeBillCapPoints(purchaseAmount, rate);
+  const maxRedeemablePoints = customer ? computeMaxRedeemablePoints({ balance: customer.balance, billAmount: purchaseAmount, rate }) : 0;
+  const maxDiscount = billAmount !== null ? Math.min(maxRedeemablePoints * rate, billAmount) : (customer ? customer.balance * rate : 0);
+  // True when the bill (not the balance) is the binding limit.
+  const limitedByBill = customer && billAmount !== null && customer.balance > billCapPoints;
+  // Bill too small to reach the minimum redemption.
+  const billTooSmall = isBillTooSmall({ billAmount: purchaseAmount, rate, minLimit });
 
   // Auto-fill points to redeem based on purchase amount
   useEffect(() => {
     if (!customer) return;
-    if (purchaseAmount && !isNaN(purchaseAmount)) {
+    if (purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0) {
       setPointsToRedeem(maxRedeemablePoints.toString());
     } else {
       setPointsToRedeem('');
@@ -176,7 +201,10 @@ export default function MerchantRedeemPoints() {
     const feePct = customer?.rewardSettings?.redemptionFeePercent !== undefined && customer?.rewardSettings?.redemptionFeePercent !== null
       ? parseFloat(customer.rewardSettings.redemptionFeePercent)
       : 5;
-    const grossDiscount = parseFloat(pointsToRedeem) * rate;
+    // Clamp the preview so discount/fee/saves never exceed the bill.
+    const bill = purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0 ? parseFloat(purchaseAmount) : null;
+    const rawGross = parseFloat(pointsToRedeem) * rate;
+    const grossDiscount = bill !== null ? Math.min(rawGross, bill) : rawGross;
     const platformFee = grossDiscount * (feePct / 100);
     const netAmount = grossDiscount - platformFee;
     setEstimatedDiscount(grossDiscount);
@@ -185,7 +213,7 @@ export default function MerchantRedeemPoints() {
       platformFee: parseFloat(platformFee.toFixed(2)),
       netAmount: parseFloat(netAmount.toFixed(2))
     });
-  }, [pointsToRedeem, customer]);
+  }, [pointsToRedeem, customer, purchaseAmount]);
 
   const handlePointsChange = (val) => {
     if (val === '') {
@@ -222,6 +250,10 @@ export default function MerchantRedeemPoints() {
 
     if (points > customer.balance) {
       return toast.error(`Insufficient balance. Customer only has ${customer.balance} points.`);
+    }
+
+    if (billAmount !== null && points > maxRedeemablePoints) {
+      return toast.error(`Discount would exceed the bill. Maximum redeemable on this bill is ${maxRedeemablePoints} points.`);
     }
 
     setIsLoading(true);
@@ -445,9 +477,15 @@ export default function MerchantRedeemPoints() {
                   value={purchaseAmount}
                   onChange={(e) => setPurchaseAmount(e.target.value)}
                 />
-                {purchaseAmount && !isNaN(purchaseAmount) && (
+                {purchaseAmount && !isNaN(purchaseAmount) && parseFloat(purchaseAmount) > 0 && (
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
                     Maximum redeemable: {maxRedeemablePoints} points = ₹{maxDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} discount
+                    {limitedByBill && <span className="text-amber-600 dark:text-amber-400"> (limited by bill amount)</span>}
+                  </div>
+                )}
+                {billTooSmall && (
+                  <div className="text-xs font-bold text-rose-600 dark:text-rose-400 mt-1">
+                    Bill amount too small. Minimum {minLimit} points needs a bill of at least ₹{(minLimit * rate).toFixed(2)}.
                   </div>
                 )}
               </div>
@@ -505,7 +543,13 @@ export default function MerchantRedeemPoints() {
             <button
               type="button"
               onClick={handleRedeem}
-              disabled={isLoading || !purchaseAmount || isNaN(purchaseAmount) || parseFloat(purchaseAmount) <= 0 || !pointsToRedeem || customer.balance < (customer?.rewardSettings?.minRedeemPoints || 100)}
+              disabled={
+                isLoading ||
+                !purchaseAmount || isNaN(purchaseAmount) || parseFloat(purchaseAmount) <= 0 ||
+                !pointsToRedeem ||
+                customer.balance < minLimit ||
+                billTooSmall
+              }
               className="w-full py-3 bg-secondary hover:bg-secondary-dark text-white rounded-xl text-sm font-bold shadow-md shadow-secondary/20 hover:shadow-lg transition-all focus:outline-none flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
             >
               {isLoading ? <span className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Gift className="w-4 h-4" />}
