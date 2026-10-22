@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { getCustomerBalance, processEarn, processRedeem, processTransfer, calculateExpiryDate } = require('../services/pointsService');
+const { getCustomerBalance, processEarn, processRedeem, processTransfer, calculateExpiryDate, computeMaxRedeemablePoints } = require('../services/pointsService');
 const { createAuditLog } = require('../services/auditLogService');
 const { pauseExistingLiveAds } = require('../services/adService');
 const notificationService = require('../services/notificationService');
@@ -151,7 +151,7 @@ async function earn(req, res, next) {
     const customer = await findActiveCustomer(identifier);
 
     // Call service to run transaction
-    const transaction = await processEarn(customer.id, merchantId, purchaseAmount);
+    const { transaction, subscriptionExpired } = await processEarn(customer.id, merchantId, purchaseAmount);
 
     // Referral bonus checks and award (delayed to first real transaction)
     try {
@@ -304,6 +304,7 @@ async function earn(req, res, next) {
       message: `Successfully issued ${transaction.points} points.`,
       data: {
         transaction,
+        subscriptionExpired,
         customer: {
           id: customer.id,
           name: customer.name,
@@ -345,10 +346,23 @@ async function redeem(req, res, next) {
       return next(err);
     }
 
+    // Invoice cap: reject up-front if the discount would exceed the bill.
+    const rewardSettings = await prisma.rewardSettings.findFirst({ orderBy: { updatedAt: 'desc' } });
+    const rupeesPerPoint = rewardSettings?.rupeesPerPoint ?? 0.10;
+    const maxRedeemable = computeMaxRedeemablePoints(purchaseAmount, rupeesPerPoint);
+    if (maxRedeemable !== null && pointsToRedeem > maxRedeemable) {
+      const err = new Error(
+        `Cannot redeem ${pointsToRedeem} points: discount would exceed the bill of Rs. ${parseFloat(purchaseAmount).toFixed(2)}. Maximum redeemable on this bill is ${maxRedeemable} points.`
+      );
+      err.status = 400;
+      err.code = 'REDEMPTION_EXCEEDS_INVOICE';
+      return next(err);
+    }
+
     const finalPoints = pointsToRedeem;
 
     // Call transaction service
-    const transaction = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
+    const { transaction, subscriptionExpired } = await processRedeem(customer.id, merchantId, finalPoints, purchaseAmount);
 
     // Log audit log
     await createAuditLog(
@@ -367,6 +381,7 @@ async function redeem(req, res, next) {
       message: `Successfully redeemed ${finalPoints} points.`,
       data: {
         transaction,
+        subscriptionExpired,
         customer: {
           id: customer.id,
           name: customer.name,

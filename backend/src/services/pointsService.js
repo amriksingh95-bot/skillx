@@ -213,8 +213,23 @@ async function processEarn(customerId, merchantId, purchaseAmount, remarks = nul
       }
     }
 
-    return transaction;
+    return {
+      transaction,
+      subscriptionExpired: subscriptionStatus.subscriptionExpired === true
+    };
   });
+}
+
+/**
+ * Maximum points redeemable against an invoice: the discount may not exceed
+ * the bill. Cap discount = invoiceAmount (100%); maxPoints = floor(cap / rate).
+ * No invoice → null (cap skipped; balance-only limit applies).
+ */
+function computeMaxRedeemablePoints(invoiceAmount, rupeesPerPoint) {
+  if (!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || parseFloat(invoiceAmount) <= 0) return null;
+  const rate = parseFloat(rupeesPerPoint);
+  if (!rate || rate <= 0) return null;
+  return Math.floor(parseFloat(invoiceAmount) / rate);
 }
 
 /**
@@ -274,6 +289,17 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmou
       throw err;
     }
 
+    // Invoice cap: discount may not exceed the bill (100% of invoice).
+    const maxRedeemable = computeMaxRedeemablePoints(invoiceAmount, settings.rupeesPerPoint);
+    if (maxRedeemable !== null && pointsToRedeem > maxRedeemable) {
+      const err = new Error(
+        `Cannot redeem ${pointsToRedeem} points: discount (Rs. ${(pointsToRedeem * parseFloat(settings.rupeesPerPoint)).toFixed(2)}) would exceed the bill of Rs. ${parseFloat(invoiceAmount).toFixed(2)}. Maximum redeemable on this bill is ${maxRedeemable} points.`
+      );
+      err.code = 'REDEMPTION_EXCEEDS_INVOICE';
+      err.status = 400;
+      throw err;
+    }
+
     // Calculate redemption fee
     const feeInfo = calculateRedemptionFee(pointsToRedeem, settings);
 
@@ -297,8 +323,11 @@ async function processRedeem(customerId, merchantId, pointsToRedeem, invoiceAmou
     await addLedgerEntry(customerId, -pointsToRedeem, transaction.id, tx, null);
 
     return {
-      ...transaction,
-      feeInfo
+      transaction: {
+        ...transaction,
+        feeInfo
+      },
+      subscriptionExpired: subscriptionStatus.subscriptionExpired === true
     };
   });
 }
@@ -647,5 +676,6 @@ module.exports = {
   processTransfer,
   getExpiringPoints,
   getPointsSummary,
-  calculateExpiryDate
+  calculateExpiryDate,
+  computeMaxRedeemablePoints
 };

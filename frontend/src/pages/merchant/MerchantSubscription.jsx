@@ -22,6 +22,7 @@ import imageCompression from 'browser-image-compression';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { useAuth } from '../../context/AuthContext';
+import { expiryDatePrefix, expiredDaysAgoLabel } from '../../utils/subscriptionText';
 import gpayQR from '../../assets/gpay-qr.png';
 
 const statusConfig = {
@@ -47,6 +48,31 @@ function daysUntil(dateStr) {
   return diff > 0 ? diff : 0;
 }
 
+const RENEWABLE_STATUSES = ['active', 'grace_period', 'expired'];
+
+export function canShowRenewButton(subscriptionStatus, merchantStatus) {
+  return RENEWABLE_STATUSES.includes(subscriptionStatus) && merchantStatus !== 'payment_pending';
+}
+
+export function isRenewalPendingVerification(subscriptionStatus, merchantStatus) {
+  return RENEWABLE_STATUSES.includes(subscriptionStatus) && merchantStatus === 'payment_pending';
+}
+
+export function getPurchaseUploadPath(subscriptionId) {
+  return subscriptionId
+    ? '/api/merchant/subscription/renewal/upload-screenshot'
+    : '/api/merchant/subscription/upload-screenshot';
+}
+
+export function validatePurchaseProofFile(file) {
+  if (!file) return 'Choose a payment screenshot or PDF.';
+  const isImage = file.type.startsWith('image/');
+  const isPdf = file.type === 'application/pdf';
+  if (!isImage && !isPdf) return 'Only image or PDF files are allowed.';
+  if (isPdf && file.size > 5 * 1024 * 1024) return 'PDF must be 5 MB or smaller.';
+  return null;
+}
+
 export default function MerchantSubscription() {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
@@ -68,13 +94,16 @@ export default function MerchantSubscription() {
   const [isRenewalUploading, setIsRenewalUploading] = useState(false);
   const [screenshotFileKey, setScreenshotFileKey] = useState(Date.now());
   const [renewalFileKey, setRenewalFileKey] = useState(Date.now());
+  const [purchaseScreenshotFile, setPurchaseScreenshotFile] = useState(null);
+  const [isPurchaseUploading, setIsPurchaseUploading] = useState(false);
+  const [purchaseFileKey, setPurchaseFileKey] = useState(Date.now());
 
   const fetchSubscription = async () => {
     try {
       setLoading(true);
       const res = await api.get('/api/merchant/subscription');
       const d = res.data.data;
-      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, availablePlans: d.availablePlans });
+      setSubscription({ ...d.subscription, daysRemaining: d.daysRemaining, isActive: d.isActive, status: d.status, daysExpired: d.daysExpired ?? null, availablePlans: d.availablePlans });
       setPlans(d.availablePlans || []);
       setSubscriptionUpiId(d.upiId || '');
       const monthly = (d.availablePlans || []).find((p) => p.name === 'monthly');
@@ -199,6 +228,51 @@ export default function MerchantSubscription() {
     }
   };
 
+  const handlePurchaseProofSubmit = async (e) => {
+    e.preventDefault();
+    const validationError = validatePurchaseProofFile(purchaseScreenshotFile);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    setIsPurchaseUploading(true);
+    try {
+      let fileToUpload = purchaseScreenshotFile;
+      if (purchaseScreenshotFile.type !== 'application/pdf') {
+        const compressed = await imageCompression(purchaseScreenshotFile, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 1600,
+          useWebWorker: true,
+        });
+        fileToUpload = new File([compressed], purchaseScreenshotFile.name, { type: compressed.type });
+      }
+      const formData = new FormData();
+      formData.append('screenshot', fileToUpload);
+      const uploadPath = getPurchaseUploadPath(subscription?.id);
+      if (subscription?.id) {
+        formData.append('subscriptionId', subscription.id);
+      }
+
+      await api.post(uploadPath, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 120000
+      });
+
+      toast.success('Proof submitted, pending admin verification');
+      setIsPurchaseOpen(false);
+      setSelectedPlan(null);
+      setPurchaseScreenshotFile(null);
+      await Promise.all([fetchSubscription(), fetchHistory(), fetchMerchantStatus()]);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload payment proof.');
+    } finally {
+      setIsPurchaseUploading(false);
+    }
+  };
+
   const currentStatus = subscription?.status || 'none';
   const config = statusConfig[currentStatus] || statusConfig.none;
   const StatusIcon = config.icon;
@@ -263,8 +337,13 @@ export default function MerchantSubscription() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    Expires {formatDate(subscription.endDate)}
+                    {expiryDatePrefix(currentStatus)} {formatDate(subscription.endDate)}
                   </span>
+                  {currentStatus === 'expired' && expiredDaysAgoLabel(subscription.daysExpired) && (
+                    <span className="font-bold text-red-500 dark:text-red-400">
+                      {expiredDaysAgoLabel(subscription.daysExpired)}
+                    </span>
+                  )}
                   {subscription.daysRemaining !== null && (
                     <span className={`font-bold ${
                       currentStatus === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
@@ -277,16 +356,16 @@ export default function MerchantSubscription() {
             </div>
           </div>
           <div className="flex gap-2">
-            {currentStatus === 'active' && merchantStatus !== 'payment_pending' && (
+            {canShowRenewButton(currentStatus, merchantStatus) && (
               <button
                 onClick={handleOpenRenew}
                 className="px-5 py-2.5 bg-white dark:bg-dark-card border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 btn-press"
               >
                 <RefreshCw className="w-4 h-4" />
-                Renew
+                {currentStatus === 'expired' ? 'Renew Now' : 'Renew'}
               </button>
             )}
-            {currentStatus === 'active' && merchantStatus === 'payment_pending' && (
+            {isRenewalPendingVerification(currentStatus, merchantStatus) && (
               <span className="px-5 py-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 Renewal pending verification
@@ -631,8 +710,8 @@ export default function MerchantSubscription() {
         )}
       </div>
 
-      {/* Purchase Modal – informational only */}
-      <Modal isOpen={isPurchaseOpen} onClose={() => { setIsPurchaseOpen(false); setSelectedPlan(null); }} title="Purchase Subscription">
+      {/* Purchase Modal – pay via QR, then upload payment proof in-modal */}
+      <Modal isOpen={isPurchaseOpen} onClose={() => { setIsPurchaseOpen(false); setSelectedPlan(null); setPurchaseScreenshotFile(null); }} title="Purchase Subscription">
         <div className="space-y-4">
           {selectedPlan && (
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-2">
@@ -691,16 +770,80 @@ export default function MerchantSubscription() {
                 </div>
               </div>
             )}
-            <p className="text-xs text-amber-600 font-medium">Note: After paying, scroll down to upload your payment screenshot</p>
+            <p className="text-xs text-amber-600 font-medium">Note: After paying, upload your payment screenshot below for admin verification</p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => { setIsPurchaseOpen(false); setSelectedPlan(null); }}
-            className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all btn-press"
-          >
-            Got it
-          </button>
+          <form onSubmit={handlePurchaseProofSubmit} className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Upload Payment Screenshot
+              </label>
+              <input
+                key={purchaseFileKey}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setPurchaseScreenshotFile(e.target.files[0])}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+              />
+              {purchaseScreenshotFile && (
+                <div className="mt-2 space-y-2">
+                  {purchaseScreenshotFile.type.startsWith('image/') ? (
+                    <img src={URL.createObjectURL(purchaseScreenshotFile)} alt="Preview" className="w-20 h-20 object-cover rounded-lg border border-slate-200" />
+                  ) : (
+                    <div className="w-20 h-20 flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200">
+                      <FileText className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="flex-1 truncate">{purchaseScreenshotFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setPurchaseScreenshotFile(null); setPurchaseFileKey(Date.now()); }}
+                      className="p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition-colors shadow-sm btn-press"
+                      title="Remove file"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <input
+                key={`cam-${purchaseFileKey}`}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setPurchaseScreenshotFile(e.target.files[0])}
+                className="hidden"
+                id="purchase-camera-input"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('purchase-camera-input').click()}
+                className="mt-2 w-full py-2 border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 btn-press"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Take Photo
+              </button>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { setIsPurchaseOpen(false); setSelectedPlan(null); setPurchaseScreenshotFile(null); }}
+                className="flex-1 py-2.5 border border-slate-200 dark:border-dark-border hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all btn-press"
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                disabled={!purchaseScreenshotFile || isPurchaseUploading}
+                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 btn-press"
+              >
+                {isPurchaseUploading ? <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full" /> : <Upload className="w-4 h-4" />}
+                Submit Payment Proof
+              </button>
+            </div>
+          </form>
         </div>
       </Modal>
 

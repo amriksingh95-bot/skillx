@@ -77,7 +77,8 @@ export function calcRedemptionFee(pointsToRedeem, settings = DEMO_REWARD_SETTING
  * Validates a redemption.
  * - min redeem: backend/src/services/pointsService.js:265-269
  * - invoice required & > 0: backend/src/services/pointsService.js:271-275
- * - discount <= bill: DEMO-ONLY (no backend equivalent)
+ * - discount <= bill: backend/src/services/pointsService.js (computeMaxRedeemablePoints
+ *   + processRedeem reject over-cap; this demo mirrors that rule)
  * Returns { ok: true } or { ok: false, code, message }.
  */
 export function validateRedemption({ pointsToRedeem, billAmount, balance, settings = DEMO_REWARD_SETTINGS }) {
@@ -101,7 +102,7 @@ export function validateRedemption({ pointsToRedeem, billAmount, balance, settin
       message: 'Purchase amount is required for redemption.'
     };
   }
-  // DEMO-ONLY: gross discount may not exceed the bill amount.
+  // gross discount may not exceed the bill amount (mirrors backend invoice cap).
   const { grossDiscount } = calcRedemptionFee(points, settings);
   if (grossDiscount > bill) {
     return {
